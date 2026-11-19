@@ -82,6 +82,10 @@ class Range{constructor(sh,r,c,nr,nc){Object.assign(this,{sh,r,c,nr,nc})}
  getValues(){const o=[];for(let i=0;i<this.nr;i++){const row=[];for(let j=0;j<this.nc;j++)row.push(this.sh.get(this.r+i,this.c+j));o.push(row)}return o}
  getFormulas(){const o=[];for(let i=0;i<this.nr;i++){const row=[];for(let j=0;j<this.nc;j++)row.push(this.sh.f[(this.r+i)+','+(this.c+j)]||'');o.push(row)}return o}
  setValues(v){this.sh.w('setValues');v.forEach((row,i)=>row.forEach((x,j)=>this.sh.set(this.r+i,this.c+j,x)));return this}
+ _st(f,d){const S0=(STYLES[this.sh.name]=STYLES[this.sh.name]||{s:{}}).s,o=[];for(let i=0;i<this.nr;i++){const row=[];for(let j=0;j<this.nc;j++)row.push(f(S0[(this.r+i)+','+(this.c+j)])||d);o.push(row)}return o}
+ _set(k,v){const S0=(STYLES[this.sh.name]=STYLES[this.sh.name]||{s:{}}).s;v.forEach((row,i)=>row.forEach((x,j)=>{const key=(this.r+i)+','+(this.c+j);const s=S0[key]=S0[key]||['','',0,''];if(k===2)s[2]=x==='bold'?1:0;else s[k]=x}));return this}
+ getBackgrounds(){return this._st(s=>s&&s[0],'#ffffff')} getFontColors(){return this._st(s=>s&&s[1],'#000000')} getFontWeights(){return this._st(s=>s&&(s[2]?'bold':'normal'),'normal')}
+ setBackgrounds(v){return this._set(0,v)} setFontColors(v){return this._set(1,v)} setFontWeights(v){return this._set(2,v)}
  setValue(x){this.sh.w('setValue');this.sh.set(this.r,this.c,x);return this}
  getValue(){return this.sh.get(this.r,this.c)}
  clearContent(){this.sh.w('clear');for(let i=0;i<this.nr;i++)for(let j=0;j<this.nc;j++)this.sh.set(this.r+i,this.c+j,'');return this}}
@@ -97,7 +101,7 @@ class Sheet{constructor(name,data){this.name=name;this.v=(data?data.values:[]).m
  appendRow(row){this.w('appendRow');const r=this.getLastRow()+1;row.forEach((x,j)=>this.set(r,j+1,x))}
  getMaxRows(){return Math.max(this.v.length,600)} getConditionalFormatRules(){return (this.cfr||[]).slice()} setConditionalFormatRules(r){this.cfr=r}
  setFrozenRows(){}setFrozenColumns(){}setColumnWidth(){}setColumnWidths(){}autoResizeColumns(){}
- activate(){showSheet(this.name)}setActiveRange(rg){hlRow=rg.r;showSheet(this.name)}}
+ hideSheet(){this.hidden=true;drawTabs()} activate(){showSheet(this.name)}setActiveRange(rg){hlRow=rg.r;showSheet(this.name)}}
 const book=[],byName={};let STYLES={};let active=null,hlRow=0;
 const ss={getSheetByName:n=>byName[n]||null,insertSheet:n=>{const s=new Sheet(n);book.push(s);byName[n]=s;return s},setActiveSheet:s=>{s&&showSheet(s.name)},getSheets:()=>book.slice(),getName:()=>'HAUS QUANG NGAI- Register'};
 const menuItems=[];const props={};const triggers=[];const mails=[];let WEATHER_RAW=null;
@@ -1341,6 +1345,112 @@ function tqnMenuAiBatch() {
 }
 
 /**
+ * Theme.gs – GIAO DIỆN DỄ NHÌN cho các sổ của Register (chỉ đổi định dạng: màu nền, màu chữ, đậm; KHÔNG đổi dữ liệu).
+ *  - Màu tối / quá gắt → màu nhạt cùng tông; chữ xanh dương gắt → xanh than; dòng tiêu đề → nền xanh nhạt chữ đậm.
+ *  - Trước khi đổi, lưu định dạng gốc vào tab TQN_GIAO_DIEN_GOC (ẩn). Nút "Trả lại giao diện gốc" khôi phục y nguyên.
+ */
+var TQN_THEME_TAB = 'TQN_GIAO_DIEN_GOC', TQN_THEME_ROWS = 600, TQN_THEME_COLS = 40, TQN_THEME_CHUNK = 40;
+
+function tqnHexToHsl_(hex) {
+  var m = /^#?([0-9a-f]{6})$/i.exec(String(hex || '').trim()); if (!m) return null;
+  var n = parseInt(m[1], 16), r = (n >> 16 & 255) / 255, g = (n >> 8 & 255) / 255, b = (n & 255) / 255;
+  var mx = Math.max(r, g, b), mn = Math.min(r, g, b), l = (mx + mn) / 2, h = 0, s = 0;
+  if (mx !== mn) {
+    var d = mx - mn; s = l > 0.5 ? d / (2 - mx - mn) : d / (mx + mn);
+    h = mx === r ? (g - b) / d + (g < b ? 6 : 0) : mx === g ? (b - r) / d + 2 : (r - g) / d + 4; h *= 60;
+  }
+  return { h: h, s: s, l: l };
+}
+function tqnHslToHex_(h, s, l) {
+  var f = function (n) { var k = (n + h / 30) % 12, a = s * Math.min(l, 1 - l); return Math.round(255 * (l - a * Math.max(-1, Math.min(k - 3, 9 - k, 1)))); };
+  return '#' + [f(0), f(8), f(4)].map(function (v) { return ('0' + v.toString(16)).slice(-2); }).join('').toUpperCase();
+}
+/** Màu nền → màu nhạt dễ nhìn (giữ tông màu để vẫn phân biệt được khối). */
+function tqnSoftBg_(hex) {
+  var c = tqnHexToHsl_(hex); if (!c) return hex;
+  if (c.l >= 0.97) return hex;                                   // trắng
+  if (c.s < 0.12) return c.l < 0.5 ? '#E8EDF4' : '#F6F7F9';      // xám / đen
+  if (c.l < 0.35) return '#E8EDF4';                              // xanh than đậm (cột ngăn) → xám xanh nhạt
+  if (c.h >= 35 && c.h <= 65) return '#FFF5D6';                  // vàng
+  return tqnHslToHex_(c.h, 0.62, 0.93);                          // màu khác → pastel cùng tông
+}
+function tqnSoftFont_(hex, bg) {
+  var c = tqnHexToHsl_(hex), b = tqnHexToHsl_(bg);
+  if (!c) return hex;
+  if (c.l > 0.85 && b && b.l > 0.8) return '#1B3F7A';           // chữ trắng trên nền đã thành nhạt
+  if (c.s > 0.5 && c.h >= 200 && c.h <= 250 && c.l >= 0.35) return '#1F3A68';   // xanh dương gắt
+  if (c.s > 0.5 && (c.h <= 10 || c.h >= 350)) return '#C5221F';  // đỏ gắt
+  return hex;
+}
+
+function tqnThemeSheets_(cfg) { return [cfg.log_sheet].concat(cfg.detailSheets); }
+
+function tqnThemeBackup_(sh, R, C) {
+  var bk = tqnOwnSheet_(TQN_THEME_TAB, ['Tab', 'Dòng từ', 'Số dòng', 'Số cột', 'Nền', 'Chữ', 'Đậm', 'Thời điểm']);
+  if (bk.getLastRow() >= 2 && bk.getRange(2, 1, bk.getLastRow() - 1, 1).getValues().some(function (r) { return r[0] === sh.getName(); })) return false;  // đã có bản gốc
+  for (var r0 = 1; r0 <= R; r0 += TQN_THEME_CHUNK) {
+    var n = Math.min(TQN_THEME_CHUNK, R - r0 + 1), rg = sh.getRange(r0, 1, n, C);
+    bk.appendRow([sh.getName(), r0, n, C, JSON.stringify(rg.getBackgrounds()), JSON.stringify(rg.getFontColors()), JSON.stringify(rg.getFontWeights()), new Date()]);
+  }
+  try { if (bk.hideSheet) bk.hideSheet(); } catch (e) { }
+  return true;
+}
+
+/** Áp giao diện dễ nhìn cho 1 tab. Trả số ô đổi màu. */
+function tqnThemeSheet_(sh, cfg) {
+  var R = Math.min(Math.max(sh.getLastRow(), 1), TQN_THEME_ROWS), C = Math.min(Math.max(sh.getLastColumn(), 1), TQN_THEME_COLS);
+  tqnThemeBackup_(sh, R, C);
+  var rg = sh.getRange(1, 1, R, C), bg = rg.getBackgrounds(), fc = rg.getFontColors(), fw = rg.getFontWeights(), vals = rg.getValues(), n = 0;
+  // dòng tiêu đề: dòng có "Mã hồ sơ" và các dòng tiêu đề con ngay dưới (khối Nhà thầu/TVGS/CĐT…)
+  var hdr = {};
+  for (var r = 0; r < Math.min(R, 60); r++) {
+    var t = vals[r].map(function (x) { return tqnNoAccent_(tqnClean_(x)); }).join('|');
+    if (/ma ho so/.test(t)) { hdr[r] = 1; if (r + 1 < R && /ke hoach|thuc te|ngay trinh|vuong mac/.test(vals[r + 1].map(function (x) { return tqnNoAccent_(tqnClean_(x)); }).join('|'))) hdr[r + 1] = 1; }
+  }
+  for (var i = 0; i < R; i++) for (var j = 0; j < C; j++) {
+    var b0 = bg[i][j], f0 = fc[i][j], b1, f1, w1 = fw[i][j];
+    if (hdr[i]) { b1 = '#EAF0FB'; f1 = '#1B3F7A'; w1 = 'bold'; }
+    else { b1 = tqnSoftBg_(b0); f1 = tqnSoftFont_(f0, b1); }
+    if (String(b1).toUpperCase() !== String(b0).toUpperCase() || String(f1).toUpperCase() !== String(f0).toUpperCase() || w1 !== fw[i][j]) n++;
+    bg[i][j] = b1; fc[i][j] = f1; fw[i][j] = w1;
+  }
+  rg.setBackgrounds(bg); rg.setFontColors(fc); rg.setFontWeights(fw);
+  return n;
+}
+
+function tqnApplyTheme() {
+  var cfg = tqnConfig_(), out = [], total = 0;
+  tqnThemeSheets_(cfg).forEach(function (name) {
+    var sh = tqnSs_().getSheetByName(name); if (!sh) return;
+    var n = tqnThemeSheet_(sh, cfg); total += n; out.push(name + ': ' + n + ' ô');
+  });
+  try { tqnApplyStatusColors(); } catch (e) { }
+  tqnAudit_('GIAO_DIEN', 'Áp giao diện dễ nhìn', { o_doi: total, tab: out.length });
+  return { total: total, tabs: out };
+}
+
+/** Trả lại định dạng gốc từ TQN_GIAO_DIEN_GOC. */
+function tqnRestoreTheme() {
+  var bk = tqnSs_().getSheetByName(TQN_THEME_TAB);
+  if (!bk || bk.getLastRow() < 2) throw new Error('Chưa có bản lưu giao diện gốc.');
+  var rows = bk.getRange(2, 1, bk.getLastRow() - 1, 7).getValues(), done = {};
+  rows.forEach(function (r) {
+    var sh = tqnSs_().getSheetByName(r[0]); if (!sh) return;
+    var rg = sh.getRange(+r[1], 1, +r[2], +r[3]);
+    rg.setBackgrounds(JSON.parse(r[4])); rg.setFontColors(JSON.parse(r[5])); rg.setFontWeights(JSON.parse(r[6]));
+    done[r[0]] = 1;
+  });
+  tqnAudit_('GIAO_DIEN', 'Trả lại giao diện gốc', { tab: Object.keys(done).length });
+  return Object.keys(done).length;
+}
+
+function tqnMenuTheme() {
+  var r = tqnApplyTheme();
+  SpreadsheetApp.getUi().alert('Giao diện dễ nhìn', 'Đã đổi màu ' + r.total + ' ô trên ' + r.tabs.length + ' sổ (chỉ màu, không đổi dữ liệu).\nBản gốc lưu ở tab ẩn TQN_GIAO_DIEN_GOC – bấm "Trả lại giao diện gốc" nếu muốn quay lại.', SpreadsheetApp.getUi().ButtonSet.OK);
+}
+function tqnMenuRestoreTheme() { SpreadsheetApp.getUi().alert('Đã trả lại giao diện gốc cho ' + tqnRestoreTheme() + ' sổ.'); }
+
+/**
  * Auto.gs – bật/tắt toàn bộ tự động bằng 1 nút. Chạy trên máy chủ Google: máy anh tắt vẫn chạy.
  *  - tqnHourlyJob : mỗi giờ nhập & kiểm lại (chỉ đọc tab gốc, ghi tab TQN_*), không gửi mail.
  *  - tqnDailyJob  : nhắc hạn ~07:00 (Remind.gs).
@@ -1424,6 +1534,8 @@ function onOpen() {
     .addItem('Quy trình hồ sơ (ai đang giữ việc)', 'tqnMenuWorkflow')
     .addItem('Tạo hồ sơ mới / Trình lại – cấp mã', 'tqnMenuNewDoc')
     .addItem('✦ AI rà hồ sơ cần xử lý (bản nháp)', 'tqnMenuAiBatch')
+    .addItem('Giao diện dễ nhìn (đổi màu các sổ)', 'tqnMenuTheme')
+    .addItem('Trả lại giao diện gốc', 'tqnMenuRestoreTheme')
     .addItem('Tô màu cột Tình trạng', 'tqnMenuStatusColors')
     .addSeparator()
     .addItem('1. Nhập & kiểm tra ngay', 'tqnMenuRun')
@@ -1569,7 +1681,7 @@ function showSheet(name){active=name;const sh=byName[name];if(!sh)return;
  $('grid').innerHTML=h+'</table>';
  if(edit)$('grid').querySelectorAll('td.ed').forEach(td=>td.addEventListener('blur',()=>{byName.TQN_CONFIG.set(+td.dataset.r,2,td.textContent.trim());toast('Đã sửa '+byName.TQN_CONFIG.get(+td.dataset.r,1))}));
  const hl=$('hlr');if(hl)hl.scrollIntoView({block:'center'});hlRow=0;drawTabs()}
-function drawTabs(){$('tabs').innerHTML=book.map(s=>'<button class="tab'+(s.name===active?' on':'')+(s.name.startsWith('TQN_')?' tqn':'')+'" data-n="'+s.name.replace(/"/g,'&quot;')+'">'+s.name+'</button>').join('');
+function drawTabs(){$('tabs').innerHTML=book.filter(s=>!s.hidden).map(s=>'<button class="tab'+(s.name===active?' on':'')+(s.name.startsWith('TQN_')?' tqn':'')+'" data-n="'+s.name.replace(/"/g,'&quot;')+'">'+s.name+'</button>').join('');
  $('tabs').querySelectorAll('.tab').forEach(b=>b.onclick=()=>showSheet(b.dataset.n))}
 function runFn(fn){try{window[fn]();if(fn==='tqnDailyJob'||/Remind|Daily/.test(fn))showMailsIfAny();if(active)showSheet(active)}catch(e){showModal('Lỗi',String(e.message||e))}}
 function showMailsIfAny(){if(!mails.length)return;const m=mails[mails.length-1];showModal('Thư nhắc hạn (xem thử, không gửi)','Đến: '+m.to+'\nTiêu đề: '+m.subject+'\n\n'+String(m.htmlBody||m.body||'').replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').slice(0,1500))}
@@ -1578,7 +1690,7 @@ function buildMenu(){const box=$('menus');const b=document.createElement('button
  menuItems.forEach(it=>{if(!it){d.appendChild(document.createElement('hr'));return}const x=document.createElement('button');x.textContent=it[0];x.onclick=()=>{d.classList.remove('show');runFn(it[1])};d.appendChild(x)});
  const sch=document.createElement('button');sch.textContent='(Xem thử) Lịch đã bật';sch.onclick=()=>{d.classList.remove('show');showModal('Lịch tự chạy (xem thử)',triggers.length?triggers.map(t=>t.fn+(String(t.h).startsWith('mỗi')?' '+t.h:' lúc ~'+t.h+':00 hằng ngày')).join('\n')+'\n\nBản thật: Google tự chạy cả khi máy tắt.':'Chưa bật lịch nào.')};
  d.appendChild(document.createElement('hr'));d.appendChild(sch);
- const q=$('quick');[['★ Bật tự động tất cả','tqnMenuSetupAll',1],['Kiểm soát quy trình + AI','tqnMenuWorkflow',1],['Tô màu Tình trạng','tqnMenuStatusColors'],['Tạo hồ sơ / cấp mã','tqnMenuNewDoc',1],['Trạng thái tự động','tqnMenuAutoStatus'],['Bảng điều khiển','tqnShowSidebar',1],['Nhập & kiểm tra','tqnMenuRun',1],['Nhắc hạn hôm nay','tqnMenuRemindPreview'],['Thời tiết ngay','tqnMenuWeatherNow'],['Bật thời tiết 06:00','tqnMenuWeatherOn'],['Bật nhắc hạn 07:00','tqnMenuInstallDaily'],['Cài đặt','tqnMenuSetup']].forEach(([l,f,pr])=>{if(!menuItems.some(m=>m&&m[1]===f))return;const x=document.createElement('button');x.textContent=l;if(pr)x.className='pr';x.onclick=()=>runFn(f);q.appendChild(x)});
+ const q=$('quick');[['★ Bật tự động tất cả','tqnMenuSetupAll',1],['Kiểm soát quy trình + AI','tqnMenuWorkflow',1],['Giao diện dễ nhìn','tqnMenuTheme',1],['Trả lại giao diện gốc','tqnMenuRestoreTheme'],['Tạo hồ sơ / cấp mã','tqnMenuNewDoc',1],['Trạng thái tự động','tqnMenuAutoStatus'],['Bảng điều khiển','tqnShowSidebar',1],['Nhập & kiểm tra','tqnMenuRun',1],['Nhắc hạn hôm nay','tqnMenuRemindPreview'],['Thời tiết ngay','tqnMenuWeatherNow'],['Bật thời tiết 06:00','tqnMenuWeatherOn'],['Bật nhắc hạn 07:00','tqnMenuInstallDaily'],['Cài đặt','tqnMenuSetup']].forEach(([l,f,pr])=>{if(!menuItems.some(m=>m&&m[1]===f))return;const x=document.createElement('button');x.textContent=l;if(pr)x.className='pr';x.onclick=()=>runFn(f);q.appendChild(x)});
  b.onclick=e=>{e.stopPropagation();d.style.left=b.offsetLeft+'px';d.classList.toggle('show')};box.appendChild(b);box.appendChild(d);document.addEventListener('click',()=>d.classList.remove('show'))}
 let sideSrc='',HTML={};
 const GSHIM='<script>window.google={script:{run:(function(){function mk(ok,fail){return new Proxy({},{get:function(_,k){if(k==="withSuccessHandler")return function(f){return mk(f,fail)};if(k==="withFailureHandler")return function(f){return mk(ok,f)};return function(){var a=arguments;setTimeout(function(){try{Promise.resolve(parent[k].apply(parent,a)).then(function(r){parent.afterCall(k);ok&&ok(r)},function(e){fail&&fail(e)})}catch(e){fail&&fail(e)}},0)}}})}return mk()})()},host:{close:function(){parent.closeDialog()}}};<\/script>';

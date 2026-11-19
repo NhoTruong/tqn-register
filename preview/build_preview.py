@@ -33,7 +33,7 @@ data = {"source": "Chụp Register (fixture_live) — chỉ đọc", "sha256_fix
         "html": {n: open(os.path.join(ROOT, "apps-script", n + ".html"), encoding="utf-8").read() for n in ["Sidebar", "Workflow", "NewDoc"]},
         "weather_raw": json.load(open(os.path.join(ROOT, "weather-poc", "data", "COASTAL_20261119_1114.json"), encoding="utf-8"))["body"]}
 json.dump(data, open(os.path.join(OUT, "data.json"), "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
-code = "".join(open(os.path.join(ROOT, "apps-script", f + ".gs"), encoding="utf-8").read() + "\n" for f in ["Config", "Read", "Import", "QC", "Remind", "Weather", "Workflow", "Ai", "Auto", "Menu"])
+code = "".join(open(os.path.join(ROOT, "apps-script", f + ".gs"), encoding="utf-8").read() + "\n" for f in ["Config", "Read", "Import", "QC", "Remind", "Weather", "Workflow", "Ai", "Theme", "Auto", "Menu"])
 open(os.path.join(OUT, "tqn.js"), "w", encoding="utf-8").write(code)
 open(os.path.join(OUT, "sidebar.html"), "w", encoding="utf-8").write(open(os.path.join(ROOT, "apps-script", "Sidebar.html"), encoding="utf-8").read())
 print("tab:", len(sheets), "| ẩn vì thông tin cá nhân:", hidden_pii, "| data.json", os.path.getsize(os.path.join(OUT, "data.json")) // 1024, "KB")

@@ -4,6 +4,7 @@ process.env.TZ = 'Asia/Ho_Chi_Minh';
 const fs = require('fs'), path = require('path'), vm = require('vm'), crypto = require('crypto');
 const FIX = process.argv[2] || 'fixture_live.json', TODAY = process.argv[3] || '2026-11-19';
 const fx = JSON.parse(fs.readFileSync(path.join(__dirname, FIX), 'utf8'));
+const STY = (() => { try { return JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'preview', 'site', 'data.json'), 'utf8')).styles || {}; } catch (e) { return {}; } })();
 const ORIGINAL = new Set(Object.keys(fx));
 const writes = [], ALLOW = new Set();   // [sheet, action]
 const dec = v => (v && typeof v === 'object' && v.__d) ? new Date(v.__d) : (v === null || v === undefined ? '' : v);
@@ -13,6 +14,10 @@ class Range {
   getValues() { const o = []; for (let i = 0; i < this.nr; i++) { const row = []; for (let j = 0; j < this.nc; j++) row.push(this.sh.get(this.r + i, this.c + j)); o.push(row); } return o; }
   getFormulas() { const o = []; for (let i = 0; i < this.nr; i++) { const row = []; for (let j = 0; j < this.nc; j++) row.push(((this.sh.f[this.r + i - 1] || [])[this.c + j - 1]) || ''); o.push(row); } return o; }
   setValues(v) { this.sh.w('setValues'); if (v.length !== this.nr || v[0].length !== this.nc) throw new Error('setValues sai kích thước ' + this.sh.name); v.forEach((row, i) => row.forEach((x, j) => this.sh.set(this.r + i, this.c + j, x))); return this; }
+  _st(f, d) { const o = []; for (let i = 0; i < this.nr; i++) { const row = []; for (let j = 0; j < this.nc; j++) row.push(f(this.sh.sty[(this.r + i) + ',' + (this.c + j)]) || d); o.push(row); } return o; }
+  _set(k, v) { v.forEach((row, i) => row.forEach((x, j) => { const key = (this.r + i) + ',' + (this.c + j); const s = this.sh.sty[key] = this.sh.sty[key] || ['', '', 0, '']; if (k === 2) s[2] = x === 'bold' ? 1 : 0; else s[k] = x; })); return this; }
+  getBackgrounds() { return this._st(s => s && s[0], '#ffffff'); } getFontColors() { return this._st(s => s && s[1], '#000000'); } getFontWeights() { return this._st(s => s && (s[2] ? 'bold' : 'normal'), 'normal'); }
+  setBackgrounds(v) { return this._set(0, v); } setFontColors(v) { return this._set(1, v); } setFontWeights(v) { return this._set(2, v); }
   setValue(x) { this.sh.w('setValue'); this.sh.set(this.r, this.c, x); return this; }
   getValue() { return this.sh.get(this.r, this.c); }
   clearContent() { this.sh.w('clear'); for (let i = 0; i < this.nr; i++) for (let j = 0; j < this.nc; j++) this.sh.set(this.r + i, this.c + j, ''); return this; }
@@ -20,7 +25,7 @@ class Range {
 ['setFontWeight', 'setBackground', 'setFontColor', 'setNumberFormat'].forEach(m => Range.prototype[m] = function () { this.sh.w(m); return this; });
 
 class Sheet {
-  constructor(name, data) { this.name = name; this.v = (data ? data.values : []).map(r => r.map(dec)); this.f = data ? data.formulas : []; }
+  constructor(name, data) { this.name = name; this.sty = JSON.parse(JSON.stringify((STY[name] || {}).s || {})); this.v = (data ? data.values : []).map(r => r.map(dec)); this.f = data ? data.formulas : []; }
   w(a) { writes.push([this.name, a]); if (ORIGINAL.has(this.name) && !ALLOW.has(this.name)) throw new Error('GHI VÀO TAB GỐC: ' + this.name + ' (' + a + ')'); }
   get(r, c) { const x = (this.v[r - 1] || [])[c - 1]; return x === undefined || x === null ? '' : x; }
   set(r, c, x) { while (this.v.length < r) this.v.push([]); const row = this.v[r - 1]; while (row.length < c) row.push(''); row[c - 1] = x; }
@@ -30,7 +35,7 @@ class Sheet {
   getRange(r, c, nr = 1, nc = 1) { if (r < 1 || c < 1 || nr < 1 || nc < 1) throw new Error('getRange sai ' + [r, c, nr, nc]); return new Range(this, r, c, nr, nc); }
   appendRow(row) { this.w('appendRow'); const r = this.getLastRow() + 1; row.forEach((x, j) => this.set(r, j + 1, x)); }
   setFrozenRows() { this.w('freeze'); } setFrozenColumns() { this.w('freeze'); } setColumnWidth() { this.w('width'); }
-  activate() { } setActiveRange() { }
+  activate() { } setActiveRange() { } hideSheet() { this.hidden = true; }
   getMaxRows() { return Math.max(this.v.length, 1000); }
   getConditionalFormatRules() { return (this.cfr || []).slice(); }
   setConditionalFormatRules(r) { this.cfr = r; }
@@ -172,6 +177,17 @@ T('U44 AI không ghi vào tab gốc', !writes.slice(aiBefore).some(w => ORIGINAL
 const ncf = run('tqnApplyStatusColors()'), cfr = sheets['Sổ trình duyệt'].cfr || [];
 T('U45 Tô màu cột Tình trạng (đã chạy trong nút ★): đủ 7 quy tắc, đúng cột O từ dòng 23, không đổi dữ liệu', cfr.length === 7 && cfr.every(r => r.o.r[0].c === 15 && r.o.r[0].r === 23) && !writes.some(w => w[0] === 'Sổ trình duyệt'), 'thêm ' + ncf);
 T('U46 Bấm lại không thêm trùng quy tắc', run('tqnApplyStatusColors()') === 0);
+// ---- Giao diện dễ nhìn ----
+const snapV = JSON.stringify([...ORIGINAL].map(n => sheets[n].v)), snapS = JSON.stringify([...ORIGINAL].map(n => sheets[n].sty));
+const th = run('tqnApplyTheme()');
+T('U47 Giao diện dễ nhìn: đổi màu nhiều ô, KHÔNG đổi dữ liệu, có bản lưu gốc', th.total > 500 && JSON.stringify([...ORIGINAL].map(n => sheets[n].v)) === snapV && sheets['TQN_GIAO_DIEN_GOC'].getLastRow() > 1, 'đổi ' + th.total + ' ô; ' + th.tabs.slice(0, 3).join(', '));
+const sdt = sheets['Sổ trình duyệt'].sty;
+T('U48 Nền xanh than #002060 → xám xanh nhạt; dòng tiêu đề Sổ trình duyệt (22) → nền #EAF0FB chữ đậm', !Object.values(sdt).some(x => String(x[0]).toUpperCase() === '#002060') && sdt['22,3'] && sdt['22,3'][0] === '#EAF0FB' && sdt['22,3'][2] === 1, JSON.stringify(sdt['22,3']));
+const bkRows = sheets['TQN_GIAO_DIEN_GOC'].getLastRow(); run('tqnApplyTheme()');
+T('U49 Áp lần 2 không ghi đè bản lưu gốc', sheets['TQN_GIAO_DIEN_GOC'].getLastRow() === bkRows);
+run('tqnRestoreTheme()');
+const norm = o => JSON.stringify(Object.fromEntries(Object.entries(o).map(([k, v]) => [k, [String(v[0] || '#ffffff').toUpperCase(), String(v[1] || '#000000').toUpperCase(), v[2] ? 1 : 0]]).filter(([k, v]) => !(v[0] === '#FFFFFF' && v[1] === '#000000' && !v[2])).sort()));
+T('U50 Trả lại giao diện gốc: màu nền / chữ / đậm y như ban đầu', [...ORIGINAL].every((n, i) => norm(sheets[n].sty) === norm(JSON.parse(snapS)[i])));
 const qcRows = sheets['TQN_QC'].getLastRow() - 1;
 console.log(`\nTQN_DATA ${n2} dòng · TQN_QC ${qcRows} dòng · TQN_NHAC_HAN ${sheets['TQN_NHAC_HAN'].getLastRow() - 1} dòng`);
 console.log(`KẾT QUẢ: ${pass} PASS / ${fail} FAIL`);
