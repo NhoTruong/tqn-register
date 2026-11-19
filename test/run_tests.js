@@ -265,6 +265,13 @@ console.log(`\nTQN_DATA ${n2} dòng · TQN_QC ${qcRows} dòng · TQN_NHAC_HAN ${
   ctx.tqnRunAll_ = orig;
   T('U77 Tạo phiếu + giao nhận + soạn nhắc: không đọc lại toàn bộ Register (0 lần nhập lại)', n === 0, 'nhập lại ' + n + ' lần, ' + ms + ' ms');
 }
+
+// ---- Mẫu phiếu theo loại ----
+{ const c = run('tqnPhieuCfg_()'); ctx.__c = c;
+  const tb = run('tqnPhieuHtml_({loai:"Thông báo",so:"20260814.X.001",nd:"Cập nhật BVTC",rev:"00"},__c,"19/11/2026","22/11/2026")');
+  const rfi = run('tqnPhieuHtml_({loai:"RFI",so:"RFI-9",nd:"Gạch",rev:"01"},__c,"19/11/2026","22/11/2026")');
+  T('U78 Thông báo dùng mẫu "Phiếu gửi văn bản", RFI vẫn dùng mẫu "Yêu cầu thông tin"', /PHIẾU GỬI VĂN BẢN – THÔNG BÁO/.test(tb) && !/YÊU CẦU PHÊ DUYỆT/.test(tb) && /YÊU CẦU THÔNG TIN/.test(rfi));
+}
 console.log(`KẾT QUẢ: ${pass} PASS / ${fail} FAIL`);
 fs.writeFileSync(path.join(__dirname, 'out_' + FIX.replace('.json', '') + '_QC.tsv'), sheets['TQN_QC'].v.map(r => r.map(x => x instanceof Date ? x.toISOString() : x).join('\t')).join('\n'));
 fs.writeFileSync(path.join(__dirname, 'out_' + FIX.replace('.json', '') + '_DATA.tsv'), sheets['TQN_DATA'].v.map(r => r.map(x => x instanceof Date ? x.toISOString().slice(0, 10) : x).join('\t')).join('\n'));

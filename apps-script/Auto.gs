@@ -4,7 +4,14 @@
  *  - tqnDailyJob  : nhắc hạn ~07:00 (Remind.gs).
  *  - tqnWeatherJob: thời tiết ~06:00 (Weather.gs), chỉ khi đủ điều kiện GPS + điều khoản nguồn.
  */
-var TQN_AUTO_HANDLERS = ['tqnHourlyJob', 'tqnDailyJob', 'tqnWeatherJob'];
+var TQN_AUTO_HANDLERS = ['tqnHourlyJob', 'tqnDailyJob', 'tqnWeatherJob', 'tqnMoBangKhiMo'];
+/** Mở bảng Quản lý hồ sơ mỗi khi mở file (trình kích hoạt onOpen cài đặt – trình kích hoạt đơn giản không mở được hộp thoại). */
+function tqnMoBangKhiMo() { try { tqnMenuManager(); } catch (e) { } }
+function tqnBatMoBangKhiMo() {
+  ScriptApp.getProjectTriggers().forEach(function (t) { if (t.getHandlerFunction() === 'tqnMoBangKhiMo') ScriptApp.deleteTrigger(t); });
+  ScriptApp.newTrigger('tqnMoBangKhiMo').forSpreadsheet(tqnSs_()).onOpen().create();
+  return 'ok';
+}
 
 function tqnHourlyJob() {
   var lock = LockService.getDocumentLock();
@@ -37,6 +44,7 @@ function tqnSetupAll() {
   var wc = tqnWeatherCfg_(), why = tqnWeatherBlocked_(wc);
   if (why) { tqnRemoveWeather(true); out.push('✖ Thời tiết 06:00 CHƯA bật: ' + why + ' → sửa ở tab TQN_CONFIG rồi bấm lại nút này'); }
   else out.push('✔ Thời tiết: hằng ngày khoảng ' + tqnInstallWeather() + ':00');
+  try { tqnBatMoBangKhiMo(); out.push('✔ Mở file là hiện bảng Quản lý hồ sơ'); } catch (e) { }
   try { var th = tqnApplyTheme(); out.push('✔ Giao diện dễ nhìn: ' + th.tabs.length + ' sổ (bản gốc lưu ở TQN_GIAO_DIEN_GOC)'); } catch (e) { out.push('✖ Giao diện: ' + e.message); }
   try { tqnHourlyJob(); out.push('✔ Đã chạy nhập & kiểm lần đầu'); } catch (e) { out.push('✖ Chạy lần đầu lỗi: ' + e.message); }
   tqnAudit_('BAT_TU_DONG', out.join(' | '), {});

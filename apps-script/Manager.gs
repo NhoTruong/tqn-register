@@ -110,7 +110,17 @@ function tqnPaperInfo_(c, title, color, so, ngay, han, labHan) {
     + '<tr><td style="height:38px">Ký xác nhận</td><td></td><td></td><td></td></tr><tr><td>Ngày ban hành</td><td>' + ngay + '</td><td>C/C</td><td></td></tr>'
     + '<tr><td>Số tham chiếu</td><td>' + tqnEsc_(so) + '</td><td>' + labHan + '</td><td>' + han + '</td></tr></table>';
 }
+/** Phiếu gửi văn bản cho Thông báo / Công văn / Lấy ý kiến / Biên bản (không phải hồ sơ trình duyệt). */
+function tqnPhieuVanBanHtml_(x, c, ngay, han) {
+  return '<div class="paper">' + tqnPaperHead_(c) + tqnPaperInfo_(c, 'PHIẾU GỬI VĂN BẢN – ' + tqnEsc_(String(x.loai).toUpperCase()), '#DDEBF7', x.so, ngay, han, 'Đề nghị phản hồi trước')
+    + '<div class="vv">Về việc: ' + tqnEsc_(x.nd) + '</div><div class="bh">NỘI DUNG GỬI</div>'
+    + '<table><tr><td style="height:80px;vertical-align:top">' + c.phieu_ben_gui + ' gửi ' + tqnEsc_(x.loai).toLowerCase() + ' số ' + tqnEsc_(x.so) + ': ' + tqnEsc_(x.nd) + '.<br>Kính đề nghị Quý đơn vị xem xét và phản hồi.</td></tr>'
+    + '<tr><td style="height:34px;vertical-align:top">Đính kèm (nếu có):</td></tr></table>'
+    + '<div class="bh">XÁC NHẬN TIẾP NHẬN / PHẢN HỒI</div><table class="sm"><tr><td class="gray" style="width:50%">BÊN NHẬN</td><td class="gray">Ý KIẾN PHẢN HỒI</td></tr>'
+    + '<tr><td style="height:80px;text-align:center;vertical-align:top">Ký, ghi rõ họ tên<br><br><br>Ngày: …/…/20…</td><td style="vertical-align:top"></td></tr></table></div>';
+}
 function tqnPhieuHtml_(x, c, ngay, han) {
+  if (/thông báo|công văn|lấy ý kiến|biên bản|^cv/i.test(String(x.loai))) return tqnPhieuVanBanHtml_(x, c, ngay, han);
   var m = x.loai === 'RFI' ? 'RFI' : (x.loai === 'RFC' ? 'RFC' : 'RFA');
   var T = { RFA: ['YÊU CẦU PHÊ DUYỆT', '#FBD4B4', 'BÊN BAN HÀNH', 'MÔ TẢ THÔNG TIN ĐƯỢC PHÊ DUYỆT', 'Nhà thầu TBCONS đệ trình '],
     RFI: ['YÊU CẦU THÔNG TIN', '#D6E3BC', 'BÊN GỬI', 'MÔ TẢ THÔNG TIN HOẶC SỰ XÁC NHẬN CẦN CÓ', 'Nhà thầu TBCONS đề nghị làm rõ thông tin: '],

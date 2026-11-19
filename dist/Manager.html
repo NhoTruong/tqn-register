@@ -49,7 +49,12 @@ table.st td:first-child,table.st th:first-child{text-align:left}
 .cmp{width:100%;border-collapse:collapse;margin-top:8px}.cmp td,.cmp th{border-top:1px solid var(--line);padding:6px 8px;text-align:left;font-size:12px;vertical-align:top}
 .drop{border:2px dashed #CBD5E1;border-radius:10px;padding:22px;text-align:center;color:var(--mut);cursor:pointer}.drop:hover{border-color:var(--navy);color:var(--navy)}
 .spin{display:inline-block;width:14px;height:14px;border:2px solid #CBD5E1;border-top-color:var(--navy);border-radius:50%;animation:s .8s linear infinite}@keyframes s{to{transform:rotate(360deg)}}
-@media (max-width:760px){.row{grid-template-columns:22px minmax(0,1fr) 96px}.row>:nth-child(3),.row>:nth-child(5){display:none}input[type=search]{width:100%}.kpi b{font-size:22px}}
+@media (max-width:760px){header{flex-wrap:wrap;gap:8px;padding:8px 10px}header>div:nth-child(2){flex:1;min-width:0}h1{font-size:14px}.sub{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+nav{order:3;width:100%;margin:0;overflow-x:auto;white-space:nowrap;flex-wrap:nowrap}nav a{padding:6px 10px;flex:none}
+main{padding:10px}.kpis{gap:6px}.kpi{padding:8px 9px}.kpi span{font-size:11px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.kpi b{font-size:22px}
+.mini{gap:10px;font-size:11px}.acts{gap:6px}.acts button{padding:6px 9px;font-size:12px}.more{margin-left:0}
+.chips{overflow-x:auto;flex-wrap:nowrap;white-space:nowrap}.chip{flex:none}
+.row{grid-template-columns:22px minmax(0,1fr) 92px;gap:8px;padding:8px}.row>:nth-child(3),.row>:nth-child(5){display:none}input[type=search]{width:100%}.box{max-height:96vh}}
 </style></head><body>
 <header><div class="logo">TQN</div><div><h1>Quản lý hồ sơ trình duyệt</h1><div class="sub" id="at">Đang tải…</div></div>
 <nav id="nav"></nav></header>

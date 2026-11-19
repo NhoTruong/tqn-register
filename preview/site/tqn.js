@@ -1478,7 +1478,14 @@ function tqnRestoreTabColors() {
  *  - tqnDailyJob  : nhắc hạn ~07:00 (Remind.gs).
  *  - tqnWeatherJob: thời tiết ~06:00 (Weather.gs), chỉ khi đủ điều kiện GPS + điều khoản nguồn.
  */
-var TQN_AUTO_HANDLERS = ['tqnHourlyJob', 'tqnDailyJob', 'tqnWeatherJob'];
+var TQN_AUTO_HANDLERS = ['tqnHourlyJob', 'tqnDailyJob', 'tqnWeatherJob', 'tqnMoBangKhiMo'];
+/** Mở bảng Quản lý hồ sơ mỗi khi mở file (trình kích hoạt onOpen cài đặt – trình kích hoạt đơn giản không mở được hộp thoại). */
+function tqnMoBangKhiMo() { try { tqnMenuManager(); } catch (e) { } }
+function tqnBatMoBangKhiMo() {
+  ScriptApp.getProjectTriggers().forEach(function (t) { if (t.getHandlerFunction() === 'tqnMoBangKhiMo') ScriptApp.deleteTrigger(t); });
+  ScriptApp.newTrigger('tqnMoBangKhiMo').forSpreadsheet(tqnSs_()).onOpen().create();
+  return 'ok';
+}
 
 function tqnHourlyJob() {
   var lock = LockService.getDocumentLock();
@@ -1511,6 +1518,7 @@ function tqnSetupAll() {
   var wc = tqnWeatherCfg_(), why = tqnWeatherBlocked_(wc);
   if (why) { tqnRemoveWeather(true); out.push('✖ Thời tiết 06:00 CHƯA bật: ' + why + ' → sửa ở tab TQN_CONFIG rồi bấm lại nút này'); }
   else out.push('✔ Thời tiết: hằng ngày khoảng ' + tqnInstallWeather() + ':00');
+  try { tqnBatMoBangKhiMo(); out.push('✔ Mở file là hiện bảng Quản lý hồ sơ'); } catch (e) { }
   try { var th = tqnApplyTheme(); out.push('✔ Giao diện dễ nhìn: ' + th.tabs.length + ' sổ (bản gốc lưu ở TQN_GIAO_DIEN_GOC)'); } catch (e) { out.push('✖ Giao diện: ' + e.message); }
   try { tqnHourlyJob(); out.push('✔ Đã chạy nhập & kiểm lần đầu'); } catch (e) { out.push('✖ Chạy lần đầu lỗi: ' + e.message); }
   tqnAudit_('BAT_TU_DONG', out.join(' | '), {});
@@ -1779,9 +1787,16 @@ function tqnReadOwn_(name, headers) {
 function tqnKeyOf_(so) { return tqnCleanCode_(so).toUpperCase().replace(/\s+/g, ''); }
 
 /** Mọi dữ liệu cho bảng quản lý. */
-function tqnManagerData() {
+/** nhanh = true: dùng bảng TQN_QUY_TRINH đã có (tự cập nhật mỗi giờ / lần "Nhập và kiểm" gần nhất), không đọc lại 32 tab. */
+function tqnWfFromSheet_() {
+  var sh = tqnSs_().getSheetByName(TQN.PREFIX + 'QUY_TRINH');
+  if (!sh || sh.getLastRow() < 2) return null;
+  return { rows: sh.getRange(2, 1, sh.getLastRow() - 1, TQN_WF_HEADERS.length).getValues() };
+}
+function tqnManagerData(nhanh) {
   tqnEnsurePhieuConfig_();
-  var r = tqnRunAll_(), wf = r.wf, tz = r.cfg.timezone;
+  var wf = nhanh ? tqnWfFromSheet_() : null, tz;
+  if (wf) tz = tqnConfig_().timezone; else { var r = tqnRunAll_(); wf = r.wf; tz = r.cfg.timezone; }
   var now = new Date(), t0 = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   var phieu = {}, gn = {};
   tqnReadOwn_(TQN.PREFIX + 'PHIEU', TQN_PHIEU_HEADERS).forEach(function (p) { phieu[tqnKeyOf_(p[3])] = { pdf: p[6], in: p[7], gn: p[8] }; });
@@ -1843,7 +1858,17 @@ function tqnPaperInfo_(c, title, color, so, ngay, han, labHan) {
     + '<tr><td style="height:38px">Ký xác nhận</td><td></td><td></td><td></td></tr><tr><td>Ngày ban hành</td><td>' + ngay + '</td><td>C/C</td><td></td></tr>'
     + '<tr><td>Số tham chiếu</td><td>' + tqnEsc_(so) + '</td><td>' + labHan + '</td><td>' + han + '</td></tr></table>';
 }
+/** Phiếu gửi văn bản cho Thông báo / Công văn / Lấy ý kiến / Biên bản (không phải hồ sơ trình duyệt). */
+function tqnPhieuVanBanHtml_(x, c, ngay, han) {
+  return '<div class="paper">' + tqnPaperHead_(c) + tqnPaperInfo_(c, 'PHIẾU GỬI VĂN BẢN – ' + tqnEsc_(String(x.loai).toUpperCase()), '#DDEBF7', x.so, ngay, han, 'Đề nghị phản hồi trước')
+    + '<div class="vv">Về việc: ' + tqnEsc_(x.nd) + '</div><div class="bh">NỘI DUNG GỬI</div>'
+    + '<table><tr><td style="height:80px;vertical-align:top">' + c.phieu_ben_gui + ' gửi ' + tqnEsc_(x.loai).toLowerCase() + ' số ' + tqnEsc_(x.so) + ': ' + tqnEsc_(x.nd) + '.<br>Kính đề nghị Quý đơn vị xem xét và phản hồi.</td></tr>'
+    + '<tr><td style="height:34px;vertical-align:top">Đính kèm (nếu có):</td></tr></table>'
+    + '<div class="bh">XÁC NHẬN TIẾP NHẬN / PHẢN HỒI</div><table class="sm"><tr><td class="gray" style="width:50%">BÊN NHẬN</td><td class="gray">Ý KIẾN PHẢN HỒI</td></tr>'
+    + '<tr><td style="height:80px;text-align:center;vertical-align:top">Ký, ghi rõ họ tên<br><br><br>Ngày: …/…/20…</td><td style="vertical-align:top"></td></tr></table></div>';
+}
 function tqnPhieuHtml_(x, c, ngay, han) {
+  if (/thông báo|công văn|lấy ý kiến|biên bản|^cv/i.test(String(x.loai))) return tqnPhieuVanBanHtml_(x, c, ngay, han);
   var m = x.loai === 'RFI' ? 'RFI' : (x.loai === 'RFC' ? 'RFC' : 'RFA');
   var T = { RFA: ['YÊU CẦU PHÊ DUYỆT', '#FBD4B4', 'BÊN BAN HÀNH', 'MÔ TẢ THÔNG TIN ĐƯỢC PHÊ DUYỆT', 'Nhà thầu TBCONS đệ trình '],
     RFI: ['YÊU CẦU THÔNG TIN', '#D6E3BC', 'BÊN GỬI', 'MÔ TẢ THÔNG TIN HOẶC SỰ XÁC NHẬN CẦN CÓ', 'Nhà thầu TBCONS đề nghị làm rõ thông tin: '],
@@ -1881,7 +1906,7 @@ function tqnSavePdf_(html, name, c) {
   } catch (e) { return ''; }
 }
 function tqnFindRows_(sos) {
-  var d = tqnManagerData(), want = {};
+  var d = tqnManagerData(true), want = {};
   sos.forEach(function (s) { want[tqnKeyOf_(s)] = 1; });
   return { d: d, list: d.rows.filter(function (x) { return want[tqnKeyOf_(x.so)]; }) };
 }
