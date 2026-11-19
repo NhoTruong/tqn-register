@@ -8,6 +8,8 @@ function onOpen() {
     .addItem('Tắt tự động tất cả', 'tqnMenuRemoveAll')
     .addSeparator()
     .addItem('Bảng điều khiển', 'tqnShowSidebar')
+    .addItem('Quy trình hồ sơ (ai đang giữ việc)', 'tqnMenuWorkflow')
+    .addItem('Tạo hồ sơ mới / Trình lại – cấp mã', 'tqnMenuNewDoc')
     .addSeparator()
     .addItem('1. Nhập & kiểm tra ngay', 'tqnMenuRun')
     .addItem('2. Xem nhắc hạn hôm nay', 'tqnMenuRemindPreview')
@@ -31,8 +33,9 @@ function tqnRunAll_() {
     tqnEnsureConfig_();
     var cfg = tqnConfig_(), imp = tqnImport_(cfg), qc = tqnQC_(cfg, imp), rem = tqnRemindList_(cfg, imp, new Date());
     tqnWriteRemind_(cfg, rem);
-    tqnAudit_('NHAP_KIEM', 'Chạy tay', { du_lieu: imp.counts, qc: qc.byRule, nhac: rem.length });
-    return { cfg: cfg, imp: imp, qc: qc, rem: rem };
+    var wf = tqnBuildWorkflow_(cfg, imp, new Date());
+    tqnAudit_('NHAP_KIEM', 'Chạy tay', { du_lieu: imp.counts, qc: qc.byRule, nhac: rem.length, quy_trinh: wf.count });
+    return { cfg: cfg, imp: imp, qc: qc, rem: rem, wf: wf };
   } finally { lock.releaseLock(); }
 }
 
@@ -58,7 +61,7 @@ function tqnMenuInstallDaily() {
   SpreadsheetApp.getUi().alert('Đã bật nhắc hạn hằng ngày khoảng ' + h + 'h. Google có thể chạy lệch ±15 phút.\nGửi mail chỉ khi TQN_CONFIG: remind_email_enabled = Có và có remind_recipients.');
 }
 function tqnMenuRemoveDaily() { SpreadsheetApp.getUi().alert('Đã tắt ' + tqnRemoveDaily(false) + ' lịch nhắc hạn.'); }
-function tqnMenuSetup() { tqnEnsureConfig_(); tqnEnsureWeatherConfig_(); tqnSs_().setActiveSheet(tqnSs_().getSheetByName(TQN.SH_CONFIG)); }
+function tqnMenuSetup() { tqnEnsureConfig_(); tqnEnsureWeatherConfig_(); tqnEnsureCodeConfig_(); tqnSs_().setActiveSheet(tqnSs_().getSheetByName(TQN.SH_CONFIG)); }
 
 /* ---------------- Thanh bên ---------------- */
 function tqnShowSidebar() {

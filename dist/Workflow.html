@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html><head><base target="_top"><meta charset="utf-8">
+<style>
+*{box-sizing:border-box}body{margin:0;font:13px Inter,Segoe UI,Arial,sans-serif;color:#202124;background:#f4f6f9}
+.top{display:flex;align-items:center;gap:8px;padding:10px 12px;background:#1B3F7A;color:#fff;flex-wrap:wrap}
+.top b{font-size:14px}.top small{opacity:.8}
+.f{margin-left:auto;display:flex;gap:6px;flex-wrap:wrap}
+.f button{border:0;border-radius:14px;padding:5px 11px;font:600 12px inherit;background:rgba(255,255,255,.15);color:#fff;cursor:pointer}
+.f button.on{background:#2DD4BF;color:#0b2a3a}
+.kpi{display:flex;gap:8px;padding:8px 12px;flex-wrap:wrap}
+.k{background:#fff;border-radius:10px;padding:6px 10px;box-shadow:0 1px 3px rgba(0,0,0,.08)}.k b{font-size:17px}.k span{font-size:11px;color:#5f6368;display:block}
+.board{display:grid;grid-template-columns:repeat(5,minmax(200px,1fr));gap:8px;padding:0 12px 12px;overflow-x:auto}
+.col{background:#e9edf2;border-radius:10px;padding:6px;min-height:200px}
+.col h4{margin:2px 4px 6px;font-size:12px;display:flex;justify-content:space-between}
+.c{background:#fff;border-radius:8px;padding:7px 8px;margin-bottom:6px;border-left:4px solid #1F8A8A;cursor:pointer;box-shadow:0 1px 2px rgba(0,0,0,.06)}
+.c:hover{outline:2px solid #2DD4BF}
+.c.late{border-left-color:#d93025}.c .so{font:600 11px ui-monospace,Consolas,monospace;word-break:break-all}
+.c .nd{font-size:12px;margin:3px 0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.c .m{display:flex;gap:6px;flex-wrap:wrap;font-size:10.5px;color:#5f6368}
+.tag{border-radius:8px;padding:0 6px;background:#eef4fb;color:#1B3F7A;font-weight:600}.tag.r{background:#fde8e8;color:#b3261e}
+.bic{font-size:11px;color:#1F8A8A;font-weight:600}
+.err{padding:20px;color:#b3261e}.load{padding:30px;color:#5f6368}
+</style></head><body>
+<div id="app"><div class="load">Đang đọc Register…</div></div>
+<script>
+var D=null,flt='ALL';
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+function draw(){
+ var who={};D.steps.forEach(function(s){D.cols[s].forEach(function(x){var k=x.bic.replace(/ \(.*$/,'');who[k]=(who[k]||0)+1})});
+ var h='<div class="top"><b>Quy trình hồ sơ</b><small>'+D.total+' hồ sơ · cập nhật '+esc(D.at)+'</small><div class="f">';
+ h+='<button data-f="ALL" class="'+(flt==='ALL'?'on':'')+'">Tất cả</button><button data-f="LATE" class="'+(flt==='LATE'?'on':'')+'">Quá hạn ('+D.late+')</button>';
+ Object.keys(who).filter(function(k){return k!=='—'}).forEach(function(k){h+='<button data-f="'+esc(k)+'" class="'+(flt===k?'on':'')+'">Đang ở '+esc(k)+' ('+who[k]+')</button>'});
+ h+='</div></div><div class="kpi">';
+ D.steps.forEach(function(s){h+='<div class="k"><b>'+D.cols[s].length+'</b><span>'+esc(s)+'</span></div>'});
+ h+='</div><div class="board">';
+ D.steps.forEach(function(s){
+  var it=D.cols[s].filter(function(x){return flt==='ALL'||(flt==='LATE'?x.late:x.bic.replace(/ \(.*$/,'')===flt)});
+  h+='<div class="col"><h4><span>'+esc(s)+'</span><span>'+it.length+'</span></h4>';
+  it.slice(0,60).forEach(function(x){
+   h+='<div class="c'+(x.late?' late':'')+'" data-at="'+esc(x.at)+'"><div class="so">'+esc(x.so)+(x.rev?' · Rev '+esc(x.rev):'')+'</div><div class="nd">'+esc(x.nd)+'</div>'+
+     '<div class="bic">Đang giữ: '+esc(x.bic)+'</div><div class="m"><span class="tag">'+esc(x.loai)+'</span>'+(x.han?'<span>hạn '+esc(x.han)+'</span>':'')+(x.cho!==''?'<span>chờ '+esc(x.cho)+' ngày</span>':'')+(x.late?'<span class="tag r">QUÁ HẠN</span>':'')+'</div></div>'});
+  if(it.length>60)h+='<div class="m">… còn '+(it.length-60)+' hồ sơ (xem tab TQN_QUY_TRINH)</div>';
+  h+='</div>'});
+ document.getElementById('app').innerHTML=h+'</div>';
+ Array.prototype.forEach.call(document.querySelectorAll('.f button'),function(b){b.onclick=function(){flt=b.getAttribute('data-f');draw()}});
+ Array.prototype.forEach.call(document.querySelectorAll('.c'),function(c){c.onclick=function(){google.script.run.tqnGoto(c.getAttribute('data-at'))}});
+}
+google.script.run.withSuccessHandler(function(d){D=d;draw()}).withFailureHandler(function(e){document.getElementById('app').innerHTML='<div class="err">'+esc(e.message||e)+'</div>'}).tqnWorkflowData();
+</script></body></html>

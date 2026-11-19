@@ -5,7 +5,7 @@ const fs = require('fs'), path = require('path'), vm = require('vm'), crypto = r
 const FIX = process.argv[2] || 'fixture_live.json', TODAY = process.argv[3] || '2026-11-19';
 const fx = JSON.parse(fs.readFileSync(path.join(__dirname, FIX), 'utf8'));
 const ORIGINAL = new Set(Object.keys(fx));
-const writes = [];   // [sheet, action]
+const writes = [], ALLOW = new Set();   // [sheet, action]
 const dec = v => (v && typeof v === 'object' && v.__d) ? new Date(v.__d) : (v === null || v === undefined ? '' : v);
 
 class Range {
@@ -13,13 +13,15 @@ class Range {
   getValues() { const o = []; for (let i = 0; i < this.nr; i++) { const row = []; for (let j = 0; j < this.nc; j++) row.push(this.sh.get(this.r + i, this.c + j)); o.push(row); } return o; }
   getFormulas() { const o = []; for (let i = 0; i < this.nr; i++) { const row = []; for (let j = 0; j < this.nc; j++) row.push(((this.sh.f[this.r + i - 1] || [])[this.c + j - 1]) || ''); o.push(row); } return o; }
   setValues(v) { this.sh.w('setValues'); if (v.length !== this.nr || v[0].length !== this.nc) throw new Error('setValues sai kích thước ' + this.sh.name); v.forEach((row, i) => row.forEach((x, j) => this.sh.set(this.r + i, this.c + j, x))); return this; }
+  setValue(x) { this.sh.w('setValue'); this.sh.set(this.r, this.c, x); return this; }
+  getValue() { return this.sh.get(this.r, this.c); }
   clearContent() { this.sh.w('clear'); for (let i = 0; i < this.nr; i++) for (let j = 0; j < this.nc; j++) this.sh.set(this.r + i, this.c + j, ''); return this; }
 }
 ['setFontWeight', 'setBackground', 'setFontColor', 'setNumberFormat'].forEach(m => Range.prototype[m] = function () { this.sh.w(m); return this; });
 
 class Sheet {
   constructor(name, data) { this.name = name; this.v = (data ? data.values : []).map(r => r.map(dec)); this.f = data ? data.formulas : []; }
-  w(a) { writes.push([this.name, a]); if (ORIGINAL.has(this.name)) throw new Error('GHI VÀO TAB GỐC: ' + this.name + ' (' + a + ')'); }
+  w(a) { writes.push([this.name, a]); if (ORIGINAL.has(this.name) && !ALLOW.has(this.name)) throw new Error('GHI VÀO TAB GỐC: ' + this.name + ' (' + a + ')'); }
   get(r, c) { const x = (this.v[r - 1] || [])[c - 1]; return x === undefined || x === null ? '' : x; }
   set(r, c, x) { while (this.v.length < r) this.v.push([]); const row = this.v[r - 1]; while (row.length < c) row.push(''); row[c - 1] = x; }
   getName() { return this.name; }
@@ -53,7 +55,7 @@ const dir = path.join(__dirname, '..', 'apps-script');
 fs.readdirSync(dir).filter(f => f.endsWith('.gs')).sort().forEach(f => vm.runInContext(fs.readFileSync(path.join(dir, f), 'utf8'), ctx, { filename: f }));
 
 // ---------------- TEST ----------------
-let pass = 0, fail = 0; const T = (name, ok, info) => { console.log((ok ? 'PASS ' : 'FAIL ') + name + (info ? '  | ' + info : '')); ok ? pass++ : fail++; };
+let pass = 0, fail = 0, expectErr; const T = (name, ok, info) => { console.log((ok ? 'PASS ' : 'FAIL ') + name + (info ? '  | ' + info : '')); ok ? pass++ : fail++; };
 const run = (code) => vm.runInContext(code, ctx);
 const today = new Date(TODAY + 'T08:00:00');
 ctx.__today = today;
@@ -113,6 +115,36 @@ T('U23 Trạng thái tự động báo đủ 3 dòng ✔', run('tqnAutoStatus()'
 run('tqnRemoveAll()');
 T('U24 Tắt tất cả: xóa hết lịch TQN', TRIG.length === 0, cnt());
 T('U25 Tự động mỗi giờ không ghi tab gốc', !writes.some(w => ORIGINAL.has(w[0])));
+// ---- S2: quy trình + cấp mã ----
+const wfr = run('(function(){var r=tqnRunAll_();return r.wf;})()');
+const sumSteps = Object.values(wfr.count).reduce((a, b) => a + b, 0);
+T('U26 Bảng quy trình: mỗi hồ sơ (Rev mới nhất) có đúng 1 bước + người giữ việc', wfr.rows.length > 0 && sumSteps === wfr.rows.length && wfr.rows.every(x => x[1]), JSON.stringify(wfr.count) + ' quá hạn=' + wfr.late);
+T('U27 Bước 5 (đã có kết quả) không còn ai giữ việc; bước 2–3 quá hạn mới gắn QUÁ HẠN', wfr.rows.filter(x => x[0].startsWith('5')).every(x => x[1] === '—') && wfr.rows.filter(x => x[11]).every(x => /^[23]/.test(x[0])));
+const ymd = run("tqnYymmdd_(new Date(), 'Asia/Ho_Chi_Minh')");
+T('U28 Xem trước RFI tiếp theo = 004 rev01 (sổ có 001–003)', run("tqnPreviewCode({type:'RFI'})") === ymd + '-COA-TBC-RFI-004 rev01', run("tqnPreviewCode({type:'RFI'})"));
+T('U29 RFC tiếp theo = 004; RFA nhóm COS tiếp theo = 003', run("tqnPreviewCode({type:'RFC'})") === ymd + '-COA-TBC-RFC-004' && run("tqnPreviewCode({type:'RFA',nhom:'COS'})") === ymd + '-COA-TBC-RFA-COS-003-rev01', run("tqnPreviewCode({type:'RFC'})") + ' | ' + run("tqnPreviewCode({type:'RFA',nhom:'COS'})"));
+const sdNums = sheets['SD'].v.slice(5).map(r => /COA\.NP\s*-\s*NT\s*-\s*SDS\s*-\s*(\d+)/i.exec(String(r[1] || ''))).filter(Boolean).map(m => +m[1]);
+const expSD = ymd + '-COA.NP-NT-SDS-' + String(Math.max(...sdNums) + 1).padStart(3, '0');
+T('U30 SDS gói NP tiếp theo = số lớn nhất trong sổ SD + 1', run("tqnPreviewCode({type:'SDS',goi:'NP'})") === expSD, run("tqnPreviewCode({type:'SDS',goi:'NP'})") + ' (cần ' + expSD + ')');
+const i1 = run("tqnIssueCode({type:'RFI',subject:'Thử cấp mã 1'})"), i2 = run("tqnIssueCode({type:'RFI',subject:'Thử cấp mã 2'})");
+T('U31 Cấp 2 lần liên tiếp ra 2 số khác nhau (004, 005) và lưu vào TQN_CAP_MA', i1.code.includes('RFI-004') && i2.code.includes('RFI-005') && sheets['TQN_CAP_MA'].getLastRow() === 3, i1.code + ' / ' + i2.code);
+T('U32 Số đã cấp không cấp lại (xem trước sau đó = 006)', run("tqnPreviewCode({type:'RFI'})").includes('RFI-006'));
+expectErr = (code, re) => { try { run(code); return false; } catch (e) { return re.test(e.message); } };
+T('U33 Thiếu nội dung thì không cấp', expectErr("tqnIssueCode({type:'RFI',subject:''})", /nội dung/));
+const rv = run("tqnReviseCode({from:'261116-COA-TBC-RFI-001 rev01'})");
+T('U34 Trình lại RFI-001 rev01 → giữ số 001, Rev 02, ngày hôm nay', rv.code === ymd + '-COA-TBC-RFI-001 rev02' && rv.rev === '02', rv.code);
+ALLOW.add('RFI');
+const rfiBefore = sheets['RFI'].getLastRow();
+const w1 = run("tqnIssueCode({type:'RFI',subject:'Ghi thử vào sổ',owner:'Nho',write:true})");
+const wr = +w1.where.split('!')[1];
+T('U35 Ghi vào sổ RFI: đúng dòng trống sau dòng có mã cuối, đúng mã + nội dung', w1.where.startsWith('RFI!') && sheets['RFI'].get(wr, 2) === w1.code && sheets['RFI'].get(wr, 3) === 'Ghi thử vào sổ', w1.where + ' (sổ trước có ' + rfiBefore + ' dòng)');
+const nextRow = wr + 1; sheets['RFI'].set(nextRow, 2, ''); sheets['RFI'].set(nextRow, 3, '');
+const ownCol = run("tqnDetailMap_(tqnSs_().getSheetByName('RFI').getRange(1,1,5,40).getValues()).owner") + 1;
+sheets['RFI'].set(nextRow, ownCol, 'đã có người gõ');
+const before = JSON.stringify(sheets['RFI'].v[nextRow - 1]);
+T('U36 Ô đích đã có chữ thì từ chối, không ghi đè, không ghi nửa chừng', expectErr("tqnIssueCode({type:'RFI',subject:'Thử đè',owner:'Nho',write:true})", /không ghi đè/) && JSON.stringify(sheets['RFI'].v[nextRow - 1]) === before);
+ALLOW.delete('RFI');
+T('U37 Loại chưa có mẫu thì báo rõ', expectErr("tqnPreviewCode({type:'XYZ'})", /Chưa có mẫu mã/));
 const qcRows = sheets['TQN_QC'].getLastRow() - 1;
 console.log(`\nTQN_DATA ${n2} dòng · TQN_QC ${qcRows} dòng · TQN_NHAC_HAN ${sheets['TQN_NHAC_HAN'].getLastRow() - 1} dòng`);
 console.log(`KẾT QUẢ: ${pass} PASS / ${fail} FAIL`);

@@ -13,8 +13,9 @@ function tqnHourlyJob() {
     tqnEnsureConfig_();
     var cfg = tqnConfig_(), imp = tqnImport_(cfg), qc = tqnQC_(cfg, imp), rem = tqnRemindList_(cfg, imp, new Date());
     tqnWriteRemind_(cfg, rem);
+    var wf = tqnBuildWorkflow_(cfg, imp, new Date());
     PropertiesService.getDocumentProperties().setProperty('lastHourly', Utilities.formatDate(new Date(), cfg.timezone, 'dd/MM/yyyy HH:mm'));
-    tqnAudit_('TU_DONG_GIO', 'Nhập & kiểm tự động', { du_lieu: imp.counts, qc: qc.byRule, nhac: rem.length });
+    tqnAudit_('TU_DONG_GIO', 'Nhập & kiểm tự động', { du_lieu: imp.counts, qc: qc.byRule, nhac: rem.length, quy_trinh: wf.count });
     return 'OK';
   } finally { lock.releaseLock(); }
 }
@@ -27,7 +28,7 @@ function tqnRemoveHourly_() {
 
 /** Bật tất cả. Bấm nhiều lần không sinh lịch trùng (xóa lịch cũ cùng tên trước). Trả danh sách dòng báo cáo. */
 function tqnSetupAll() {
-  tqnEnsureConfig_(); tqnEnsureWeatherConfig_();
+  tqnEnsureConfig_(); tqnEnsureWeatherConfig_(); tqnEnsureCodeConfig_();
   var out = [];
   tqnRemoveHourly_();
   ScriptApp.newTrigger('tqnHourlyJob').timeBased().everyHours(1).create();
