@@ -23,8 +23,8 @@ function tqnHslToHex_(h, s, l) {
 function tqnSoftBg_(hex) {
   var c = tqnHexToHsl_(hex); if (!c) return hex;
   if (c.l >= 0.97) return hex;                                   // trắng
-  if (c.s < 0.12) return c.l < 0.5 ? '#E8EDF4' : '#F6F7F9';      // xám / đen
-  if (c.l < 0.35) return '#E8EDF4';                              // xanh than đậm (cột ngăn) → xám xanh nhạt
+  if (c.s < 0.12) return c.l < 0.5 ? '#EEF1F5' : '#F7F8FA';      // xám / đen
+  if (c.l < 0.35) return '#EEF1F5';                              // xanh than đậm (cột ngăn) → vạch xám rất nhạt
   if (c.h >= 35 && c.h <= 65) return '#FFF5D6';                  // vàng
   return tqnHslToHex_(c.h, 0.62, 0.93);                          // màu khác → pastel cùng tông
 }

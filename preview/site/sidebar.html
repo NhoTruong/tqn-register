@@ -21,7 +21,7 @@
 .grp h5{margin:0 0 6px;font-size:10.5px;letter-spacing:.6px;text-transform:uppercase;color:var(--tx3);font-weight:700}
 .act{display:flex;align-items:center;gap:10px;width:100%;text-align:left;border:1px solid var(--bd);background:var(--card);border-radius:10px;padding:8px 10px;margin-bottom:6px;cursor:pointer;font:inherit;color:var(--tx);transition:border-color .15s,box-shadow .15s}
 .act:hover{border-color:var(--ac);box-shadow:0 2px 8px rgba(16,24,40,.06)}
-.act .ic{width:28px;height:28px;border-radius:8px;display:grid;place-items:center;background:var(--ab);color:var(--ac);flex:none;font-size:14px;font-weight:700}
+.act .ic{width:30px;height:30px;border-radius:8px;display:grid;place-items:center;background:var(--ab);color:var(--ac);flex:none}
 .act b{display:block;font-size:12.5px}.act span{display:block;font-size:11px;color:var(--tx3)}
 .act.pri{background:var(--navy);border-color:var(--navy);color:#fff}.act.pri span{color:#c9d6ee}.act.pri .ic{background:rgba(255,255,255,.15);color:#fff}
 .act:disabled{opacity:.6;cursor:wait}
@@ -39,14 +39,15 @@
 <div class="wrap" id="app"><div class="load">Đang đọc Register và kiểm tra…</div></div>
 <div class="toast" id="toast"></div>
 <script>
+var ICO={"refresh": "<path d=\"M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7\"/>", "board": "<rect x=\"3\" y=\"4\" width=\"18\" height=\"16\" rx=\"2\"/><path d=\"M9 4v16M15 4v16\"/>", "plus": "<path d=\"M12 5v14M5 12h14\"/>", "panel": "<rect x=\"3\" y=\"4\" width=\"18\" height=\"16\" rx=\"2\"/><path d=\"M15 4v16\"/>", "star": "<path d=\"M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z\"/>", "clock": "<circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M12 7v5l3 2\"/>", "cloud": "<path d=\"M7 18h10a4 4 0 0 0 .5-8 6 6 0 0 0-11.5 1.5A3.5 3.5 0 0 0 7 18z\"/>", "palette": "<path d=\"M12 3a9 9 0 1 0 0 18c1.1 0 1.5-.8 1.5-1.5 0-.9-.7-1.2-.7-2s.7-1.5 1.7-1.5H17a4 4 0 0 0 4-4c0-4.4-4-9-9-9z\"/><circle cx=\"7.5\" cy=\"11\" r=\"1\"/><circle cx=\"10\" cy=\"7\" r=\"1\"/><circle cx=\"15\" cy=\"7.5\" r=\"1\"/>", "undo": "<path d=\"M9 14L4 9l5-5\"/><path d=\"M4 9h10a6 6 0 0 1 0 12h-3\"/>", "spark": "<path d=\"M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z\"/><path d=\"M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z\"/>"};function svg(n){return '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+(ICO[n]||"")+"</svg>"}
 var D=null,TAB='home';
 var LV={'QUÁ HẠN':['#c5221f','#fce8e6'],'HẠN HÔM NAY':['#8a6100','#fef7e0'],'SẮP ĐẾN HẠN':['#1a56b8','#e8f0fe'],'LỖI':['#c5221f','#fce8e6'],'CẢNH BÁO':['#8a6100','#fef7e0']};
 var GROUPS=[
- ['Việc hằng ngày',[['tqnSidebarRefresh','↻','Nhập & kiểm tra','Đọc lại các sổ, báo lỗi, nhắc hạn',1],['tqnMenuWorkflow','▦','Kiểm soát quy trình','Ai đang giữ việc, hồ sơ quá hạn',1],['tqnMenuNewDoc','＋','Tạo hồ sơ / cấp mã','Cấp số hiệu, trình lại Rev+1',1]],'#1B3F7A','#e8f0fe'],
- ['Trợ lý AI',[['tqnMenuAiBatch','✦','AI rà hồ sơ cần xử lý','Tóm tắt, việc tiếp theo, nháp trả lời']],'#5b3fd1','#f1edfc'],
- ['Tự động',[['tqnMenuSetupAll','★','Bật tự động tất cả','Mỗi giờ · nhắc 07:00 · thời tiết 06:00'],['tqnMenuAutoStatus','◷','Trạng thái tự động','Xem lịch đang chạy']],'#0f7a6d','#e6f6f4'],
- ['Thời tiết',[['tqnMenuWeatherNow','☁','Cập nhật thời tiết ngay','Ghi vào tab Theo dõi thời tiết']],'#8a6100','#fef7e0'],
- ['Giao diện',[['tqnMenuTheme','◐','Giao diện dễ nhìn','Đổi màu các sổ (chỉ màu)'],['tqnMenuRestoreTheme','↺','Trả lại giao diện gốc','Khôi phục màu ban đầu']],'#4d5a6b','#f1f3f6']];
+ ['Việc hằng ngày',[['tqnSidebarRefresh','refresh','Nhập & kiểm tra','Đọc lại các sổ, báo lỗi, nhắc hạn',1],['tqnMenuWorkflow','board','Kiểm soát quy trình','Ai đang giữ việc, hồ sơ quá hạn',1],['tqnMenuNewDoc','plus','Tạo hồ sơ / cấp mã','Cấp số hiệu, trình lại Rev+1',1]],'#1B3F7A','#e8f0fe'],
+ ['Trợ lý AI',[['tqnMenuAiBatch','spark','AI rà hồ sơ cần xử lý','Tóm tắt, việc tiếp theo, nháp trả lời']],'#5b3fd1','#f1edfc'],
+ ['Tự động',[['tqnMenuSetupAll','star','Bật tự động tất cả','Mỗi giờ · nhắc 07:00 · thời tiết 06:00'],['tqnMenuAutoStatus','clock','Trạng thái tự động','Xem lịch đang chạy']],'#0f7a6d','#e6f6f4'],
+ ['Thời tiết',[['tqnMenuWeatherNow','cloud','Cập nhật thời tiết ngay','Ghi vào tab Theo dõi thời tiết']],'#8a6100','#fef7e0'],
+ ['Giao diện',[['tqnMenuTheme','palette','Giao diện dễ nhìn','Đổi màu các sổ (chỉ màu)'],['tqnMenuRestoreTheme','undo','Trả lại giao diện gốc','Khôi phục màu ban đầu']],'#4d5a6b','#f1f3f6']];
 function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
 function toast(t){var e=document.getElementById('toast');e.textContent=t;e.style.display='block';clearTimeout(e._t);e._t=setTimeout(function(){e.style.display='none'},2800)}
 function load(){document.getElementById('app').innerHTML='<div class="load">Đang đọc Register và kiểm tra…</div>';
@@ -62,7 +63,7 @@ function draw(){
  if(TAB==='home'){
   h+='<div class="kp">'+kp('Sổ trình duyệt',k.tong,'#94a3b8')+kp('Đang chờ',k.cho,'#e0a100','#8a6100')+kp('Quá hạn',k.quaHan,'#c5221f','#c5221f')+kp('Đã duyệt',k.duyet,'#1e7b3a','#1e7b3a')+'</div>';
   h+='<div class="note">Sổ chi tiết '+k.chiTiet+' hồ sơ · ghép được với sổ tổng '+k.ghep+' · '+(k.loi+k.canhBao)+' lỗi/cảnh báo</div>';
-  GROUPS.forEach(function(g){h+='<div class="grp"><h5>'+g[0]+'</h5>'+g[1].map(function(a){return '<button class="act'+(a[4]&&a[0]==='tqnSidebarRefresh'?' pri':'')+'" data-fn="'+a[0]+'" style="--ac:'+g[2]+';--ab:'+g[3]+'"><span class="ic">'+a[1]+'</span><span><b>'+esc(a[2])+'</b><span>'+esc(a[3])+'</span></span></button>'}).join('')+'</div>'});
+  GROUPS.forEach(function(g){h+='<div class="grp"><h5>'+g[0]+'</h5>'+g[1].map(function(a){return '<button class="act'+(a[4]&&a[0]==='tqnSidebarRefresh'?' pri':'')+'" data-fn="'+a[0]+'" style="--ac:'+g[2]+';--ab:'+g[3]+'"><span class="ic">'+svg(a[1])+'</span><span><b>'+esc(a[2])+'</b><span>'+esc(a[3])+'</span></span></button>'}).join('')+'</div>'});
  }else if(TAB==='rem'){
   h+=d.remind.length?d.remind.map(function(x){var c=LV[x.g]||['#4d5a6b','#f1f3f6'];return '<div class="it" style="--c:'+c[0]+';--b:'+c[1]+'" data-at="'+esc(x.at)+'"><span class="pill">'+esc(x.g)+(x.d!==''?' · '+esc(Math.abs(x.d))+' ngày':'')+'</span> <span class="m">hạn '+esc(x.han)+'</span><div class="d">'+esc(String(x.nd).slice(0,110))+'</div><div class="c2">'+esc(x.ma)+'</div></div>'}).join(''):'<div class="load">✓ Không có hồ sơ quá hạn hoặc sắp đến hạn</div>';
   if(d.remindTotal>d.remind.length)h+='<div class="note">Hiện '+d.remind.length+'/'+d.remindTotal+' việc gần nhất · đủ ở tab TQN_NHAC_HAN</div>';

@@ -23,7 +23,7 @@ body{font:13px Inter,Segoe UI,Arial,sans-serif;color:var(--tx);display:flex;flex
 .qg{display:flex;gap:6px;align-items:center;padding-right:14px;border-right:1px solid #e3e8ef;flex:none}.qg:last-child{border-right:0}
 .qg em{font:700 10px Inter,Arial;letter-spacing:.5px;text-transform:uppercase;color:#8792a2;font-style:normal;margin-right:2px;white-space:nowrap}
 .quick button{flex:none;display:flex;align-items:center;gap:6px;border:1px solid #e3e8ef;border-radius:8px;padding:6px 11px;font:600 12.5px Inter,Arial,sans-serif;background:#fff;color:#18212d;cursor:pointer;transition:border-color .15s,background .15s}
-.quick button i{font-style:normal;width:20px;height:20px;border-radius:6px;display:grid;place-items:center;background:var(--ab);color:var(--ac);font-size:12px}
+.quick button i{font-style:normal;width:22px;height:22px;border-radius:6px;display:grid;place-items:center;background:var(--ab);color:var(--ac)}
 .quick button:hover{border-color:var(--ac);background:#fafbfd}
 .quick button.pr{background:#1B3F7A;border-color:#1B3F7A;color:#fff}.quick button.pr i{background:rgba(255,255,255,.18);color:#fff}
 .main{flex:1;display:flex;min-height:0}
@@ -138,6 +138,9 @@ window.tqnAiAnalyze=async function(at){
  const o=tqnAiParse_(r.text);tqnAiSave_(rec,o,'Claude (bản xem thử)');o.so=rec['Số hiệu (nguyên văn)'];o.at=rec['Nguồn'];o.model='Claude (bản xem thử)';return o};
 </script>
 <script>
+var ICO={"refresh": "<path d=\"M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7\"/>", "board": "<rect x=\"3\" y=\"4\" width=\"18\" height=\"16\" rx=\"2\"/><path d=\"M9 4v16M15 4v16\"/>", "plus": "<path d=\"M12 5v14M5 12h14\"/>", "panel": "<rect x=\"3\" y=\"4\" width=\"18\" height=\"16\" rx=\"2\"/><path d=\"M15 4v16\"/>", "star": "<path d=\"M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z\"/>", "clock": "<circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M12 7v5l3 2\"/>", "cloud": "<path d=\"M7 18h10a4 4 0 0 0 .5-8 6 6 0 0 0-11.5 1.5A3.5 3.5 0 0 0 7 18z\"/>", "palette": "<path d=\"M12 3a9 9 0 1 0 0 18c1.1 0 1.5-.8 1.5-1.5 0-.9-.7-1.2-.7-2s.7-1.5 1.7-1.5H17a4 4 0 0 0 4-4c0-4.4-4-9-9-9z\"/><circle cx=\"7.5\" cy=\"11\" r=\"1\"/><circle cx=\"10\" cy=\"7\" r=\"1\"/><circle cx=\"15\" cy=\"7.5\" r=\"1\"/>", "undo": "<path d=\"M9 14L4 9l5-5\"/><path d=\"M4 9h10a6 6 0 0 1 0 12h-3\"/>", "spark": "<path d=\"M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z\"/><path d=\"M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z\"/>"};function svg(n){return '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+(ICO[n]||"")+"</svg>"}
+</script>
+<script>
 /* ===== Giao diện ===== */
 const $=id=>document.getElementById(id);
 function showModal(t,b){$('mT').textContent=t;$('mB').textContent=b;$('modal').classList.add('show')}
@@ -177,12 +180,12 @@ function buildMenu(){const box=$('menus');const b=document.createElement('button
  const sch=document.createElement('button');sch.textContent='(Xem thử) Lịch đã bật';sch.onclick=()=>{d.classList.remove('show');showModal('Lịch tự chạy (xem thử)',triggers.length?triggers.map(t=>t.fn+(String(t.h).startsWith('mỗi')?' '+t.h:' lúc ~'+t.h+':00 hằng ngày')).join('\n')+'\n\nBản thật: Google tự chạy cả khi máy tắt.':'Chưa bật lịch nào.')};
  d.appendChild(document.createElement('hr'));d.appendChild(sch);
  const q=$('quick');[
-  ['Hằng ngày','#1B3F7A','#e8f0fe',[['↻','Nhập & kiểm tra','tqnMenuRun',1],['▦','Kiểm soát quy trình + AI','tqnMenuWorkflow'],['＋','Tạo hồ sơ / cấp mã','tqnMenuNewDoc'],['☰','Bảng điều khiển','tqnShowSidebar']]],
-  ['Tự động','#0f7a6d','#e6f6f4',[['★','Bật tự động tất cả','tqnMenuSetupAll'],['◷','Trạng thái','tqnMenuAutoStatus']]],
-  ['Thời tiết','#8a6100','#fef7e0',[['☁','Cập nhật ngay','tqnMenuWeatherNow']]],
-  ['Giao diện','#4d5a6b','#f1f3f6',[['◐','Dễ nhìn','tqnMenuTheme'],['↺','Trả lại gốc','tqnMenuRestoreTheme']]]
+  ['Hằng ngày','#1B3F7A','#e8f0fe',[['refresh','Nhập & kiểm tra','tqnMenuRun',1],['board','Kiểm soát quy trình + AI','tqnMenuWorkflow'],['plus','Tạo hồ sơ / cấp mã','tqnMenuNewDoc'],['panel','Bảng điều khiển','tqnShowSidebar']]],
+  ['Tự động','#0f7a6d','#e6f6f4',[['star','Bật tự động tất cả','tqnMenuSetupAll'],['clock','Trạng thái','tqnMenuAutoStatus']]],
+  ['Thời tiết','#8a6100','#fef7e0',[['cloud','Cập nhật ngay','tqnMenuWeatherNow']]],
+  ['Giao diện','#4d5a6b','#f1f3f6',[['palette','Dễ nhìn','tqnMenuTheme'],['undo','Trả lại gốc','tqnMenuRestoreTheme']]]
  ].forEach(([g,ac,ab,items])=>{const w=document.createElement('div');w.className='qg';w.innerHTML='<em>'+g+'</em>';
-  items.forEach(([ic,l,f,pr])=>{if(!menuItems.some(m=>m&&m[1]===f))return;const x=document.createElement('button');x.style.setProperty('--ac',ac);x.style.setProperty('--ab',ab);x.innerHTML='<i>'+ic+'</i>'+l;if(pr)x.className='pr';x.onclick=()=>runFn(f);w.appendChild(x)});q.appendChild(w)});
+  items.forEach(([ic,l,f,pr])=>{if(!menuItems.some(m=>m&&m[1]===f))return;const x=document.createElement('button');x.style.setProperty('--ac',ac);x.style.setProperty('--ab',ab);x.innerHTML='<i>'+svg(ic)+'</i>'+l;if(pr)x.className='pr';x.onclick=()=>runFn(f);w.appendChild(x)});q.appendChild(w)});
  b.onclick=e=>{e.stopPropagation();d.style.left=b.offsetLeft+'px';d.classList.toggle('show')};box.appendChild(b);box.appendChild(d);document.addEventListener('click',()=>d.classList.remove('show'))}
 let sideSrc='',HTML={};
 const GSHIM='<script>window.google={script:{run:(function(){function mk(ok,fail){return new Proxy({},{get:function(_,k){if(k==="withSuccessHandler")return function(f){return mk(f,fail)};if(k==="withFailureHandler")return function(f){return mk(ok,f)};return function(){var a=arguments;setTimeout(function(){try{Promise.resolve(parent[k].apply(parent,a)).then(function(r){parent.afterCall(k);ok&&ok(r)},function(e){fail&&fail(e)})}catch(e){fail&&fail(e)}},0)}}})}return mk()})()},host:{close:function(){parent.closeDialog()}}};<\/script>';
@@ -197,7 +200,7 @@ function closeSide(){$('side').classList.remove('show')}
 (async()=>{const data=await (await fetch('data.json')).json();WEATHER_RAW=data.weather_raw;STYLES=data.styles||{};HTML=data.html;sideSrc=HTML.Sidebar;
  data.sheets.forEach(s=>{const sh=new Sheet(s.name,s);book.push(sh);byName[s.name]=sh;ORIGINAL.add(s.name)});
  $('src').textContent='Bản chụp Register · '+data.sheets.length+' tab · ẩn '+data.pii_hidden.length+' tab có SĐT/email';
- onOpen();buildMenu();showSheet('Sổ trình duyệt');toast('Bấm các nút phía trên để chạy thử: Nhập & kiểm tra, Bảng điều khiển, Thời tiết…');
+ onOpen();buildMenu();try{tqnEnsureConfig_();tqnApplyTheme()}catch(e){}showSheet('Sổ trình duyệt');toast('Đang xem ở chế độ Giao diện dễ nhìn · bấm "Trả lại gốc" để xem màu ban đầu');
  window.__ready=true})();
 </script>
 </body></html>
