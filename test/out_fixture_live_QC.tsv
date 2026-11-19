@@ -1,43 +1,43 @@
 Mức	Mã luật	Vị trí	Số hiệu	Chi tiết	Kiểm lúc
-LỖI	Q01_TRUNG_MA	SD!30, SD!32	261117-COA.NP-NT-SDS-025	Một số hiệu dùng cho 2 hồ sơ khác nội dung: "Bản vẽ chi tiết thép thang bộ REHAUS - RE4" / "Bản vẽ chi tiết thép cột tầng 1 đến mái REHAUS - RE4"	2026-11-19T05:30:08.371Z
-LỖI	Q01_TRUNG_MA	SD!31, SD!33	261117-COA.NP-NT-SDS-026	Một số hiệu dùng cho 2 hồ sơ khác nội dung: "Bản vẽ chi tiết thép thang bộ REHAUS - RE5" / "Bản vẽ chi tiết thép cột tầng 1 đến mái REHAUS - RE5"	2026-11-19T05:30:08.371Z
-LỖI	Q09_CONG_THUC	RFA!Q6 (cả cột)		Số ngày CĐT phản hồi = ngày CĐT trừ cột M là "Số ngày" TVGS (một con số), kết quả sai. Công thức: =IF(OR(P6="",M6=""),"",P6-M6)	2026-11-19T05:30:08.371Z
-LỖI	Q09_CONG_THUC	RFC!Q6 (cả cột)		Số ngày CĐT phản hồi = ngày CĐT trừ cột M là "Số ngày" TVGS (một con số), kết quả sai. Công thức: =IF(OR(P6="",M6=""),"",P6-M6)	2026-11-19T05:30:08.371Z
-LỖI	Q09_CONG_THUC	Hồ sơ an toàn!Q6 (cả cột)		Số ngày CĐT phản hồi = ngày CĐT trừ cột M là "Số ngày" TVGS (một con số), kết quả sai. Công thức: =IF(OR(P6="",M6=""),"",P6-M6)	2026-11-19T05:30:08.371Z
-CẢNH BÁO	Q02_KHOANG_TRANG	M0S!6	261113-COA.NP-NT-MSS-001	Số hiệu có khoảng trắng đầu/cuối	2026-11-19T05:30:08.371Z
-CẢNH BÁO	Q02_KHOANG_TRANG	M0S!7	261113-COA.NP-NT-MSS-002	Số hiệu có khoảng trắng đầu/cuối	2026-11-19T05:30:08.371Z
-CẢNH BÁO	Q02_KHOANG_TRANG	M0S!8	261113-COA.NP-NT-MSS-004	Số hiệu có khoảng trắng đầu/cuối	2026-11-19T05:30:08.371Z
-CẢNH BÁO	Q02_KHOANG_TRANG	M0S!9	261113-COA.NP-NT-MSS-005	Số hiệu có khoảng trắng đầu/cuối	2026-11-19T05:30:08.371Z
-CẢNH BÁO	Q02_KHOANG_TRANG	M0S!10	261113-COA.NP-NT-MSS-006	Số hiệu có khoảng trắng đầu/cuối	2026-11-19T05:30:08.371Z
-CẢNH BÁO	Q02_KHOANG_TRANG	M0S!11	261113-COA.NP-NT-MSS-007	Số hiệu có khoảng trắng đầu/cuối	2026-11-19T05:30:08.371Z
-CẢNH BÁO	Q02_KHOANG_TRANG	M0S!12	261113-COA.NP-NT-MSS-008	Số hiệu có khoảng trắng đầu/cuối	2026-11-19T05:30:08.371Z
-CẢNH BÁO	Q02_KHOANG_TRANG	M0S!13	261113-COA.NP-NT-MSS-009	Số hiệu có khoảng trắng đầu/cuối	2026-11-19T05:30:08.371Z
-CẢNH BÁO	Q02_KHOANG_TRANG	M0S!14	261113-COA.NP-NT-MSS-010	Số hiệu có khoảng trắng đầu/cuối	2026-11-19T05:30:08.371Z
-CẢNH BÁO	Q02_KHOANG_TRANG	M0S!15	261113-COA.NP-NT-MSS-011	Số hiệu có khoảng trắng đầu/cuối	2026-11-19T05:30:08.371Z
-CẢNH BÁO	Q02_KHOANG_TRANG	M0S!16	261113-COA.NP-NT-MSS-012	Số hiệu có khoảng trắng đầu/cuối	2026-11-19T05:30:08.371Z
-CẢNH BÁO	Q02_KHOANG_TRANG	RFI!8	261116-COA-TBC-RFI-003 rev01	Số hiệu có khoảng trắng hoặc tab thừa: "261116- COA-TBC-RFI-003 rev01"	2026-11-19T05:30:08.371Z
-CẢNH BÁO	Q05_CHUA_VAO_SO_TONG	SD!6	261117-COA.NP-NT-SDS-001	Sổ chi tiết ghi "Đã trình duyệt" nhưng không tìm thấy dòng tương ứng trong Sổ trình duyệt	2026-11-19T05:30:08.371Z
-CẢNH BÁO	Q05_CHUA_VAO_SO_TONG	SD!7	261117-COA.NP-NT-SDS-002	Sổ chi tiết ghi "Đã trình duyệt" nhưng không tìm thấy dòng tương ứng trong Sổ trình duyệt	2026-11-19T05:30:08.371Z
-CẢNH BÁO	Q05_CHUA_VAO_SO_TONG	SD!8	261117-COA.NP-NT-SDS-003	Sổ chi tiết ghi "Đã trình duyệt" nhưng không tìm thấy dòng tương ứng trong Sổ trình duyệt	2026-11-19T05:30:08.371Z
-CẢNH BÁO	Q05_CHUA_VAO_SO_TONG	SD!9	261117-COA.NP-NT-SDS-004	Sổ chi tiết ghi "Đã trình duyệt" nhưng không tìm thấy dòng tương ứng trong Sổ trình duyệt	2026-11-19T05:30:08.371Z
-CẢNH BÁO	Q05_CHUA_VAO_SO_TONG	M0S!6	261113-COA.NP-NT-MSS-001	Sổ chi tiết ghi "Đã trình duyệt" nhưng không tìm thấy dòng tương ứng trong Sổ trình duyệt	2026-11-19T05:30:08.371Z
-CẢNH BÁO	Q05_CHUA_VAO_SO_TONG	M0S!7	261113-COA.NP-NT-MSS-002	Sổ chi tiết ghi "Đã trình duyệt" nhưng không tìm thấy dòng tương ứng trong Sổ trình duyệt	2026-11-19T05:30:08.371Z
-CẢNH BÁO	Q05_CHUA_VAO_SO_TONG	M0S!8	261113-COA.NP-NT-MSS-004	Sổ chi tiết ghi "Đã trình duyệt" nhưng không tìm thấy dòng tương ứng trong Sổ trình duyệt	2026-11-19T05:30:08.371Z
-CẢNH BÁO	Q05_CHUA_VAO_SO_TONG	M0S!12	261113-COA.NP-NT-MSS-008	Sổ chi tiết ghi "Đã duyệt" nhưng không tìm thấy dòng tương ứng trong Sổ trình duyệt	2026-11-19T05:30:08.371Z
-CẢNH BÁO	Q07_LECH_TINH_TRANG	RFI!6 ↔ Sổ trình duyệt!24	261116-COA-TBC-RFI-001 rev01	Sổ tổng: "Đã duyệt" nhưng sổ chi tiết vẫn: "Đã trình duyệt"	2026-11-19T05:30:08.371Z
-CẢNH BÁO	Q08_Y_KIEN_LAP	RFA!6, RFC!6	261111-COA-TBC-RFA-COS-001-rev01 / 261116-COA-TBC-RFC-001	Cùng một ý kiến CĐT ở 2 hồ sơ khác nhau, kiểm có chép nhầm: "Chủ đầu tư đồng ý phê duyệt cọc thử, sau khi có kết quả đánh giá chất lượng Chủ đầu tư sẽ phê duyệt triển khai cọc đại t"	2026-11-19T05:30:08.371Z
-CẢNH BÁO	Q11_NGAY_TUONG_LAI	SD!10	261117-COA.NP-NT-SDS-005	Cột "Thực tế" (ngày trình) ghi 24/11/2026, sau hôm nay: có thể là ngày kế hoạch nhập nhầm cột Thực tế	2026-11-19T05:30:08.371Z
-CẢNH BÁO	Q11_NGAY_TUONG_LAI	SD!11	261117-COA.NP-NT-SDS-006	Cột "Thực tế" (ngày trình) ghi 24/11/2026, sau hôm nay: có thể là ngày kế hoạch nhập nhầm cột Thực tế	2026-11-19T05:30:08.371Z
-CẢNH BÁO	Q11_NGAY_TUONG_LAI	SD!12	261117-COA.NP-NT-SDS-007	Cột "Thực tế" (ngày trình) ghi 24/11/2026, sau hôm nay: có thể là ngày kế hoạch nhập nhầm cột Thực tế	2026-11-19T05:30:08.371Z
-CẢNH BÁO	Q11_NGAY_TUONG_LAI	SD!13	261117-COA.NP-NT-SDS-008	Cột "Thực tế" (ngày trình) ghi 24/11/2026, sau hôm nay: có thể là ngày kế hoạch nhập nhầm cột Thực tế	2026-11-19T05:30:08.371Z
-CẢNH BÁO	Q11_NGAY_TUONG_LAI	SD!32	261117-COA.NP-NT-SDS-025	Cột "Thực tế" (ngày trình) ghi 21/11/2026, sau hôm nay: có thể là ngày kế hoạch nhập nhầm cột Thực tế	2026-11-19T05:30:08.371Z
-CẢNH BÁO	Q11_NGAY_TUONG_LAI	SD!33	261117-COA.NP-NT-SDS-026	Cột "Thực tế" (ngày trình) ghi 21/11/2026, sau hôm nay: có thể là ngày kế hoạch nhập nhầm cột Thực tế	2026-11-19T05:30:08.371Z
-THÔNG TIN	Q10_QUA_HAN	Sổ trình duyệt!36	20260814.DESCOS.DB01.COA07.001.R00	Quá hạn phản hồi từ 15/08/2026: Cập nhật nội dung chỉnh sửa BVTC nhà TM3	2026-11-19T05:30:08.371Z
-THÔNG TIN	Q10_QUA_HAN	Sổ trình duyệt!37	20260819.DESCOS.DB01.HAUS07.001.R00	Quá hạn phản hồi từ 20/08/2026: Thông báo nhà thầu Catinat trình duyệt vật liệu, thiết bị còn thiếu của công trình nhà TM3	2026-11-19T05:30:08.371Z
-THÔNG TIN	Q10_QUA_HAN	Sổ trình duyệt!44	20260922.DESCOS.DB01.DE08.COA07.001.R00	Quá hạn phản hồi từ 23/09/2026: Công văn Yêu cầu sự có mặt của Giám đốc nhà thầu tại dự án để trực tiếp điều hành thi công	2026-11-19T05:30:08.371Z
-THÔNG TIN	Q10_QUA_HAN	Sổ trình duyệt!45	20260922.DESCOS.DB01.DE08.COA07.002.R00	Quá hạn phản hồi từ 23/09/2026: Công văn Cảnh báo chậm trễ đệ trình hồ sơ phê duyệt vật liệu đầu vào nhà Thương mại TM3	2026-11-19T05:30:08.371Z
-THÔNG TIN	Q10_QUA_HAN	Sổ trình duyệt!50	20261011.GEN.HAUS04.001.R00	Quá hạn phản hồi từ 13/10/2026: 261006.QNG.COA.NHSL.MOM_Weekly Meeting_REV16_Biên bản cuộc họp Nội bộ Tuần	2026-11-19T05:30:08.371Z
-THÔNG TIN	Q10_QUA_HAN	Sổ trình duyệt!51	20261012.DESCOS.DB01.DE08.COA07.001.R00	Quá hạn phản hồi từ 13/10/2026: Công văn chấn chỉnh tiến độ thi công, phạt chậm trễ tiến độ theo điều khoản hợp đồng	2026-11-19T05:30:08.371Z
-THÔNG TIN	Q10_QUA_HAN	Sổ trình duyệt!52	20261015.DESCOS.DB01.DE08.COA07.001.R00	Quá hạn phản hồi từ 16/10/2026: Công văn chấn chỉnh tiến độ thi công, yêu cầu thay thế nhân sự và bổ sung nhân sự theo hợp	2026-11-19T05:30:08.371Z
-THÔNG TIN	Q10_QUA_HAN	Sổ trình duyệt!53	20261024.DESCOS.DB01.DE08.COA07.001.R00	Quá hạn phản hồi từ 25/10/2026: Công văn chậm trễ hoàn thiện và thi công hệ thống MEP phòng kỹ thuật nhà điều hành bán hàn	2026-11-19T05:30:08.371Z
-THÔNG TIN	Q10_QUA_HAN	Sổ trình duyệt!59	20261112.COT.TC39.NTP01.C07.TBCONS.02C.001.R00	Quá hạn phản hồi từ 18/11/2026: COA_TBC_Đệ trình Hồ sơ tạm ứng vật tư_Long Thịnh Phát	2026-11-19T05:30:08.371Z
+LỖI	Q01_TRUNG_MA	SD!30, SD!32	261117-COA.NP-NT-SDS-025	Một số hiệu dùng cho 2 hồ sơ khác nội dung: "Bản vẽ chi tiết thép thang bộ REHAUS - RE4" / "Bản vẽ chi tiết thép cột tầng 1 đến mái REHAUS - RE4"	2026-11-19T05:37:25.715Z
+LỖI	Q01_TRUNG_MA	SD!31, SD!33	261117-COA.NP-NT-SDS-026	Một số hiệu dùng cho 2 hồ sơ khác nội dung: "Bản vẽ chi tiết thép thang bộ REHAUS - RE5" / "Bản vẽ chi tiết thép cột tầng 1 đến mái REHAUS - RE5"	2026-11-19T05:37:25.715Z
+LỖI	Q09_CONG_THUC	RFA!Q6 (cả cột)		Số ngày CĐT phản hồi = ngày CĐT trừ cột M là "Số ngày" TVGS (một con số), kết quả sai. Công thức: =IF(OR(P6="",M6=""),"",P6-M6)	2026-11-19T05:37:25.715Z
+LỖI	Q09_CONG_THUC	RFC!Q6 (cả cột)		Số ngày CĐT phản hồi = ngày CĐT trừ cột M là "Số ngày" TVGS (một con số), kết quả sai. Công thức: =IF(OR(P6="",M6=""),"",P6-M6)	2026-11-19T05:37:25.715Z
+LỖI	Q09_CONG_THUC	Hồ sơ an toàn!Q6 (cả cột)		Số ngày CĐT phản hồi = ngày CĐT trừ cột M là "Số ngày" TVGS (một con số), kết quả sai. Công thức: =IF(OR(P6="",M6=""),"",P6-M6)	2026-11-19T05:37:25.715Z
+CẢNH BÁO	Q02_KHOANG_TRANG	M0S!6	261113-COA.NP-NT-MSS-001	Số hiệu có khoảng trắng đầu/cuối	2026-11-19T05:37:25.715Z
+CẢNH BÁO	Q02_KHOANG_TRANG	M0S!7	261113-COA.NP-NT-MSS-002	Số hiệu có khoảng trắng đầu/cuối	2026-11-19T05:37:25.715Z
+CẢNH BÁO	Q02_KHOANG_TRANG	M0S!8	261113-COA.NP-NT-MSS-004	Số hiệu có khoảng trắng đầu/cuối	2026-11-19T05:37:25.715Z
+CẢNH BÁO	Q02_KHOANG_TRANG	M0S!9	261113-COA.NP-NT-MSS-005	Số hiệu có khoảng trắng đầu/cuối	2026-11-19T05:37:25.715Z
+CẢNH BÁO	Q02_KHOANG_TRANG	M0S!10	261113-COA.NP-NT-MSS-006	Số hiệu có khoảng trắng đầu/cuối	2026-11-19T05:37:25.715Z
+CẢNH BÁO	Q02_KHOANG_TRANG	M0S!11	261113-COA.NP-NT-MSS-007	Số hiệu có khoảng trắng đầu/cuối	2026-11-19T05:37:25.715Z
+CẢNH BÁO	Q02_KHOANG_TRANG	M0S!12	261113-COA.NP-NT-MSS-008	Số hiệu có khoảng trắng đầu/cuối	2026-11-19T05:37:25.715Z
+CẢNH BÁO	Q02_KHOANG_TRANG	M0S!13	261113-COA.NP-NT-MSS-009	Số hiệu có khoảng trắng đầu/cuối	2026-11-19T05:37:25.715Z
+CẢNH BÁO	Q02_KHOANG_TRANG	M0S!14	261113-COA.NP-NT-MSS-010	Số hiệu có khoảng trắng đầu/cuối	2026-11-19T05:37:25.715Z
+CẢNH BÁO	Q02_KHOANG_TRANG	M0S!15	261113-COA.NP-NT-MSS-011	Số hiệu có khoảng trắng đầu/cuối	2026-11-19T05:37:25.715Z
+CẢNH BÁO	Q02_KHOANG_TRANG	M0S!16	261113-COA.NP-NT-MSS-012	Số hiệu có khoảng trắng đầu/cuối	2026-11-19T05:37:25.715Z
+CẢNH BÁO	Q02_KHOANG_TRANG	RFI!8	261116-COA-TBC-RFI-003 rev01	Số hiệu có khoảng trắng hoặc tab thừa: "261116- COA-TBC-RFI-003 rev01"	2026-11-19T05:37:25.715Z
+CẢNH BÁO	Q05_CHUA_VAO_SO_TONG	SD!6	261117-COA.NP-NT-SDS-001	Sổ chi tiết ghi "Đã trình duyệt" nhưng không tìm thấy dòng tương ứng trong Sổ trình duyệt	2026-11-19T05:37:25.715Z
+CẢNH BÁO	Q05_CHUA_VAO_SO_TONG	SD!7	261117-COA.NP-NT-SDS-002	Sổ chi tiết ghi "Đã trình duyệt" nhưng không tìm thấy dòng tương ứng trong Sổ trình duyệt	2026-11-19T05:37:25.715Z
+CẢNH BÁO	Q05_CHUA_VAO_SO_TONG	SD!8	261117-COA.NP-NT-SDS-003	Sổ chi tiết ghi "Đã trình duyệt" nhưng không tìm thấy dòng tương ứng trong Sổ trình duyệt	2026-11-19T05:37:25.715Z
+CẢNH BÁO	Q05_CHUA_VAO_SO_TONG	SD!9	261117-COA.NP-NT-SDS-004	Sổ chi tiết ghi "Đã trình duyệt" nhưng không tìm thấy dòng tương ứng trong Sổ trình duyệt	2026-11-19T05:37:25.715Z
+CẢNH BÁO	Q05_CHUA_VAO_SO_TONG	M0S!6	261113-COA.NP-NT-MSS-001	Sổ chi tiết ghi "Đã trình duyệt" nhưng không tìm thấy dòng tương ứng trong Sổ trình duyệt	2026-11-19T05:37:25.715Z
+CẢNH BÁO	Q05_CHUA_VAO_SO_TONG	M0S!7	261113-COA.NP-NT-MSS-002	Sổ chi tiết ghi "Đã trình duyệt" nhưng không tìm thấy dòng tương ứng trong Sổ trình duyệt	2026-11-19T05:37:25.715Z
+CẢNH BÁO	Q05_CHUA_VAO_SO_TONG	M0S!8	261113-COA.NP-NT-MSS-004	Sổ chi tiết ghi "Đã trình duyệt" nhưng không tìm thấy dòng tương ứng trong Sổ trình duyệt	2026-11-19T05:37:25.715Z
+CẢNH BÁO	Q05_CHUA_VAO_SO_TONG	M0S!12	261113-COA.NP-NT-MSS-008	Sổ chi tiết ghi "Đã duyệt" nhưng không tìm thấy dòng tương ứng trong Sổ trình duyệt	2026-11-19T05:37:25.715Z
+CẢNH BÁO	Q07_LECH_TINH_TRANG	RFI!6 ↔ Sổ trình duyệt!24	261116-COA-TBC-RFI-001 rev01	Sổ tổng: "Đã duyệt" nhưng sổ chi tiết vẫn: "Đã trình duyệt"	2026-11-19T05:37:25.715Z
+CẢNH BÁO	Q08_Y_KIEN_LAP	RFA!6, RFC!6	261111-COA-TBC-RFA-COS-001-rev01 / 261116-COA-TBC-RFC-001	Cùng một ý kiến CĐT ở 2 hồ sơ khác nhau, kiểm có chép nhầm: "Chủ đầu tư đồng ý phê duyệt cọc thử, sau khi có kết quả đánh giá chất lượng Chủ đầu tư sẽ phê duyệt triển khai cọc đại t"	2026-11-19T05:37:25.715Z
+CẢNH BÁO	Q11_NGAY_TUONG_LAI	SD!10	261117-COA.NP-NT-SDS-005	Cột "Thực tế" (ngày trình) ghi 24/11/2026, sau hôm nay: có thể là ngày kế hoạch nhập nhầm cột Thực tế	2026-11-19T05:37:25.715Z
+CẢNH BÁO	Q11_NGAY_TUONG_LAI	SD!11	261117-COA.NP-NT-SDS-006	Cột "Thực tế" (ngày trình) ghi 24/11/2026, sau hôm nay: có thể là ngày kế hoạch nhập nhầm cột Thực tế	2026-11-19T05:37:25.715Z
+CẢNH BÁO	Q11_NGAY_TUONG_LAI	SD!12	261117-COA.NP-NT-SDS-007	Cột "Thực tế" (ngày trình) ghi 24/11/2026, sau hôm nay: có thể là ngày kế hoạch nhập nhầm cột Thực tế	2026-11-19T05:37:25.715Z
+CẢNH BÁO	Q11_NGAY_TUONG_LAI	SD!13	261117-COA.NP-NT-SDS-008	Cột "Thực tế" (ngày trình) ghi 24/11/2026, sau hôm nay: có thể là ngày kế hoạch nhập nhầm cột Thực tế	2026-11-19T05:37:25.715Z
+CẢNH BÁO	Q11_NGAY_TUONG_LAI	SD!32	261117-COA.NP-NT-SDS-025	Cột "Thực tế" (ngày trình) ghi 21/11/2026, sau hôm nay: có thể là ngày kế hoạch nhập nhầm cột Thực tế	2026-11-19T05:37:25.715Z
+CẢNH BÁO	Q11_NGAY_TUONG_LAI	SD!33	261117-COA.NP-NT-SDS-026	Cột "Thực tế" (ngày trình) ghi 21/11/2026, sau hôm nay: có thể là ngày kế hoạch nhập nhầm cột Thực tế	2026-11-19T05:37:25.715Z
+THÔNG TIN	Q10_QUA_HAN	Sổ trình duyệt!36	20260814.DESCOS.DB01.COA07.001.R00	Quá hạn phản hồi từ 15/08/2026: Cập nhật nội dung chỉnh sửa BVTC nhà TM3	2026-11-19T05:37:25.715Z
+THÔNG TIN	Q10_QUA_HAN	Sổ trình duyệt!37	20260819.DESCOS.DB01.HAUS07.001.R00	Quá hạn phản hồi từ 20/08/2026: Thông báo nhà thầu Catinat trình duyệt vật liệu, thiết bị còn thiếu của công trình nhà TM3	2026-11-19T05:37:25.715Z
+THÔNG TIN	Q10_QUA_HAN	Sổ trình duyệt!44	20260922.DESCOS.DB01.DE08.COA07.001.R00	Quá hạn phản hồi từ 23/09/2026: Công văn Yêu cầu sự có mặt của Giám đốc nhà thầu tại dự án để trực tiếp điều hành thi công	2026-11-19T05:37:25.715Z
+THÔNG TIN	Q10_QUA_HAN	Sổ trình duyệt!45	20260922.DESCOS.DB01.DE08.COA07.002.R00	Quá hạn phản hồi từ 23/09/2026: Công văn Cảnh báo chậm trễ đệ trình hồ sơ phê duyệt vật liệu đầu vào nhà Thương mại TM3	2026-11-19T05:37:25.715Z
+THÔNG TIN	Q10_QUA_HAN	Sổ trình duyệt!50	20261011.GEN.HAUS04.001.R00	Quá hạn phản hồi từ 13/10/2026: 261006.QNG.COA.NHSL.MOM_Weekly Meeting_REV16_Biên bản cuộc họp Nội bộ Tuần	2026-11-19T05:37:25.715Z
+THÔNG TIN	Q10_QUA_HAN	Sổ trình duyệt!51	20261012.DESCOS.DB01.DE08.COA07.001.R00	Quá hạn phản hồi từ 13/10/2026: Công văn chấn chỉnh tiến độ thi công, phạt chậm trễ tiến độ theo điều khoản hợp đồng	2026-11-19T05:37:25.715Z
+THÔNG TIN	Q10_QUA_HAN	Sổ trình duyệt!52	20261015.DESCOS.DB01.DE08.COA07.001.R00	Quá hạn phản hồi từ 16/10/2026: Công văn chấn chỉnh tiến độ thi công, yêu cầu thay thế nhân sự và bổ sung nhân sự theo hợp	2026-11-19T05:37:25.715Z
+THÔNG TIN	Q10_QUA_HAN	Sổ trình duyệt!53	20261024.DESCOS.DB01.DE08.COA07.001.R00	Quá hạn phản hồi từ 25/10/2026: Công văn chậm trễ hoàn thiện và thi công hệ thống MEP phòng kỹ thuật nhà điều hành bán hàn	2026-11-19T05:37:25.715Z
+THÔNG TIN	Q10_QUA_HAN	Sổ trình duyệt!59	20261112.COT.TC39.NTP01.C07.TBCONS.02C.001.R00	Quá hạn phản hồi từ 18/11/2026: COA_TBC_Đệ trình Hồ sơ tạm ứng vật tư_Long Thịnh Phát	2026-11-19T05:37:25.715Z
