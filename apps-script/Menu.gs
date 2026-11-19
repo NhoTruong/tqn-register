@@ -11,6 +11,10 @@ function onOpen() {
     .addItem('Bật nhắc hạn hằng ngày', 'tqnMenuInstallDaily')
     .addItem('Tắt nhắc hạn hằng ngày', 'tqnMenuRemoveDaily')
     .addSeparator()
+    .addItem('Thời tiết: cập nhật ngay', 'tqnMenuWeatherNow')
+    .addItem('Thời tiết: bật 06:00 hằng ngày', 'tqnMenuWeatherOn')
+    .addItem('Thời tiết: tắt', 'tqnMenuWeatherOff')
+    .addSeparator()
     .addItem('Cài đặt (tạo TQN_CONFIG)', 'tqnMenuSetup')
     .addToUi();
 }
@@ -50,7 +54,7 @@ function tqnMenuInstallDaily() {
   SpreadsheetApp.getUi().alert('Đã bật nhắc hạn hằng ngày khoảng ' + h + 'h. Google có thể chạy lệch ±15 phút.\nGửi mail chỉ khi TQN_CONFIG: remind_email_enabled = Có và có remind_recipients.');
 }
 function tqnMenuRemoveDaily() { SpreadsheetApp.getUi().alert('Đã tắt ' + tqnRemoveDaily(false) + ' lịch nhắc hạn.'); }
-function tqnMenuSetup() { tqnEnsureConfig_(); tqnSs_().setActiveSheet(tqnSs_().getSheetByName(TQN.SH_CONFIG)); }
+function tqnMenuSetup() { tqnEnsureConfig_(); tqnEnsureWeatherConfig_(); tqnSs_().setActiveSheet(tqnSs_().getSheetByName(TQN.SH_CONFIG)); }
 
 /* ---------------- Thanh bên ---------------- */
 function tqnShowSidebar() {

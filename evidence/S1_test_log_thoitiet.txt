@@ -1,0 +1,17 @@
+PASS W01 Mặc định tắt → chặn, không gọi API  | CHAN: weather_enabled chưa bật (Có)
+PASS W02 Chưa có GPS → chặn  | CHAN: Chưa có tọa độ hợp lệ (weather_lat / weather_lon)
+PASS W03 GPS chưa xác nhận → chặn  | CHAN: Tọa độ chưa được xác nhận (weather_gps_confirmed = Có)
+PASS W04 Chưa xác nhận điều khoản nguồn → chặn  | CHAN: Chưa xác nhận điều khoản nguồn dữ liệu (weather_license_ok = Có)
+PASS W05 API lỗi 500 → thử lại 3 lần, FAILED, không ghi vào Register  | FAILED: HTTP 500 | gọi 3 lần
+PASS W06 Phản hồi thiếu trường → FAILED, không ghi  | FAILED: Thiếu trường time
+PASS W07 Thành công: thêm dòng 2 đúng cột Register  | THEM
+     Dòng ghi: 19/11/2026 | Thứ Năm | 23.1 |  | 29.4 |  | Mưa rào nhẹ | 6.2 | 91 | 11.3 | [TQN] Dự báo lúc 10:59 19/11 · khả năng mưa 80% · gió giật 24.8 km/h · Nguồn: Open-Meteo (CC BY 4.0). Số dự báo, không phải quan trắc tại công trường
+PASS W08 Cột đúng: A ngày, B thứ, C min, E max (ô gộp), G thời tiết, H mưa, I ẩm, J gió, K ghi chú
+PASS W09 Ghi chú có nguồn + khả năng mưa + ghi rõ là dự báo
+PASS W10 Trigger chạy lần 2 cùng ngày → bỏ qua  | DA_CHAY
+PASS W11 Bấm tay cùng ngày → cập nhật lại đúng dòng TQN, không thêm dòng  | CAP_NHAT
+PASS W12 Dòng cùng ngày do người nhập tay → không ghi đè  | BO_QUA_NHAP_TAY
+PASS W13 Chỉ ghi vào tab thời tiết + tab TQN_*  | TQN_CONFIG, TQN_AUDIT, TQN_THOI_TIET_RAW, Theo dõi thời tiết
+PASS W14 URL đúng tham số + timezone dự án
+PASS W15 Lưu phản hồi gốc vào TQN_THOI_TIET_RAW (cả lần lỗi)
+KẾT QUẢ THỜI TIẾT: 15 PASS / 0 FAIL
