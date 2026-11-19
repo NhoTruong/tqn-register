@@ -9,7 +9,7 @@ body{font:13px Inter,Segoe UI,Arial,sans-serif;color:var(--tx);display:flex;flex
 .logo{width:40px;height:26px;border-radius:7px;background:var(--navy);color:#fff;font-weight:800;font-size:12px;display:flex;align-items:center;justify-content:center;box-shadow:inset 0 0 0 1.5px var(--teal2)}
 .logo b{color:var(--teal2)}
 .doc{font-size:15px;font-weight:600}.doc small{display:block;font-size:11px;font-weight:400;color:var(--tx2)}
-.note{margin-left:auto;font-size:11px;background:#fff7e0;border:1px solid #f3d27a;color:#7a5600;padding:4px 8px;border-radius:6px;max-width:520px}
+.note{margin-left:auto;font-size:11px;color:#5b6675;display:flex;align-items:center;gap:6px;max-width:560px}.note b{background:#eef4fb;color:#1B3F7A;border-radius:999px;padding:2px 8px;font-size:10.5px;white-space:nowrap}
 .menus{display:flex;gap:2px;padding:2px 8px;border-bottom:1px solid var(--bd);position:relative}
 .mbtn{padding:6px 10px;border-radius:5px;cursor:pointer;border:0;background:none;font:inherit;color:var(--tx)}
 .mbtn:hover,.mbtn.on{background:#e8f0fe}
@@ -19,8 +19,9 @@ body{font:13px Inter,Segoe UI,Arial,sans-serif;color:var(--tx);display:flex;flex
 .drop button{display:block;width:100%;text-align:left;border:0;background:none;padding:8px 16px;font:inherit;cursor:pointer}
 .drop button:hover{background:#f1f3f4}.drop hr{border:0;border-top:1px solid var(--bd);margin:5px 0}
 .quick{display:flex;gap:6px;padding:7px 10px;overflow-x:auto;background:#eef4fb;border-bottom:1px solid var(--bd)}
-.quick button{flex:none;border:0;border-radius:18px;padding:7px 13px;font:600 12.5px Inter,Arial,sans-serif;background:#fff;color:var(--navy);box-shadow:0 0 0 1px #c9d6ea;cursor:pointer}
-.quick button.pr{background:var(--navy);color:#fff;box-shadow:none}
+.quick{background:#fff !important}.quick button{flex:none;border:1px solid #d3d9e1;border-radius:8px;padding:6px 12px;font:600 12.5px Inter,Arial,sans-serif;background:#fff;color:#1d2733;cursor:pointer;transition:border-color .15s,background .15s}
+.quick button:hover{border-color:#1B3F7A;background:#f5f8fd}
+.quick button.pr{background:var(--navy);border-color:var(--navy);color:#fff}.quick button.pr:hover{background:#163566}
 .main{flex:1;display:flex;min-height:0}
 .gridwrap{flex:1;overflow:auto;background:#fff}
 table.g{border-collapse:collapse;font-size:12px}
@@ -51,13 +52,13 @@ td.num{text-align:right}
 <body>
 <div class="bar"><div class="logo">T<b>Q</b>N</div>
  <div class="doc">HAUS QUANG NGAI- Register<small id="src"></small></div>
- <div class="note"><b>Bản xem thử:</b> chạy đúng code TQN Register trên bản chụp Register (chỉ đọc). Không ghi gì vào Google Sheets thật, không gửi mail, không đặt lịch thật. Bản dùng thật: cài <code>TQN_Code.gs</code> vào Google Sheets.</div></div>
+ <div class="note"><b>BẢN XEM THỬ</b><span>Chạy đúng code TQN trên bản chụp Register · không ghi Google Sheets thật, không gửi mail, không đặt lịch</span></div></div>
 <div class="menus" id="menus"><button class="mbtn">Tệp</button><button class="mbtn">Chỉnh sửa</button><button class="mbtn">Xem</button></div>
 <div class="quick" id="quick"></div>
 <div class="main"><div class="gridwrap" id="grid"></div>
  <div class="side" id="side"><div class="sh" id="sideT">TQN Register<button onclick="closeSide()">×</button></div><iframe id="sideF"></iframe></div></div>
 <div class="tabs" id="tabs"></div>
-<div class="modal" id="dlg"><div class="box" style="max-width:1100px;width:96%;height:86vh;padding:0;display:flex;flex-direction:column"><div style="display:flex;align-items:center;padding:8px 12px;border-bottom:1px solid #dadce0;font-weight:600" id="dlgT"></div><iframe id="dlgF" style="flex:1;border:0;width:100%"></iframe><div style="padding:6px 12px;text-align:right"><button class="ok" style="float:none;margin:0" onclick="closeDialog()">Đóng</button></div></div></div>
+<div class="modal" id="dlg"><div class="box" style="max-width:1180px;width:96%;height:90vh;padding:0;display:flex;flex-direction:column;border-radius:14px;overflow:hidden"><div style="display:flex;align-items:center;padding:10px 14px;border-bottom:1px solid #e4e8ee;font-weight:600;font-size:13px;color:#5b6675"><span id="dlgT"></span><button onclick="closeDialog()" style="margin-left:auto;border:0;background:none;font-size:20px;line-height:1;cursor:pointer;color:#5b6675" aria-label="Đóng">×</button></div><iframe id="dlgF" style="flex:1;border:0;width:100%"></iframe></div></div>
 <div class="modal" id="modal"><div class="box"><h3 id="mT"></h3><pre id="mB"></pre><button class="ok" onclick="hideModal()">OK</button></div></div>
 <div class="toast" id="toast"></div>
 <script>
@@ -119,6 +120,15 @@ Object.assign(window,G);
 </script>
 <script src="tqn.js"></script>
 <script>
+/* ===== AI trong bản xem thử: dùng chung câu lệnh/kiểm khuôn/lưu của Ai.gs, chỉ khác đường gọi (Claude của claude.ai thay cho API key) ===== */
+window.tqnAiAnalyze=async function(at){
+ const rec=tqnAiRecord_(at),prompt=tqnAiPrompt_(rec);
+ let sample=null;try{sample=window.claude&&await window.claude.use('sample')}catch(e){}
+ if(!sample)throw new Error('Bản xem thử chưa được dùng AI ở đây (mở trang trên claude.ai và cho phép khi được hỏi). Bản thật dùng khóa API trong Apps Script.');
+ let r;try{r=await sample(prompt,{modelTier:'default'})}catch(e){throw new Error(e.code==='rate_limited'?'AI đang bận, thử lại sau ít phút.':(e.code==='not_granted'?'Chưa cho phép trang dùng AI.':'Gọi AI lỗi: '+(e.message||e.code)))}
+ const o=tqnAiParse_(r.text);tqnAiSave_(rec,o,'Claude (bản xem thử)');o.so=rec['Số hiệu (nguyên văn)'];o.at=rec['Nguồn'];o.model='Claude (bản xem thử)';return o};
+</script>
+<script>
 /* ===== Giao diện ===== */
 const $=id=>document.getElementById(id);
 function showModal(t,b){$('mT').textContent=t;$('mB').textContent=b;$('modal').classList.add('show')}
@@ -144,12 +154,12 @@ function buildMenu(){const box=$('menus');const b=document.createElement('button
  menuItems.forEach(it=>{if(!it){d.appendChild(document.createElement('hr'));return}const x=document.createElement('button');x.textContent=it[0];x.onclick=()=>{d.classList.remove('show');runFn(it[1])};d.appendChild(x)});
  const sch=document.createElement('button');sch.textContent='(Xem thử) Lịch đã bật';sch.onclick=()=>{d.classList.remove('show');showModal('Lịch tự chạy (xem thử)',triggers.length?triggers.map(t=>t.fn+(String(t.h).startsWith('mỗi')?' '+t.h:' lúc ~'+t.h+':00 hằng ngày')).join('\n')+'\n\nBản thật: Google tự chạy cả khi máy tắt.':'Chưa bật lịch nào.')};
  d.appendChild(document.createElement('hr'));d.appendChild(sch);
- const q=$('quick');[['★ Bật tự động tất cả','tqnMenuSetupAll',1],['Quy trình hồ sơ','tqnMenuWorkflow',1],['Tạo hồ sơ / cấp mã','tqnMenuNewDoc',1],['Trạng thái tự động','tqnMenuAutoStatus'],['Bảng điều khiển','tqnShowSidebar',1],['Nhập & kiểm tra','tqnMenuRun',1],['Nhắc hạn hôm nay','tqnMenuRemindPreview'],['Thời tiết ngay','tqnMenuWeatherNow'],['Bật thời tiết 06:00','tqnMenuWeatherOn'],['Bật nhắc hạn 07:00','tqnMenuInstallDaily'],['Cài đặt','tqnMenuSetup']].forEach(([l,f,pr])=>{if(!menuItems.some(m=>m&&m[1]===f))return;const x=document.createElement('button');x.textContent=l;if(pr)x.className='pr';x.onclick=()=>runFn(f);q.appendChild(x)});
+ const q=$('quick');[['★ Bật tự động tất cả','tqnMenuSetupAll',1],['Kiểm soát quy trình + AI','tqnMenuWorkflow',1],['Tạo hồ sơ / cấp mã','tqnMenuNewDoc',1],['Trạng thái tự động','tqnMenuAutoStatus'],['Bảng điều khiển','tqnShowSidebar',1],['Nhập & kiểm tra','tqnMenuRun',1],['Nhắc hạn hôm nay','tqnMenuRemindPreview'],['Thời tiết ngay','tqnMenuWeatherNow'],['Bật thời tiết 06:00','tqnMenuWeatherOn'],['Bật nhắc hạn 07:00','tqnMenuInstallDaily'],['Cài đặt','tqnMenuSetup']].forEach(([l,f,pr])=>{if(!menuItems.some(m=>m&&m[1]===f))return;const x=document.createElement('button');x.textContent=l;if(pr)x.className='pr';x.onclick=()=>runFn(f);q.appendChild(x)});
  b.onclick=e=>{e.stopPropagation();d.style.left=b.offsetLeft+'px';d.classList.toggle('show')};box.appendChild(b);box.appendChild(d);document.addEventListener('click',()=>d.classList.remove('show'))}
 let sideSrc='',HTML={};
-const GSHIM='<script>window.google={script:{run:(function(){function mk(ok,fail){return new Proxy({},{get:function(_,k){if(k==="withSuccessHandler")return function(f){return mk(f,fail)};if(k==="withFailureHandler")return function(f){return mk(ok,f)};return function(){var a=arguments;setTimeout(function(){try{var r=parent[k].apply(parent,a);parent.afterCall(k);ok&&ok(r)}catch(e){fail&&fail(e)}},0)}}})}return mk()})()},host:{close:function(){parent.closeDialog()}}};<\/script>';
+const GSHIM='<script>window.google={script:{run:(function(){function mk(ok,fail){return new Proxy({},{get:function(_,k){if(k==="withSuccessHandler")return function(f){return mk(f,fail)};if(k==="withFailureHandler")return function(f){return mk(ok,f)};return function(){var a=arguments;setTimeout(function(){try{Promise.resolve(parent[k].apply(parent,a)).then(function(r){parent.afterCall(k);ok&&ok(r)},function(e){fail&&fail(e)})}catch(e){fail&&fail(e)}},0)}}})}return mk()})()},host:{close:function(){parent.closeDialog()}}};<\/script>';
 function withShim(src){return src.replace('<script>',GSHIM+'<script>')}
-function openDialog(name,title){$('dlgT').textContent=title||name;$('dlgF').srcdoc=withShim(HTML[name]||'<p>Thiếu '+name+'</p>');$('dlg').classList.add('show')}
+function openDialog(name,title){$('dlgT').textContent=title||name;document.querySelector('#dlg .box').style.maxWidth=name==='NewDoc'?'560px':'1180px';$('dlgF').srcdoc=withShim(HTML[name]||'<p>Thiếu '+name+'</p>');$('dlg').classList.add('show')}
 function closeDialog(){$('dlg').classList.remove('show');if(active)showSheet(active)}
 window.afterCall=(k)=>{if(k==='tqnGoto'){closeDialog();if(innerWidth<800)closeSide()}};
 function openSide(){$('side').classList.add('show');

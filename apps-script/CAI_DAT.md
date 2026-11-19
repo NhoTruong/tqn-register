@@ -50,3 +50,10 @@ Thêm 6 tab `TQN_*`. Tab gốc duy nhất được ghi là "Theo dõi thời ti�
 5. Mở tab TQN_CONFIG, đổi `weather_enabled` và `weather_license_ok` thành `Có`, rồi bấm ★ lại. Vào **Trạng thái tự động**, thấy đủ 3 dấu ✔ là xong.
 
 Hình minh họa từng bước: `dist/HUONG_DAN_CAI_TQN_REGISTER.png`.
+
+
+## Bật trợ lý AI đọc nội dung (tùy chọn)
+1. Trong Apps Script, vào **Cài đặt dự án → Thuộc tính tập lệnh**, thêm thuộc tính `ANTHROPIC_API_KEY` và dán khóa API của anh vào đó. Không dán khóa vào ô trong bảng tính, cũng không gửi khóa qua chat.
+2. Vào tab TQN_CONFIG, đổi `ai_enabled` thành `Có`. Muốn dùng mô hình khác thì sửa `ai_model`.
+3. Mở **Quy trình hồ sơ**, bấm **✦ AI** trên từng hồ sơ, hoặc bấm **✦ AI rà hồ sơ cần xử lý**. Kết quả là bản nháp, được ghi vào tab TQN_AI. AI không ghi gì vào sổ gốc; người phụ trách kiểm tra rồi ghi tên mình vào cột "Đã duyệt bởi".
+4. Lưu ý: nội dung và ý kiến của hồ sơ sẽ được gửi sang Anthropic để xử lý. Trước khi gửi, email trong dữ liệu được che đi. Lượt gọi tính phí theo tài khoản API của anh.

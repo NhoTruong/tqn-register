@@ -1,55 +1,73 @@
 <!DOCTYPE html>
 <html><head><base target="_top"><meta charset="utf-8">
 <style>
-*{box-sizing:border-box}body{margin:0;font:13px Inter,Segoe UI,Arial,sans-serif;color:#202124}
-.tabs{display:flex;border-bottom:1px solid #dadce0}.tabs button{flex:1;border:0;background:none;padding:10px;font:600 13px inherit;cursor:pointer;color:#5f6368;border-bottom:3px solid transparent}
-.tabs button.on{color:#1B3F7A;border-bottom-color:#1F8A8A}
-.p{padding:12px 16px;display:none}.p.on{display:block}
-label{display:block;font-size:12px;color:#5f6368;margin:9px 0 3px}
-input,select,textarea{width:100%;padding:7px 8px;border:1px solid #c7ccd1;border-radius:6px;font:13px inherit}
-textarea{height:54px;resize:vertical}
-.row{display:flex;gap:8px}.row>div{flex:1}
-.code{margin-top:12px;background:#eef4fb;border-radius:8px;padding:10px;font:600 14px ui-monospace,Consolas,monospace;color:#1B3F7A;word-break:break-all;min-height:40px}
-.code small{display:block;font:11px Inter,Arial;color:#5f6368;margin-bottom:3px}
-.ck{display:flex;gap:6px;align-items:center;margin-top:10px;font-size:12px}.ck input{width:auto}
-.btn{margin-top:12px;width:100%;border:0;border-radius:8px;padding:10px;font:700 14px inherit;background:#1B3F7A;color:#fff;cursor:pointer}
-.btn.s{background:#fff;color:#1B3F7A;border:1px solid #1B3F7A;margin-top:6px}
-.msg{margin-top:10px;font-size:12px;line-height:1.5}.ok{color:#137333}.er{color:#b3261e}
+:root{--navy2:#1B3F7A;--teal:#14837f;--teal2:#2DD4BF;--line:#e4e8ee;--tx:#1d2733;--tx2:#5b6675;--tx3:#8a94a3;--bg:#f5f7fa}
+*{box-sizing:border-box}body{margin:0;font:13px/1.45 Inter,"Segoe UI",Roboto,Arial,sans-serif;color:var(--tx);background:#fff}
+.seg{display:flex;margin:14px 18px 4px;background:var(--bg);border-radius:10px;padding:3px}
+.seg button{flex:1;border:0;background:none;padding:8px;border-radius:8px;font:600 13px inherit;color:var(--tx2);cursor:pointer}
+.seg button.on{background:#fff;color:var(--navy2);box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.p{padding:6px 18px 16px;display:none}.p.on{display:block}
+.g{display:grid;grid-template-columns:1fr 1fr;gap:10px 12px}.full{grid-column:1/-1}
+label{display:block;font-size:11.5px;font-weight:600;color:var(--tx2);margin:10px 0 4px}
+input,select,textarea{width:100%;padding:8px 10px;border:1px solid #d3d9e1;border-radius:8px;font:13px inherit;color:var(--tx);background:#fff;transition:border-color .15s,box-shadow .15s}
+input:focus,select:focus,textarea:focus{outline:0;border-color:var(--navy2);box-shadow:0 0 0 3px rgba(27,63,122,.12)}
+textarea{height:64px;resize:vertical}
+.types{display:flex;gap:6px;flex-wrap:wrap}
+.types button{border:1px solid #d3d9e1;background:#fff;border-radius:8px;padding:6px 11px;font:700 12px inherit;color:var(--tx2);cursor:pointer}
+.types button.on{background:var(--navy2);border-color:var(--navy2);color:#fff}
+.types small{display:block;font:400 10px Inter;opacity:.8}
+.pv{margin-top:14px;border:1px solid var(--line);border-radius:12px;padding:12px 14px;background:linear-gradient(180deg,#f8fbff,#fff)}
+.pv .l{font-size:11px;color:var(--tx3);text-transform:uppercase;letter-spacing:.5px;font-weight:600}
+.pv .c{font:700 16px ui-monospace,"SF Mono",Consolas,monospace;color:var(--navy2);margin-top:4px;word-break:break-all}
+.pv .h{font-size:11.5px;color:var(--tx3);margin-top:4px}
+.ck{display:flex;gap:8px;align-items:flex-start;margin-top:12px;font-size:12.5px;color:var(--tx2)}.ck input{width:auto;margin-top:2px}
+.btn{margin-top:14px;width:100%;border:0;border-radius:10px;padding:11px;font:700 14px inherit;background:var(--navy2);color:#fff;cursor:pointer;transition:background .15s}
+.btn:hover{background:#163566}.btn:disabled{opacity:.6;cursor:default}
+.msg{margin-top:12px;border-radius:10px;padding:10px 12px;font-size:12.5px;display:none}
+.msg.ok{display:block;background:#e6f4ec;color:#1e7d4f}.msg.er{display:block;background:#fdecea;color:#c62828}.msg.wt{display:block;background:var(--bg);color:var(--tx2)}
+.msg b{font-family:ui-monospace,Consolas,monospace}
 </style></head><body>
-<div class="tabs"><button class="on" data-p="a">Hồ sơ mới</button><button data-p="b">Trình lại (Rev+1)</button></div>
+<div class="seg"><button class="on" data-p="a">Hồ sơ mới</button><button data-p="b">Trình lại (Rev + 1)</button></div>
 <div class="p on" id="a">
- <div class="row"><div><label>Loại hồ sơ</label><select id="type"><option>RFI</option><option>RFA</option><option>RFC</option><option>SDS</option><option>MSS</option><option>MAS</option><option>OTS</option></select></div>
- <div id="wn"><label>Nhóm (RFA)</label><input id="nhom" value="COS"></div>
- <div id="wg"><label>Gói</label><select id="goi"><option>NP</option><option>HTKT</option></select></div></div>
- <label>Nội dung hồ sơ</label><textarea id="subject" placeholder="Vd: Yêu cầu làm rõ thông tin – cao độ sàn tầng 2"></textarea>
- <div class="row"><div><label>Người thực hiện</label><input id="owner"></div><div><label>Ngày trình</label><input id="date" type="date"></div></div>
- <div class="code" id="pv"><small>Mã sẽ cấp (xem trước, chưa giữ số)</small>—</div>
- <label class="ck"><input type="checkbox" id="write" checked> Ghi mã + nội dung vào dòng trống tiếp theo của sổ chi tiết (không đè ô có dữ liệu)</label>
+ <label>Loại hồ sơ</label>
+ <div class="types" id="types"></div>
+ <div class="g">
+  <div id="wn"><label>Nhóm (RFA)</label><input id="nhom" value="COS"></div>
+  <div id="wg"><label>Gói</label><select id="goi"><option value="NP">NP – Nhà phố</option><option value="HTKT">HTKT – Hạ tầng kỹ thuật</option></select></div>
+  <div class="full"><label>Nội dung hồ sơ</label><textarea id="subject" placeholder="Vd: Yêu cầu làm rõ thông tin – cao độ sàn tầng 2"></textarea></div>
+  <div><label>Người thực hiện</label><input id="owner" placeholder="Tên người lập"></div>
+  <div><label>Ngày trình</label><input id="date" type="date"></div>
+ </div>
+ <div class="pv"><div class="l">Số hiệu sẽ cấp</div><div class="c" id="pv">—</div><div class="h">Xem trước, chưa giữ số. Số chỉ được giữ khi bấm Cấp mã.</div></div>
+ <label class="ck"><input type="checkbox" id="write" checked><span>Ghi số hiệu và nội dung vào dòng trống tiếp theo của sổ chi tiết. Ô đã có dữ liệu sẽ không bị ghi đè.</span></label>
  <button class="btn" id="issue">Cấp mã</button>
  <div class="msg" id="m1"></div>
 </div>
 <div class="p" id="b">
  <label>Số hiệu lần trình trước</label><input id="from" placeholder="Vd: 261116-COA-TBC-RFI-001 rev01">
- <label>Nội dung (nếu đổi)</label><textarea id="subject2"></textarea>
- <label class="ck"><input type="checkbox" id="write2" checked> Ghi vào dòng trống tiếp theo của sổ chi tiết</label>
+ <label>Nội dung (nếu thay đổi)</label><textarea id="subject2"></textarea>
+ <label class="ck"><input type="checkbox" id="write2" checked><span>Ghi vào dòng trống tiếp theo của sổ chi tiết</span></label>
  <button class="btn" id="revise">Cấp mã trình lại</button>
  <div class="msg" id="m2"></div>
 </div>
 <script>
+var T=[['RFI','Thông tin'],['RFA','Phê duyệt'],['RFC','Thay đổi'],['SDS','Bản vẽ'],['MSS','Biện pháp'],['MAS','Vật tư'],['OTS','Khác']],type='RFI';
 function $(i){return document.getElementById(i)}
 function esc(s){return String(s==null?'':s).replace(/[&<>]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;'}[c]})}
+$('types').innerHTML=T.map(function(t){return '<button data-t="'+t[0]+'" class="'+(t[0]===type?'on':'')+'">'+t[0]+'<small>'+t[1]+'</small></button>'}).join('');
+Array.prototype.forEach.call(document.querySelectorAll('#types button'),function(b){b.onclick=function(){type=b.getAttribute('data-t');Array.prototype.forEach.call(document.querySelectorAll('#types button'),function(x){x.classList.toggle('on',x===b)});pv()}});
 var d=new Date();$('date').value=d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);
-Array.prototype.forEach.call(document.querySelectorAll('.tabs button'),function(b){b.onclick=function(){
- Array.prototype.forEach.call(document.querySelectorAll('.tabs button,.p'),function(x){x.classList.remove('on')});b.classList.add('on');$(b.getAttribute('data-p')).classList.add('on')}});
-function form(){return{type:$('type').value,nhom:$('nhom').value,goi:$('goi').value,subject:$('subject').value,owner:$('owner').value,date:$('date').value,write:$('write').checked}}
-function vis(){var t=$('type').value;$('wn').style.display=t==='RFA'?'':'none';$('wg').style.display=/SDS|MSS|MAS|OTS/.test(t)?'':'none'}
-function pv(){vis();$('pv').innerHTML='<small>Mã sẽ cấp (xem trước, chưa giữ số)</small>…';
- google.script.run.withSuccessHandler(function(c){$('pv').innerHTML='<small>Mã sẽ cấp (xem trước, chưa giữ số)</small>'+esc(c)}).withFailureHandler(function(e){$('pv').innerHTML='<small>Lỗi</small>'+esc(e.message||e)}).tqnPreviewCode(form())}
-['type','nhom','goi','date'].forEach(function(i){$(i).onchange=pv});pv();
-$('issue').onclick=function(){var b=this;b.disabled=true;$('m1').innerHTML='Đang cấp mã (có khóa chống trùng)…';
- google.script.run.withSuccessHandler(function(r){b.disabled=false;$('m1').innerHTML='<span class="ok">✔ Đã cấp: <b>'+esc(r.code)+'</b>'+(r.where?'<br>Đã ghi vào '+esc(r.where):'')+'<br>Đã lưu vào tab TQN_CAP_MA.</span>';pv()})
- .withFailureHandler(function(e){b.disabled=false;$('m1').innerHTML='<span class="er">✖ '+esc(e.message||e)+'</span>'}).tqnIssueCode(form())};
-$('revise').onclick=function(){var b=this;b.disabled=true;$('m2').innerHTML='Đang cấp…';
- google.script.run.withSuccessHandler(function(r){b.disabled=false;$('m2').innerHTML='<span class="ok">✔ Mã trình lại: <b>'+esc(r.code)+'</b> (Rev '+esc(r.rev)+')'+(r.where?'<br>Đã ghi vào '+esc(r.where):'')+'</span>'})
- .withFailureHandler(function(e){b.disabled=false;$('m2').innerHTML='<span class="er">✖ '+esc(e.message||e)+'</span>'}).tqnReviseCode({from:$('from').value,subject:$('subject2').value,write:$('write2').checked})};
+Array.prototype.forEach.call(document.querySelectorAll('.seg button'),function(b){b.onclick=function(){
+ Array.prototype.forEach.call(document.querySelectorAll('.seg button,.p'),function(x){x.classList.remove('on')});b.classList.add('on');$(b.getAttribute('data-p')).classList.add('on')}});
+function form(){return{type:type,nhom:$('nhom').value,goi:$('goi').value,subject:$('subject').value,owner:$('owner').value,date:$('date').value,write:$('write').checked}}
+function msg(id,cls,html){var m=$(id);m.className='msg '+cls;m.innerHTML=html}
+function pv(){$('wn').style.display=type==='RFA'?'':'none';$('wg').style.display=/SDS|MSS|MAS|OTS/.test(type)?'':'none';$('pv').textContent='…';
+ google.script.run.withSuccessHandler(function(c){$('pv').textContent=c}).withFailureHandler(function(e){$('pv').textContent=e.message||e}).tqnPreviewCode(form())}
+['nhom','goi','date'].forEach(function(i){$(i).onchange=pv});pv();
+$('issue').onclick=function(){var b=this;b.disabled=true;msg('m1','wt','Đang cấp mã (có khóa chống trùng)…');
+ google.script.run.withSuccessHandler(function(r){b.disabled=false;msg('m1','ok','✔ Đã cấp <b>'+esc(r.code)+'</b>'+(r.where?'<br>Đã ghi vào '+esc(r.where):'')+'<br>Lưu tại tab TQN_CAP_MA.');pv()})
+ .withFailureHandler(function(e){b.disabled=false;msg('m1','er','✖ '+esc(e.message||e))}).tqnIssueCode(form())};
+$('revise').onclick=function(){var b=this;b.disabled=true;msg('m2','wt','Đang cấp…');
+ google.script.run.withSuccessHandler(function(r){b.disabled=false;msg('m2','ok','✔ Số hiệu trình lại <b>'+esc(r.code)+'</b> (Rev '+esc(r.rev)+')'+(r.where?'<br>Đã ghi vào '+esc(r.where):''))})
+ .withFailureHandler(function(e){b.disabled=false;msg('m2','er','✖ '+esc(e.message||e))}).tqnReviseCode({from:$('from').value,subject:$('subject2').value,write:$('write2').checked})};
 </script></body></html>

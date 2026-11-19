@@ -34,18 +34,20 @@ class Sheet {
 }
 const sheets = {}; Object.keys(fx).forEach(n => sheets[n] = new Sheet(n, fx[n]));
 const ss = { getSheetByName: n => sheets[n] || null, insertSheet: n => (sheets[n] = new Sheet(n)), setActiveSheet() { } };
-const mails = [], props = {}, TRIG = [];
+const mails = [], props = {}, TRIG = [], sprops = {}, fetches = []; let AI_RES = () => ({ getResponseCode: () => 500, getContentText: () => '' });
 const ctx = {
   console, Date, JSON, Math, String, Object, Array, RegExp, Error, parseInt, isNaN,
   SpreadsheetApp: { getActiveSpreadsheet: () => ss, getUi: () => ({ alert() { }, ButtonSet: {} }) },
   Utilities: {
+    sleep: () => {},
     DigestAlgorithm: { MD5: 'md5' }, Charset: { UTF_8: 'utf8' },
     computeDigest: (a, s) => Array.from(crypto.createHash('md5').update(s, 'utf8').digest()).map(b => b > 127 ? b - 256 : b),
     formatDate: (d, tz, f) => { const p = n => String(n).padStart(2, '0'); return f.replace('yyyy', d.getFullYear()).replace('MM', p(d.getMonth() + 1)).replace('dd', p(d.getDate())).replace('HH', p(d.getHours())).replace('mm', p(d.getMinutes())); }
   },
   Session: { getActiveUser: () => ({ getEmail: () => 'test@local' }) },
   LockService: { getDocumentLock: () => ({ tryLock: () => true, releaseLock() { } }) },
-  PropertiesService: { getDocumentProperties: () => ({ getProperty: k => props[k] || null, setProperty: (k, v) => { props[k] = v; } }) },
+  PropertiesService: { getDocumentProperties: () => ({ getProperty: k => props[k] || null, setProperty: (k, v) => { props[k] = v; } }), getScriptProperties: () => ({ getProperty: k => sprops[k] || null }) },
+  UrlFetchApp: { fetch: (url, o) => { fetches.push({ url, o }); return AI_RES(url, o); } },
   MailApp: { sendEmail: o => mails.push(o) },
   ScriptApp: { getProjectTriggers: () => TRIG.slice(), deleteTrigger(t) { TRIG.splice(TRIG.indexOf(t), 1); },
     newTrigger(fn) { const t = { getHandlerFunction: () => fn }; const b = { timeBased: () => b, atHour: () => b, nearMinute: () => b, everyHours: () => b, everyDays: () => b, inTimezone: () => b, create: () => { TRIG.push(t); return t; } }; return b; } }
@@ -145,6 +147,25 @@ const before = JSON.stringify(sheets['RFI'].v[nextRow - 1]);
 T('U36 Ô đích đã có chữ thì từ chối, không ghi đè, không ghi nửa chừng', expectErr("tqnIssueCode({type:'RFI',subject:'Thử đè',owner:'Nho',write:true})", /không ghi đè/) && JSON.stringify(sheets['RFI'].v[nextRow - 1]) === before);
 ALLOW.delete('RFI');
 T('U37 Loại chưa có mẫu thì báo rõ', expectErr("tqnPreviewCode({type:'XYZ'})", /Chưa có mẫu mã/));
+// ---- AI đọc nội dung ----
+run('tqnEnsureAiConfig_()');
+const atRFI = sheets['TQN_DATA'].v.slice(1).find(r => String(r[4]).includes('RFI-001'))[2];
+T('U38 AI tắt mặc định → chặn, không gọi mạng', expectErr("tqnAiAnalyze('" + atRFI + "')", /ai_enabled/) && fetches.length === 0);
+setC('ai_enabled', 'Có');
+T('U39 Chưa có khóa API → chặn, không gọi mạng', expectErr("tqnAiAnalyze('" + atRFI + "')", /ANTHROPIC_API_KEY/) && fetches.length === 0);
+sprops.ANTHROPIC_API_KEY = 'test-key';
+AI_RES = () => ({ getResponseCode: () => 200, getContentText: () => JSON.stringify({ content: [{ type: 'text', text: 'Đây là kết quả: {"tom_tat":"RFI hỏi thông tin gạch porcelain, CĐT đã phản hồi.","muc_do":"THAP","ben_xu_ly":"Không ai","viec_tiep_theo":"Lưu hồ sơ và áp dụng theo phản hồi.","can_bo_sung":[],"nhap_tra_loi":"Kính gửi CĐT..."}' }] }) });
+const aiBefore = writes.length;
+const ai1 = run("tqnAiAnalyze('" + atRFI + "')");
+const req = fetches[fetches.length - 1], pl = JSON.parse(req.o.payload);
+T('U40 Gọi đúng API (header khóa + phiên bản, mô hình cấu hình), đọc đúng JSON, lưu tab TQN_AI', req.url === 'https://api.anthropic.com/v1/messages' && req.o.headers['x-api-key'] === 'test-key' && req.o.headers['anthropic-version'] && pl.model === 'claude-sonnet-5-5' && ai1.muc_do === 'THAP' && sheets['TQN_AI'].getLastRow() === 2, ai1.tom_tat);
+const prm = pl.messages[0].content;
+T('U41 Câu lệnh chỉ chứa dữ liệu đúng hồ sơ đó, không có email', prm.includes('gach porcelain'.replace('gach', 'gạch')) || prm.includes('porcelain') ? !/@/.test(prm.split('--- DỮ LIỆU HỒ SƠ ---')[1]) : false, prm.split('--- DỮ LIỆU HỒ SƠ ---')[1].slice(0, 160).replace(/\n/g, ' | '));
+AI_RES = () => ({ getResponseCode: () => 200, getContentText: () => JSON.stringify({ content: [{ type: 'text', text: 'xin lỗi tôi không chắc' }] }) });
+T('U42 AI trả lời sai khuôn → báo lỗi, không ghi gì vào TQN_AI', expectErr("tqnAiAnalyze('" + atRFI + "')", /JSON/) && sheets['TQN_AI'].getLastRow() === 2);
+let n429 = 0; AI_RES = () => { n429++; return { getResponseCode: () => 429, getContentText: () => 'rate' }; };
+T('U43 Bị giới hạn 429 → thử lại 3 lần rồi báo lỗi rõ', expectErr("tqnAiAnalyze('" + atRFI + "')", /429/) && n429 === 3);
+T('U44 AI không ghi vào tab gốc', !writes.slice(aiBefore).some(w => ORIGINAL.has(w[0])));
 const qcRows = sheets['TQN_QC'].getLastRow() - 1;
 console.log(`\nTQN_DATA ${n2} dòng · TQN_QC ${qcRows} dòng · TQN_NHAC_HAN ${sheets['TQN_NHAC_HAN'].getLastRow() - 1} dòng`);
 console.log(`KẾT QUẢ: ${pass} PASS / ${fail} FAIL`);

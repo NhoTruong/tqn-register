@@ -215,8 +215,14 @@ function tqnWriteToDetail_(cfg, type, code, subject, owner, rev) {
 function tqnWorkflowData() {
   var r = tqnRunAll_(), wf = r.wf, cols = {};
   TQN_WF_STEPS.slice(1).forEach(function (s) { cols[s] = []; });
+  var now = new Date(), t0 = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   wf.rows.forEach(function (x) {
-    cols[x[0]].push({ bic: x[1], loai: x[2], so: x[3], rev: x[4], nd: x[5], han: tqnFmtDate_(x[9], r.cfg.timezone), cho: x[10], late: x[11], y: x[12], at: x[13] });
+    var d = tqnIsDate_(x[9]) ? Math.round((new Date(x[9].getFullYear(), x[9].getMonth(), x[9].getDate()) - t0) / 86400000) : '';
+    var open = !/^5/.test(x[0]);
+    // trạng thái hạn: QUA_HAN | SAP_HAN (≤2 ngày) | CON_HAN | KHONG_HAN | XONG
+    var sla = !open ? 'XONG' : (x[11] ? 'QUA_HAN' : (d === '' ? 'KHONG_HAN' : (d <= 2 ? 'SAP_HAN' : 'CON_HAN')));
+    cols[x[0]].push({ bic: x[1], loai: x[2], so: x[3], rev: x[4], nd: x[5], han: tqnFmtDate_(x[9], r.cfg.timezone), d: d, sla: sla,
+      cho: x[10], late: x[11], y: x[12], at: x[13], nguoi: x[6] });
   });
   return { steps: TQN_WF_STEPS.slice(1), cols: cols, late: wf.late, total: wf.rows.length, at: Utilities.formatDate(new Date(), r.cfg.timezone, 'dd/MM/yyyy HH:mm') };
 }
