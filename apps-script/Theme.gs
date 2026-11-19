@@ -20,7 +20,23 @@ function tqnHslToHex_(h, s, l) {
   return '#' + [f(0), f(8), f(4)].map(function (v) { return ('0' + v.toString(16)).slice(-2); }).join('').toUpperCase();
 }
 /** Bảng màu TQN (cùng tông bảng điều khiển: xanh than #1B3F7A + xanh ngọc #0F6E66). Màu gắt → màu theo VAI TRÒ của ô. */
-var TQN_TH = { head: '#E8EEF8', headFc: '#1B3F7A', band: '#DDF0EE', bandFc: '#0F5E58', input: '#FFF8E1', calc: '#F7F8FA', line: '#EEF1F5' };
+var TQN_TH = { head: '#EEF1F5', headFc: '#1E293B', band: '#E2E8F0', bandFc: '#1E293B', input: '#FFF8E1', calc: '#F7F8FA', line: '#EEF1F5' };
+/** MÀU THEO BÊN – dùng chung cho tiêu đề khối các sổ, cột "Trình đến", bảng quản lý. Mỗi bên 1 tông, cách xa nhau. */
+var TQN_PARTY = [   // [từ khóa đầu nhãn (không dấu), tên, nền tiêu đề, chữ, nền dòng tiêu đề con]
+  ['nha thau', 'Nhà thầu', '#C7DCFB', '#1E3A8A', '#E8F0FD'],
+  ['tu van giam sat', 'TVGS', '#B7EDE0', '#115E59', '#E3F7F1'],
+  ['bql du an', 'TVGS', '#B7EDE0', '#115E59', '#E3F7F1'],
+  ['tvqlda', 'TVGS', '#B7EDE0', '#115E59', '#E3F7F1'],
+  ['tu van thiet ke', 'TVTK', '#F7D0E2', '#9D174D', '#FCEAF2'],
+  ['chu dau tu', 'CĐT', '#FBDDB8', '#8A4B0F', '#FDEEDC'],
+  ['cdt phan hoi', 'CĐT', '#FBDDB8', '#8A4B0F', '#FDEEDC']
+];
+function tqnPartyOf_(label) {
+  var t = tqnNoAccent_(tqnClean_(label));
+  if (!t) return null;
+  for (var i = 0; i < TQN_PARTY.length; i++) if (t.indexOf(TQN_PARTY[i][0]) === 0) return TQN_PARTY[i];
+  return null;
+}
 /** Trả [nền, màu chữ mới hoặc '' (giữ)]. */
 function tqnRoleColor_(hex) {
   var c = tqnHexToHsl_(hex); if (!c) return [hex, ''];
@@ -69,9 +85,21 @@ function tqnThemeSheet_(sh, cfg) {
     var t = vals[r].map(function (x) { return tqnNoAccent_(tqnClean_(x)); }).join('|');
     if (/ma ho so/.test(t)) { hdr[r] = 1; if (r + 1 < R && /ke hoach|thuc te|ngay trinh|vuong mac/.test(vals[r + 1].map(function (x) { return tqnNoAccent_(tqnClean_(x)); }).join('|'))) hdr[r + 1] = 1; }
   }
+  // khối theo bên trên dòng tiêu đề: từ cột có nhãn bên tới trước nhãn kế tiếp, bỏ cột ngăn trống ở cuối khối
+  var party = {};   // 'r,c' → [nền, chữ]
+  Object.keys(hdr).forEach(function (k) {
+    var r = +k, row = vals[r], sub = hdr[r + 1] ? vals[r + 1] : null;
+    for (var c = 0; c < C; c++) {
+      var p = tqnPartyOf_(row[c]); if (!p) continue;
+      var e = c + 1; while (e < C && !tqnClean_(row[e])) e++;
+      var last = e - 1; if (sub) while (last > c && !tqnClean_(sub[last])) last--;
+      for (var cc = c; cc <= last; cc++) { party[r + ',' + cc] = [p[2], p[3]]; if (sub) party[(r + 1) + ',' + cc] = [p[4], p[3]]; }
+    }
+  });
   for (var i = 0; i < R; i++) for (var j = 0; j < C; j++) {
     var b0 = bg[i][j], f0 = fc[i][j], b1, f1, w1 = fw[i][j];
-    if (hdr[i]) { b1 = TQN_TH.head; f1 = TQN_TH.headFc; w1 = 'bold'; }
+    if (party[i + ',' + j]) { b1 = party[i + ',' + j][0]; f1 = party[i + ',' + j][1]; w1 = 'bold'; }
+    else if (hdr[i]) { b1 = TQN_TH.head; f1 = TQN_TH.headFc; w1 = 'bold'; }
     else { var rc = tqnRoleColor_(b0); b1 = rc[0]; f1 = rc[1] || tqnSoftFont_(f0, b1); }
     if (String(b1).toUpperCase() !== String(b0).toUpperCase() || String(f1).toUpperCase() !== String(f0).toUpperCase() || w1 !== fw[i][j]) n++;
     bg[i][j] = b1; fc[i][j] = f1; fw[i][j] = w1;
@@ -116,11 +144,16 @@ function tqnMenuTheme() {
 function tqnMenuRestoreTheme() { SpreadsheetApp.getUi().alert('Đã trả lại giao diện gốc cho ' + tqnRestoreTheme() + ' sổ.'); }
 
 /* ---------------- Ô CHỌN (dropdown) đổi màu theo lựa chọn ---------------- */
-var TQN_OPT_COLORS = [   // [từ khóa (không dấu), nền, chữ]
-  ['khong duyet', '#FDE9DD', '#A8430A'], ['tra ve', '#FDE9DD', '#A8430A'], ['qua han', '#FCE4E4', '#B42318'], ['duyet co y kien', '#EAF5E3', '#3F6E12'],
-  ['da duyet', '#E1F4EF', '#0F6E56'], ['da hoan thanh', '#E1F4EF', '#0F6E56'], ['da phan hoi', '#E5EEFB', '#1B3F7A'],
-  ['da trinh', '#E5EEFB', '#1B3F7A'], ['dang', '#FEF3D7', '#8A5A00'], ['chua', '#F1F3F6', '#5F6B7A'], ['huy', '#F1F3F6', '#8A94A3'],
-  ['tvgs + cdt', '#EAEFFB', '#3B4FA0'], ['tvgs', '#E5EEFB', '#1B3F7A'], ['cdt', '#EFE9FB', '#5B3FB0'], ['tvtk', '#E3F2F7', '#0B6B8A'], ['tbcons', '#E1F4EF', '#0F6E56']
+var TQN_OPT_COLORS = [   // [từ khóa (không dấu), nền, chữ] – TÌNH TRẠNG theo đèn giao thông, BÊN theo TQN_PARTY; 2 nhóm không trùng tông
+  ['qua han', '#FEE2E2', '#B91C1C'],
+  ['khong duyet', '#FFEDD5', '#9A3412'], ['tra ve', '#FFEDD5', '#9A3412'], ['trinh lai', '#FFEDD5', '#9A3412'],
+  ['duyet co y kien', '#ECFCCB', '#3F6212'],
+  ['da duyet', '#DCFCE7', '#166534'], ['da hoan thanh', '#DCFCE7', '#166534'], ['hoan thanh', '#DCFCE7', '#166534'],
+  ['da phan hoi', '#E0E7FF', '#3730A3'],
+  ['da trinh', '#FEF3C7', '#92400E'], ['dang', '#FEF3C7', '#92400E'], ['gui email', '#FEF3C7', '#92400E'],
+  ['chua', '#F1F5F9', '#475569'], ['huy', '#F8FAFC', '#94A3B8'],
+  ['tvgs + cdt', '#E2E8F0', '#334155'], ['tvgs', '#B7EDE0', '#115E59'], ['cdt', '#FBDDB8', '#8A4B0F'], ['tvtk', '#F7D0E2', '#9D174D'],
+  ['tbcons', '#C7DCFB', '#1E3A8A'], ['nha thau', '#C7DCFB', '#1E3A8A']
 ];
 function tqnOptColor_(v) {
   var t = tqnNoAccent_(String(v || '')).trim();

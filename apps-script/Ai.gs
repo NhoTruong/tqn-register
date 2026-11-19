@@ -88,7 +88,7 @@ function tqnAiCall_(cfg, prompt) {
     var res = UrlFetchApp.fetch('https://api.anthropic.com/v1/messages', {
       method: 'post', contentType: 'application/json', muteHttpExceptions: true,
       headers: { 'x-api-key': key, 'anthropic-version': '2023-06-01' },
-      payload: JSON.stringify({ model: cfg.ai_model, max_tokens: 1200, messages: [{ role: 'user', content: prompt }] })
+      payload: JSON.stringify({ model: cfg.ai_model, max_tokens: 1200, messages: [{ role: 'user', content: prompt }] })   // prompt: chữ, hoặc mảng [ảnh/PDF, chữ] khi đọc phiếu
     });
     var code = res.getResponseCode(), body = res.getContentText();
     if (code === 200) {

@@ -176,7 +176,7 @@ let n429 = 0; AI_RES = () => { n429++; return { getResponseCode: () => 429, getC
 T('U43 Bị giới hạn 429 → thử lại 3 lần rồi báo lỗi rõ', expectErr("tqnAiAnalyze('" + atRFI + "')", /429/) && n429 === 3);
 T('U44 AI không ghi vào tab gốc', !writes.slice(aiBefore).some(w => ORIGINAL.has(w[0])));
 const ncf = run('tqnApplyStatusColors()'), cfr = sheets['Sổ trình duyệt'].cfr || [];
-T('U45 Tô màu cột Tình trạng (đã chạy trong nút ★): đủ 7 quy tắc, đúng cột O từ dòng 23, không đổi dữ liệu', cfr.length === 7 && cfr.every(r => r.o.r[0].c === 15 && r.o.r[0].r === 23) && !writes.some(w => w[0] === 'Sổ trình duyệt'), 'thêm ' + ncf);
+T('U45 Tô màu cột Tình trạng (đã chạy trong nút ★): đủ 8 quy tắc, đúng cột O từ dòng 23, không đổi dữ liệu', cfr.length === 8 && cfr.every(r => r.o.r[0].c === 15 && r.o.r[0].r === 23) && !writes.some(w => w[0] === 'Sổ trình duyệt'), 'thêm ' + ncf);
 T('U46 Bấm lại không thêm trùng quy tắc', run('tqnApplyStatusColors()') === 0);
 // ---- Giao diện dễ nhìn ---- (nút ★ đã áp giao diện ở U20 → trả lại gốc trước để đo)
 T('U47a Nút ★ đã áp giao diện và có bản lưu gốc', !!sheets['TQN_GIAO_DIEN_GOC'] && sheets['TQN_GIAO_DIEN_GOC'].getLastRow() > 1);
@@ -185,7 +185,7 @@ const snapV = JSON.stringify([...ORIGINAL].map(n => sheets[n].v)), snapS = JSON.
 const th = run('tqnApplyTheme()');
 T('U47 Giao diện dễ nhìn: đổi màu nhiều ô, KHÔNG đổi dữ liệu, có bản lưu gốc', th.total > 500 && JSON.stringify([...ORIGINAL].map(n => sheets[n].v)) === snapV && sheets['TQN_GIAO_DIEN_GOC'].getLastRow() > 1, 'đổi ' + th.total + ' ô; ' + th.tabs.slice(0, 3).join(', '));
 const sdt = sheets['Sổ trình duyệt'].sty;
-T('U48 Nền xanh than #002060 → vạch xám rất nhạt; dòng tiêu đề Sổ trình duyệt (22) → nền xanh than nhạt #E8EEF8 chữ đậm (cùng tông bảng điều khiển)', !Object.values(sdt).some(x => String(x[0]).toUpperCase() === '#002060') && sdt['22,3'] && sdt['22,3'][0] === '#E8EEF8' && sdt['22,3'][2] === 1, JSON.stringify(sdt['22,3']));
+T('U48 Nền xanh than #002060 → vạch xám rất nhạt; dòng tiêu đề Sổ trình duyệt (22) → nền xám xanh trung tính #EEF1F5 chữ đậm (không lẫn với màu các bên)', !Object.values(sdt).some(x => String(x[0]).toUpperCase() === '#002060') && sdt['22,3'] && sdt['22,3'][0] === '#EEF1F5' && sdt['22,3'][2] === 1, JSON.stringify(sdt['22,3']));
 const bkRows = sheets['TQN_GIAO_DIEN_GOC'].getLastRow(); run('tqnApplyTheme()');
 T('U49 Áp lần 2 không ghi đè bản lưu gốc', sheets['TQN_GIAO_DIEN_GOC'].getLastRow() === bkRows);
 run('tqnRestoreTheme()');
@@ -214,6 +214,18 @@ console.log(`\nTQN_DATA ${n2} dòng · TQN_QC ${qcRows} dòng · TQN_NHAC_HAN ${
   T('U57 Không đổi tên, không đổi thứ tự, không đụng dữ liệu tab', Object.keys(sheets).join('|') === Object.keys(before).join('|'));
   run('tqnRestoreTabColors()');
   T('U58 Trả lại màu tab gốc', Object.values(sheets).every(s => s.getTabColor() === before[s.name]));
+}
+
+// ---- Màu theo bên ở dòng tiêu đề khối ----
+{ run('tqnRestoreTheme()'); run('tqnApplyTheme()');
+  const st = sheets['M0S'].sty, at = (r, c) => (st[r + ',' + c] || [])[0];
+  const hdrRow = sheets['M0S'].v.findIndex(r => r.some(x => /Nhà thầu đệ trình/.test(String(x)))) + 1;
+  const cNT = sheets['M0S'].v[hdrRow - 1].findIndex(x => /Nhà thầu đệ trình/.test(String(x))) + 1;
+  const cTV = sheets['M0S'].v[hdrRow - 1].findIndex(x => /Tư vấn giám sát/.test(String(x))) + 1;
+  T('U59 M0S: khối "Nhà thầu đệ trình" xanh dương, "Tư vấn giám sát" xanh ngọc, khác nhau', at(hdrRow, cNT) === '#C7DCFB' && at(hdrRow, cTV) === '#B7EDE0', 'dòng ' + hdrRow + ': NT ' + at(hdrRow, cNT) + ' / TVGS ' + at(hdrRow, cTV));
+  T('U60 Dòng tiêu đề con (Kế hoạch/Thực tế) cùng tông bên, nhạt hơn', at(hdrRow + 1, cNT + 1) === '#E8F0FD' && at(hdrRow + 1, cTV) === '#E3F7F1', at(hdrRow + 1, cNT + 1) + ' / ' + at(hdrRow + 1, cTV));
+  const cdtC = sheets['RFA'].v[2].findIndex(x => /Chủ Đầu Tư/.test(String(x))) + 1;
+  T('U61 RFA: khối Chủ đầu tư màu cam nhạt riêng', cdtC > 0 && (sheets['RFA'].sty['3,' + cdtC] || [])[0] === '#FBDDB8', 'cột ' + cdtC);
 }
 console.log(`KẾT QUẢ: ${pass} PASS / ${fail} FAIL`);
 fs.writeFileSync(path.join(__dirname, 'out_' + FIX.replace('.json', '') + '_QC.tsv'), sheets['TQN_QC'].v.map(r => r.map(x => x instanceof Date ? x.toISOString() : x).join('\t')).join('\n'));
