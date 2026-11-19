@@ -1,0 +1,8 @@
+Kiem cong thuc so ngay phan hoi CDT (D1). Nguon: ban .xlsx trong goi, SHA256 47e537fe...
+RFA: Q6==IF(OR(P6="",M6=""),"",P6-M6) | M7==IF(OR(I7="",L7=""),"",L7-I7) | tieu de cot M=['Số ngày\n phản hồi \n(max 3)']
+RFC: Q6==IF(OR(P6="",M6=""),"",P6-M6) | M7==IF(OR(I7="",L7=""),"",L7-I7) | tieu de cot M=['Số ngày\n phản hồi \n(max 3)']
+Hồ sơ an toàn: Q6==IF(OR(P6="",M6=""),"",P6-M6) | M7==IF(OR(I7="",L7=""),"",L7-I7) | tieu de cot M=['Số ngày\n phản hồi (max 3']
+SCH-Kế hoạch: Q6==IF(OR(P6="",M6=""),"",P6-M6) | M7==IF(OR(I7="",L7=""),"",L7-I7) | tieu de cot M=['Số ngày\n phản hồi (max 3']
+M0S: O23= =IF(OR(I23="",N23=""),"",N23-I23)  S23= =IF(OR(R23="",I23=""),"",R23-I23)
+So trinh duyet: K23= =IF(OR(I23="",J23=""),"",I23+J23)  O23= =IF(C23="","",IF(M23<>"",M23,IF(I23="","Chưa trình",IF(L23<>"","Đã phản hồi",IF(AND(K23<>"",TODAY()>K23),"Quá hạn","Đang chờ")))))
+Tab an tu du an truoc: Check!A1= Dự án: Trung tâm hội nghị Phật Giáo Quốc Tế
