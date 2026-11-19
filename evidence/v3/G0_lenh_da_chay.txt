@@ -1,0 +1,23 @@
+# Lệnh G0 đã chạy — 2026-11-19T04:09:42Z
+$ uname -sr
+Linux 6.18.44-fc-v653
+$ python3 --version
+Python 3.13.18
+$ node --version
+v22.23.5
+$ psql --version
+psql (PostgreSQL) 16.15 (Ubuntu 16.15-0ubuntu0.24.04.1)
+$ /usr/lib/postgresql/16/bin/postgres --version
+postgres (PostgreSQL) 16.15 (Ubuntu 16.15-0ubuntu0.24.04.1)
+$ docker ps
+failed to connect to the docker API at unix:///var/run/docker.sock; check if the path is correct and if the daemon is running: dial unix /var/run/docker.sock: connect: no such file or directory
+$ dotnet --version
+bash: line 1: dotnet: command not found
+$ git --version
+git version 2.43.0
+$ curl https://api.nuget.org/v3/index.json
+curl: (56) CONNECT tunnel failed, response 403
+$ curl https://builds.dotnet.microsoft.com/
+curl: (56) CONNECT tunnel failed, response 403
+$ curl https://api.open-meteo.com/
+curl: (56) CONNECT tunnel failed, response 403

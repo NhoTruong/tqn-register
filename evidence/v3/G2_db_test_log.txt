@@ -1,0 +1,19 @@
+# 2026-11-19T04:11:24Z PostgreSQL 16.15
+PASS T01 áp schema
+PASS T02a (= 2)
+PASS T02b (bị chặn: duplicate key)
+PASS T03a (= 100)
+PASS T03b (= 100)
+PASS T03c (= 1)
+PASS T04 (bị chặn: bất biến)
+PASS T04b (bị chặn: bất biến)
+PASS T05a (= Rev02)
+PASS T05b (= 3)
+PASS T05c (= DUYET_CO_Y_KIEN,KHONG_DUYET_TRINH_LAI)
+PASS T05d (bị chặn: duplicate key)
+PASS T06 (= 2)
+PASS T07 (= 1||1)
+PASS T08 (bị chặn: check constraint)
+PASS T09 (bị chặn: foreign key)
+PASS T10 (bị chặn: bất biến)
+TONG: PASS=17 FAIL=0

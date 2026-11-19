@@ -1,0 +1,6 @@
+gate,trang_thai,bang_chung,ghi_chu
+G0,PASS (co muc BLOCKED),docs/ENVIRONMENT.md; evidence/v3/G0_lenh_da_chay.txt,"Da khao sat du; .NET SDK, Google credential, hosting, giay phep thoi tiet: BLOCKED"
+G1,PASS,docs/CURRENT_STATE_V3.md; docs/SOURCE_REGISTER.md; evidence/v3/sha256_*.txt,"Doc du nguon; 10 rui ro; KEEP/REFACTOR/REPLACE/DEPRECATE co file:dong"
+G2,PASS (cho anh chon ADR-007),docs/ADR_V3.md; db/schema_v0.sql; evidence/v3/G2_db_test_log.txt,"Schema chay that PostgreSQL 16: 17/17 PASS"
+G3,BLOCKED,,"Can .NET 10 SDK + NuGet hoac build tren may anh; can hosting"
+G4-G10,CHUA BAT DAU,,

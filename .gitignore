@@ -2,3 +2,7 @@ test/fixture_*.json
 test/out_*_DATA.tsv
 test/sidebar_preview.html
 test/sidebar_data.json
+
+# Du lieu goc va thong tin ca nhan khong dua len repo
+*.xlsx
+*.xlsm
