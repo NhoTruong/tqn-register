@@ -121,8 +121,8 @@ T('U21 Bấm lại không sinh lịch trùng', cnt() === 'tqnDailyJob,tqnHourlyJ
 const setC = (k, v) => { const c = sheets['TQN_CONFIG']; for (let r = 2; r <= c.getLastRow(); r++) if (c.get(r, 1) === k) c.set(r, 2, v); };
 setC('weather_enabled', 'Có'); setC('weather_license_ok', 'Có');
 const rep2 = run('tqnSetupAll()');
-T('U22 Đủ điều kiện (GPS Coastal đã xác nhận + điều khoản) thì bật đủ 3 lịch', cnt() === 'tqnDailyJob,tqnHourlyJob,tqnWeatherJob', cnt() + ' | ' + rep2.join(' / '));
-T('U23 Trạng thái tự động báo đủ 3 dòng ✔', run('tqnAutoStatus()').every(x => x.startsWith('✔')), run('tqnAutoStatus()').join(' / '));
+T('U22 Đủ điều kiện (GPS Coastal đã xác nhận + điều khoản) thì bật đủ lịch (thời tiết 3 buổi)', cnt() === 'tqnDailyJob,tqnHourlyJob,tqnWeatherJob,tqnWeatherJob,tqnWeatherJob,tqnWeatherJob', cnt() + ' | ' + rep2.join(' / '));
+T('U23 Trạng thái tự động: 3 lịch ✔ + dòng Tự cấp mã', run('tqnAutoStatus()').slice(0, 3).every(x => x.startsWith('✔')) && /Tự cấp mã/.test(run('tqnAutoStatus()')[3]) && /Thả file/.test(run('tqnAutoStatus()')[4]), run('tqnAutoStatus()').join(' / '));
 run('tqnRemoveAll()');
 T('U24 Tắt tất cả: xóa hết lịch TQN', TRIG.length === 0, cnt());
 T('U25 Tự động mỗi giờ không ghi tab gốc', !writes.some(w => ORIGINAL.has(w[0])));

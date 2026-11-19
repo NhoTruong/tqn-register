@@ -9,3 +9,11 @@ test/sidebar_data.json
 weather-poc/out/
 __pycache__/
 preview/site/data.json
+node_modules/
+v6/gas/dist/
+v6/.clasp.json
+v6/.clasp.*.json
+!v6/.clasp.*.json.example
+.clasprc.json
+dist/
+backup/

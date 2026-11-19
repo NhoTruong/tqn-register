@@ -1,0 +1,6 @@
+node_modules/
+gas/dist/
+.clasp.json
+.clasprc.json
+*.log
+.env*

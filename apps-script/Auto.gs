@@ -4,7 +4,7 @@
  *  - tqnDailyJob  : nhắc hạn ~07:00 (Remind.gs).
  *  - tqnWeatherJob: thời tiết ~06:00 (Weather.gs), chỉ khi đủ điều kiện GPS + điều khoản nguồn.
  */
-var TQN_AUTO_HANDLERS = ['tqnHourlyJob', 'tqnDailyJob', 'tqnWeatherJob', 'tqnMoBangKhiMo'];
+var TQN_AUTO_HANDLERS = ['tqnHourlyJob', 'tqnDailyJob', 'tqnWeatherJob', 'tqnMoBangKhiMo', 'tqnTuDongMaKhiSua', 'tqnPhanPhoiFile', 'tqnQuanLyKhiSua', 'tqnEmailSang', 'tqnEmailSep'];
 /** Mở bảng Quản lý hồ sơ mỗi khi mở file (trình kích hoạt onOpen cài đặt – trình kích hoạt đơn giản không mở được hộp thoại). */
 function tqnMoBangKhiMo() { try { tqnMenuManager(); } catch (e) { } }
 function tqnBatMoBangKhiMo() {
@@ -17,10 +17,12 @@ function tqnHourlyJob() {
   var lock = LockService.getDocumentLock();
   if (!lock.tryLock(10000)) { tqnAudit_('TU_DONG_GIO', 'Bỏ qua: đang có lần chạy khác', {}); return 'BAN'; }
   try {
+    tqnCacheClear_();
     tqnEnsureConfig_();
     var cfg = tqnConfig_(), imp = tqnImport_(cfg), qc = tqnQC_(cfg, imp), rem = tqnRemindList_(cfg, imp, new Date());
     tqnWriteRemind_(cfg, rem);
     var wf = tqnBuildWorkflow_(cfg, imp, new Date());
+    try { if (ScriptApp.getProjectTriggers().some(function (t) { return t.getHandlerFunction() === 'tqnQuanLyKhiSua'; })) tqnQlTinhLaiTatCa(); } catch (e) { }
     PropertiesService.getDocumentProperties().setProperty('lastHourly', Utilities.formatDate(new Date(), cfg.timezone, 'dd/MM/yyyy HH:mm'));
     tqnAudit_('TU_DONG_GIO', 'Nhập & kiểm tự động', { du_lieu: imp.counts, qc: qc.byRule, nhac: rem.length, quy_trinh: wf.count });
     return 'OK';
@@ -43,8 +45,10 @@ function tqnSetupAll() {
   out.push('✔ Nhắc hạn: hằng ngày khoảng ' + tqnInstallDaily() + ':00' + (tqnConfig_().emailOn ? ' (có gửi mail)' : ' (chưa gửi mail – bật remind_email_enabled = Có để gửi)'));
   var wc = tqnWeatherCfg_(), why = tqnWeatherBlocked_(wc);
   if (why) { tqnRemoveWeather(true); out.push('✖ Thời tiết 06:00 CHƯA bật: ' + why + ' → sửa ở tab TQN_CONFIG rồi bấm lại nút này'); }
-  else out.push('✔ Thời tiết: hằng ngày khoảng ' + tqnInstallWeather() + ':00');
+  else out.push('✔ Thời tiết: hằng ngày lúc ' + tqnInstallWeather());
   try { tqnBatMoBangKhiMo(); out.push('✔ Mở file là hiện bảng Quản lý hồ sơ'); } catch (e) { }
+  try { out.push('✔ Tự cấp mã khi gõ Nội dung: ' + tqnBatTuDongMa().join(', ')); } catch (e) { out.push('✖ Tự cấp mã: ' + e.message); }
+  try { tqnBatThaFile(); out.push('✔ Chỗ thả file: tự phân phối 15 phút/lần (Drive › TQN Register – Hồ sơ › 0. THẢ FILE VÀO ĐÂY)'); } catch (e) { out.push('✖ Thả file: ' + e.message); }
   try { var th = tqnApplyTheme(); out.push('✔ Giao diện dễ nhìn: ' + th.tabs.length + ' sổ (bản gốc lưu ở TQN_GIAO_DIEN_GOC)'); } catch (e) { out.push('✖ Giao diện: ' + e.message); }
   try { tqnHourlyJob(); out.push('✔ Đã chạy nhập & kiểm lần đầu'); } catch (e) { out.push('✖ Chạy lần đầu lỗi: ' + e.message); }
   tqnAudit_('BAT_TU_DONG', out.join(' | '), {});
@@ -66,7 +70,9 @@ function tqnAutoStatus() {
   return [
     (on.tqnHourlyJob ? '✔' : '✖') + ' Nhập & kiểm mỗi giờ' + (p.getProperty('lastHourly') ? ' – lần gần nhất ' + p.getProperty('lastHourly') : ''),
     (on.tqnDailyJob ? '✔' : '✖') + ' Nhắc hạn hằng ngày' + (p.getProperty('lastRemind') ? ' – ' + p.getProperty('lastRemind') : ''),
-    (on.tqnWeatherJob ? '✔' : '✖') + ' Thời tiết 06:00' + (p.getProperty('lastWeather') ? ' – ' + p.getProperty('lastWeather') : '')
+    (on.tqnWeatherJob ? '✔' : '✖') + ' Thời tiết (6h · 11h · 13h · 18h)' + (p.getProperty('lastWeather') ? ' – ' + p.getProperty('lastWeather') : ''),
+    (on.tqnTuDongMaKhiSua ? '✔' : '✖') + ' Tự cấp mã SD · RFI khi gõ Nội dung',
+    (on.tqnPhanPhoiFile ? '✔' : '✖') + ' Thả file tự phân phối 15 phút/lần' + (p.getProperty('lastThaFile') ? ' – ' + p.getProperty('lastThaFile') : '')
   ];
 }
 

@@ -212,7 +212,8 @@ function tqnWriteToDetail_(cfg, type, code, subject, owner, rev) {
 }
 
 /* ---------------- Giao diện ---------------- */
-function tqnWorkflowData() {
+function tqnWorkflowData() { return tqnCached_('tqn_wf', tqnWorkflowDataGoc_, 180); }
+function tqnWorkflowDataGoc_() {
   var r = tqnRunAll_(), wf = r.wf, cols = {};
   TQN_WF_STEPS.slice(1).forEach(function (s) { cols[s] = []; });
   var now = new Date(), t0 = new Date(now.getFullYear(), now.getMonth(), now.getDate());

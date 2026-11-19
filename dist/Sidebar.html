@@ -53,7 +53,7 @@ function toast(t){var e=document.getElementById('toast');e.textContent=t;e.style
 function load(){document.getElementById('app').innerHTML='<div class="load">Đang đọc Register và kiểm tra…</div>';
  google.script.run.withSuccessHandler(function(d){D=d;draw()}).withFailureHandler(function(e){document.getElementById('app').innerHTML='<div class="err">'+esc(e.message||e)+'</div>'}).tqnSidebarData();}
 function go(at){google.script.run.tqnGoto(at)}
-function run(fn,btn){if(fn==='tqnSidebarRefresh'){load();return}
+function run(fn,btn){if(fn==='tqnSidebarRefresh'){google.script.run.withSuccessHandler(load).withFailureHandler(load).tqnXoaNho();return}
  btn.disabled=true;google.script.run.withSuccessHandler(function(){btn.disabled=false;if(/Theme|SetupAll|WeatherNow|AiBatch/.test(fn))load()}).withFailureHandler(function(e){btn.disabled=false;toast(e.message||String(e))})[fn]()}
 function draw(){
  var d=D,k=d.kpi;document.getElementById('pj').textContent=d.project+' · '+d.at;

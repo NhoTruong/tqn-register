@@ -129,7 +129,9 @@ function tqnOwnSheet_(name, headers) {
   if (name.indexOf(TQN.PREFIX) !== 0) throw new Error('TQN không được ghi vào tab gốc: ' + name);
   var ss = tqnSs_(), sh = ss.getSheetByName(name);
   if (!sh) {
+    var dangMo = null; try { dangMo = ss.getActiveSheet(); } catch (e) { }
     sh = ss.insertSheet(name);
+    try { if (dangMo && dangMo.getName() !== name) ss.setActiveSheet(dangMo); } catch (e) { }   // tạo tab phụ không làm nhảy khỏi tab đang làm
     if (headers) {
       sh.getRange(1, 1, 1, headers.length).setValues([headers]).setFontWeight('bold').setBackground('#1B3F7A').setFontColor('#ffffff');
       sh.setFrozenRows(1);

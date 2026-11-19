@@ -1,0 +1,10 @@
+const fs = require('fs'), path = require('path'), vm = require('vm');
+const ctx = { console, String, RegExp, Math, JSON, Object, Date, parseInt }; vm.createContext(ctx);
+vm.runInContext(['Config', 'Read', 'Workflow', 'TuDongMa', 'TienDo'].map(n => fs.readFileSync(path.join(__dirname, '../apps-script', n + '.gs'), 'utf8')).join('\n'), ctx);
+let p = 0, f = 0; const T = (t, ok, i) => { console.log((ok ? 'PASS ' : 'FAIL ') + t + (i ? ' | ' + i : '')); ok ? p++ : f++; };
+const hm = s => vm.runInContext('tqnHangMucTuNoiDung_(' + JSON.stringify(s) + ')', ctx), kh = (s, m) => vm.runInContext('tqnKhoiTuNoiDung_(' + JSON.stringify(s) + ',' + JSON.stringify(m) + ')', ctx);
+T('D01 "Bản vẽ chi tiết thép dầm móng REHAUS - RE4" → "Thép dầm móng"', hm('Bản vẽ chi tiết thép dầm móng REHAUS - RE4') === 'Thép dầm móng', hm('Bản vẽ chi tiết thép dầm móng REHAUS - RE4'));
+T('D02 "Hạng mục kết cấu Mái che 1 (LD-05)" → "Mái che 1"', hm('Hạng mục kết cấu Mái che 1 (LD-05)') === 'Mái che 1', hm('Hạng mục kết cấu Mái che 1 (LD-05)'));
+T('D03 Khối RE5 từ nội dung', kh('Bản vẽ chi tiết thép sàn tầng 1 REHAUS - RE5', '261117-COA.NP-NT-SDS-008') === 'RE5');
+T('D04 Gói HTKT → "Công viên"', kh('Hạng mục kết cấu Đảo cà phê (LD-04)', '261113-COA.HTKT-NT-SDS-003') === 'Công viên');
+console.log(`KẾT QUẢ TIẾN ĐỘ: ${p} PASS / ${f} FAIL`);

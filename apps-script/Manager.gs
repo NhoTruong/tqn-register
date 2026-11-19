@@ -62,6 +62,7 @@ function tqnManagerData(nhanh) {
       nguoi: x[6], den: x[7], ngay: tqnFmtDate_(x[8], tz), han: tqnFmtDate_(x[9], tz), d: d, cho: x[10], sla: sla, y: x[12], at: x[13],
       phieu: ph ? (ph.pdf || 'Đã tạo') : '', gn: ph ? ph.gn : '', next: next };
   });
+  try { tqnQlGanVaoManager_(rows); } catch (e) { }   // lấy kết quả tự động (Ai đang giữ / trễ / rev cũ)
   var docs = tqnDocsData(now).map(function (x) { x.nhom = /NCR|Chỉ thị/.test(x.loai) ? 4 : 3; return x; });
   var k = { quaHan: 0, sapHan: 0, cho: 0, traVe: 0, chuaPhieu: 0, xong: 0, tong: rows.length + docs.length };
   rows.forEach(function (x) {

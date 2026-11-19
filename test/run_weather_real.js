@@ -26,7 +26,7 @@ const props = {}; let apiMode = 'ok', calls = 0, lastUrl = '';
 const fakeBody0 = () => JSON.stringify({ latitude: 15.1, longitude: 108.8, timezone: 'Asia/Ho_Chi_Minh',
   daily: { time: ['2026-11-19'], weather_code: [80], temperature_2m_max: [29.4], temperature_2m_min: [23.1], precipitation_sum: [6.2], precipitation_probability_max: [80], wind_speed_10m_max: [11.3], wind_gusts_10m_max: [24.8] },
   hourly: { time: [], relative_humidity_2m: [90, 92, 88, 94] } });
-const fakeBody = () => fs.readFileSync(path.join(__dirname,'openmeteo_real_19-11.json'),'utf8');
+const fakeBody = () => fs.readFileSync(path.join(__dirname,'openmeteo_buoi_19-11.json'),'utf8');
 const ctx = { console, Date, JSON, Math, String, Object, Array, RegExp, Error, parseInt, parseFloat, isNaN, encodeURIComponent,
   SpreadsheetApp: { getActiveSpreadsheet: () => ss, getUi: () => ({ alert() { } }) },
   Utilities: { sleep() { }, DigestAlgorithm: { MD5: 1 }, Charset: { UTF_8: 1 }, computeDigest: (a, s) => Array.from(crypto.createHash('md5').update(s).digest()),
@@ -45,7 +45,7 @@ const setCfg = (k, v) => { const c = sheets['TQN_CONFIG']; for (let r = 2; r <= 
 const W = sheets[WEATHER_TAB];
 run('tqnEnsureConfig_(); tqnEnsureWeatherConfig_();');
 let r = run('tqnWeatherJob(true)'); T('W01 Mặc định tắt → chặn, không gọi API', r.startsWith('CHAN') && calls === 0, r);
-setCfg('weather_enabled', 'Có'); r = run('tqnWeatherJob(true)'); T('W02 Chưa có GPS → chặn', r.includes('tọa độ') && calls === 0, r);
+setCfg('weather_enabled', 'Có'); setCfg('weather_lat', ''); setCfg('weather_gps_confirmed', 'Không'); r = run('tqnWeatherJob(true)'); T('W02 Chưa có GPS → chặn', r.includes('tọa độ') && calls === 0, r);
 setCfg('weather_lat', '15.0'); setCfg('weather_lon', '108.8'); r = run('tqnWeatherJob(true)'); T('W03 GPS chưa xác nhận → chặn', r.includes('xác nhận') && calls === 0, r);
 setCfg('weather_gps_confirmed', 'Có'); r = run('tqnWeatherJob(true)'); T('W04 Chưa xác nhận điều khoản nguồn → chặn', r.includes('điều khoản') && calls === 0, r);
 setCfg('weather_license_ok', 'Có'); apiMode = '500'; r = run('tqnWeatherJob(false)');
@@ -53,9 +53,9 @@ T('W05 API lỗi 500 → thử lại 3 lần, FAILED, không ghi vào Register',
 apiMode = 'bad'; calls = 0; r = run('tqnWeatherJob(false)'); T('W06 Phản hồi thiếu trường → FAILED, không ghi', r.startsWith('FAILED') && W.getLastRow() === 1, r);
 apiMode = 'ok'; calls = 0; r = run('tqnWeatherJob(false)'); const row2 = W.v[1] || [];
 T('W07 Thành công: thêm dòng 2 đúng cột Register', r === 'THEM' && W.getLastRow() === 2, r);
-console.log('     Dòng ghi:', row2.map(x => x instanceof Date ? x.toLocaleDateString('vi-VN') : x).join(' | '));
-T('W08 Cột đúng: A ngày, B thứ, C min, E max (ô gộp), G thời tiết, H mưa, I ẩm, J gió, K ghi chú', row2[1] === 'Thứ Năm' && row2[2] === 23.1 && row2[3] === '' && row2[4] === 29.4 && row2[6] === 'Mưa rào nhẹ' && row2[7] === 6.2 && row2[8] === 91 && row2[9] === 11.3 && String(row2[10]).startsWith('[TQN]'));
-T('W09 Ghi chú có nguồn + khả năng mưa + ghi rõ là dự báo', /Open-Meteo/.test(row2[10]) && /80%/.test(row2[10]) && /dự báo/i.test(row2[10]));
+console.log('     Ghi chú K:\n' + row2[10]); console.log('     Dòng ghi:', row2.map(x => x instanceof Date ? x.toLocaleDateString('vi-VN') : x).join(' | '));
+T('W08 Cột đúng: A ngày, B thứ, C min, E max (ô gộp), G thời tiết, H mưa, I ẩm, J gió, K ghi chú', row2[1] === 'Thứ Năm' && row2[2] === 21.6 && row2[3] === '' && row2[4] === 27.2 && row2[6] === 'Mưa phùn dày' && row2[7] === 5.3 && row2[8] === 89 && row2[9] === 13.9 && /^📷 /.test(String(row2[10])));
+T('W09 Ghi chú tách dòng Sáng/Trưa/Chiều/Tối + khả năng mưa + ngày mai (nguồn ghi ở bản tin PDF)', ['Sáng', 'Trưa', 'Chiều', 'Tối'].every(b => new RegExp('\\n' + b + ' ').test(row2[10])) && /96%/.test(row2[10]) && /Ngày mai/.test(row2[10]) && !/Tự động/.test(row2[10]));
 r = run('tqnWeatherJob(false)'); T('W10 Trigger chạy lần 2 cùng ngày → bỏ qua', r === 'DA_CHAY' && W.getLastRow() === 2, r);
 r = run('tqnWeatherJob(true)'); T('W11 Bấm tay cùng ngày → cập nhật lại đúng dòng TQN, không thêm dòng', r === 'CAP_NHAT' && W.getLastRow() === 2, r);
 W.set(2, 11, 'Nhập tay bởi BCH'); delete props.lastWeather; r = run('tqnWeatherJob(true)');

@@ -82,13 +82,13 @@ function tqnAiSave_(rec, o, model) {
 }
 
 /** Gọi Claude qua API Anthropic (thử lại khi 429/5xx). */
-function tqnAiCall_(cfg, prompt) {
+function tqnAiCall_(cfg, prompt, maxTokens) {
   var key = PropertiesService.getScriptProperties().getProperty('ANTHROPIC_API_KEY'), last = '';
   for (var i = 0; i < 3; i++) {
     var res = UrlFetchApp.fetch('https://api.anthropic.com/v1/messages', {
       method: 'post', contentType: 'application/json', muteHttpExceptions: true,
       headers: { 'x-api-key': key, 'anthropic-version': '2023-06-01' },
-      payload: JSON.stringify({ model: cfg.ai_model, max_tokens: 1200, messages: [{ role: 'user', content: prompt }] })   // prompt: chữ, hoặc mảng [ảnh/PDF, chữ] khi đọc phiếu
+      payload: JSON.stringify({ model: cfg.ai_model, max_tokens: maxTokens || 1200, messages: [{ role: 'user', content: prompt }] })   // prompt: chữ, hoặc mảng [ảnh/PDF, chữ] khi đọc phiếu
     });
     var code = res.getResponseCode(), body = res.getContentText();
     if (code === 200) {

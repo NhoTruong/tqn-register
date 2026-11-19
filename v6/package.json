@@ -1,0 +1,35 @@
+{
+  "name": "tqn-register-v6",
+  "private": true,
+  "version": "0.6.0",
+  "type": "module",
+  "description": "TQN Register V6 – lõi nghiệp vụ TS + Apps Script adapter + Web App React. Starter: Mikoshiba-Kyu/gas-webapp-boilerplate (MIT).",
+  "scripts": {
+    "dev": "vite --config vite.config.frontend.ts",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "build:frontend": "vite build --config vite.config.frontend.ts",
+    "build:backend": "vite build --config vite.config.backend.ts",
+    "build": "rm -rf gas/dist && npm run build:frontend && npm run build:backend",
+    "push:dev": "cp .clasp.dev.json .clasp.json && clasp push -f",
+    "push:staging": "cp .clasp.staging.json .clasp.json && clasp push -f",
+    "push:prod": "cp .clasp.prod.json .clasp.json && clasp push -f"
+  },
+  "dependencies": {
+    "gas-client": "^1.2.1",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@google/clasp": "^3.4.1",
+    "@types/google-apps-script": "^2.0.15",
+    "@types/react": "^18.3.31",
+    "@types/react-dom": "^18.3.7",
+    "@vitejs/plugin-react": "^4.7.0",
+    "rollup-plugin-google-apps-script": "^1.1.14",
+    "typescript": "^5.9.3",
+    "vite": "^5.4.21",
+    "vite-plugin-singlefile": "^2.3.4",
+    "vitest": "^2.1.9"
+  }
+}

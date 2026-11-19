@@ -4,6 +4,8 @@
 function onOpen() {
   SpreadsheetApp.getUi().createMenu('TQN Register')
     .addItem('▣ Quản lý hồ sơ (bảng chính)', 'tqnMenuManager')
+    .addItem('⌂ Tạo / làm mới tab Trang chủ (thanh nút)', 'tqnMenuTrangChu')
+    .addItem('⌂ Gắn hàng nút lên đầu từng sổ (SD, RFA, RFI…)', 'tqnMenuHangNut')
     .addSeparator()
     .addItem('★ Bật tự động tất cả (bấm 1 lần)', 'tqnMenuSetupAll')
     .addItem('Trạng thái tự động', 'tqnMenuAutoStatus')
@@ -12,6 +14,22 @@ function onOpen() {
     .addItem('Bảng điều khiển', 'tqnShowSidebar')
     .addItem('Quy trình hồ sơ (ai đang giữ việc)', 'tqnMenuWorkflow')
     .addItem('Tạo hồ sơ mới / Trình lại – cấp mã', 'tqnMenuNewDoc')
+    .addItem('Tự cấp mã SD · RFI khi gõ Nội dung: BẬT', 'tqnMenuBatTuDongMa')
+    .addItem('Cấp mã cho các dòng còn trống mã', 'tqnMenuCapMaTrong')
+    .addItem('Kiểm & sửa mã nhập tay (trùng số, STT, khoảng trắng)', 'tqnMenuKiemMa')
+    .addItem('📂 Thả file tự phân phối (mở thư mục / phân phối ngay)', 'tqnMenuThaFile')
+    .addItem('⛔ Tiến độ ↔ hồ sơ chặn thi công (tạo / làm mới tab)', 'tqnMenuTienDo')
+    .addItem('🛡 Quản lý theo mẫu phiếu A/B/C/D: cài / cập nhật', 'tqnMenuQuanLy')
+    .addItem('🛡 Tính lại Ai đang giữ + Kiểm tra', 'tqnMenuTinhLaiQuanLy')
+    .addItem('🙈 Ẩn khối Tư vấn (dự án không có tư vấn)', 'tqnMenuAnTuVan')
+    .addItem('👁 Hiện lại khối Tư vấn', 'tqnMenuHienTuVan')
+    .addItem('↻ Trình lại rev mới (đứng ở dòng bị trả về)', 'tqnMenuTrinhLai')
+    .addItem('🔎 Tạo bộ lọc sẵn: Việc của từng người / Đang chờ / Cần sửa', 'tqnMenuBoLoc')
+    .addItem('👥 Phân quyền theo email (cột kết quả phiếu)', 'tqnMenuPhanQuyen')
+    .addItem('✉ Email nhắc (bị trả về · 7h sáng · thứ Hai cho sếp): bật / tắt', 'tqnMenuEmail')
+    .addItem('🤖 AI đọc mẫu phiếu dự án mới → đề xuất', 'tqnMenuAiMauPhieu')
+    .addItem('🌐 Trang web cập nhật hồ sơ (lấy link gửi đội)', 'tqnMenuMoWeb')
+    .addItem('Tự cấp mã: tắt', 'tqnMenuTatTuDongMa')
     .addItem('✦ AI rà hồ sơ cần xử lý (bản nháp)', 'tqnMenuAiBatch')
     .addItem('Giao diện dễ nhìn (đổi màu các sổ)', 'tqnMenuTheme')
     .addItem('Trả lại giao diện gốc', 'tqnMenuRestoreTheme')
@@ -24,7 +42,8 @@ function onOpen() {
     .addItem('Tắt nhắc hạn hằng ngày', 'tqnMenuRemoveDaily')
     .addSeparator()
     .addItem('Thời tiết: cập nhật ngay', 'tqnMenuWeatherNow')
-    .addItem('Thời tiết: bật 06:00 hằng ngày', 'tqnMenuWeatherOn')
+    .addItem('Thời tiết: cập nhật từ ngày… đến ngày…', 'tqnMenuWeatherKhoang')
+    .addItem('Thời tiết: bật tự động (6h · 11h · 13h · 18h)', 'tqnMenuWeatherOn')
     .addItem('Thời tiết: tắt', 'tqnMenuWeatherOff')
     .addSeparator()
     .addItem('Cài đặt (tạo TQN_CONFIG)', 'tqnMenuSetup')
@@ -36,6 +55,7 @@ function tqnRunAll_() {
   var lock = LockService.getDocumentLock();
   if (!lock.tryLock(20000)) throw new Error('Đang có người chạy nhập/kiểm, thử lại sau ít phút.');
   try {
+    tqnCacheClear_();
     tqnEnsureConfig_();
     var cfg = tqnConfig_(), imp = tqnImport_(cfg), qc = tqnQC_(cfg, imp), rem = tqnRemindList_(cfg, imp, new Date());
     tqnWriteRemind_(cfg, rem);
@@ -75,7 +95,19 @@ function tqnShowSidebar() {
 }
 
 /** Dữ liệu cho thanh bên (gọi từ google.script.run). */
-function tqnSidebarData() {
+/** Nhớ kết quả 3 phút cho các bảng mở nhiều lần (không phải đọc lại 32 sổ mỗi lần bấm). Chạy nhập/kiểm mới thì xóa nhớ. */
+var TQN_CACHE_KEYS = ['tqn_sb', 'tqn_wf'];
+function tqnCached_(key, fn, sec) {
+  var c = null; try { c = CacheService.getDocumentCache(); } catch (e) { }
+  if (c) { var v = c.get(key); if (v) { try { return JSON.parse(v); } catch (e) { } } }
+  var kq = fn();
+  if (c) { try { var s = JSON.stringify(kq); if (s.length < 95000) c.put(key, s, sec || 180); } catch (e) { } }
+  return kq;
+}
+function tqnCacheClear_() { try { CacheService.getDocumentCache().removeAll(TQN_CACHE_KEYS); } catch (e) { } }
+function tqnXoaNho() { tqnCacheClear_(); return true; }
+function tqnSidebarData() { return tqnCached_('tqn_sb', tqnSidebarDataGoc_, 180); }
+function tqnSidebarDataGoc_() {
   var r = tqnRunAll_(), cfg = r.cfg, tz = cfg.timezone;
   var log = r.imp.src.log, cnt = function (f) { return log.filter(f).length; };
   var st = function (L) { return tqnNoAccent_(L.status); };
