@@ -18,7 +18,7 @@ export class SheetsRepo implements Repo {
   private sh(t: TabName) {
     const name = this.prefix + t;
     let s = this.ss.getSheetByName(name);
-    if (!s) { s = this.ss.insertSheet(name); s.getRange(1, 1, 1, TABS[t].length).setValues([[...TABS[t]]]).setFontWeight('bold'); s.setFrozenRows(1); }
+    if (!s) { s = this.ss.insertSheet(name); s.getRange(1, 1, s.getMaxRows(), TABS[t].length).setNumberFormat('@'); s.getRange(1, 1, 1, TABS[t].length).setValues([[...TABS[t]]]).setFontWeight('bold'); s.setFrozenRows(1); }
     return s;
   }
   private rows(t: TabName): unknown[][] {
@@ -30,10 +30,15 @@ export class SheetsRepo implements Repo {
     if (i >= 0) { s.getRange(i + 2, 1, 1, row.length).setValues([row]); all[i] = row; }
     else { s.getRange(all.length + 2, 1, 1, row.length).setValues([row]); all.push(row); }
   }
-  private obj<T>(t: TabName, r: unknown[]): T { const o: Record<string, unknown> = {}; TABS[t].forEach((k, i) => { o[k] = r[i] === '' ? null : r[i]; }); return o as T; }
+  private obj<T>(t: TabName, r: unknown[]): T {
+    // Sheets tự đổi chữ ISO thành ngày → trả lại chuỗi ISO (google.script.run không trả được Date lồng trong object)
+    const o: Record<string, unknown> = {};
+    TABS[t].forEach((k, i) => { const v = r[i]; o[k] = v === '' ? null : v instanceof Date ? v.toISOString() : v; });
+    return o as T;
+  }
 
   getDocument(id: string) { const r = this.rows('DOCS').find(x => x[0] === id); return r ? this.doc(r) : null; }
-  private doc(r: unknown[]): DocumentRec { const d = this.obj<DocumentRec>('DOCS', r); d.currentRev = Number(d.currentRev); return d; }
+  private doc(r: unknown[]): DocumentRec { const d = this.obj<DocumentRec>('DOCS', r); d.currentRev = Number(d.currentRev); d.docNo = String(d.docNo); return d; }
   listDocuments(projectId: string, type?: DocType) { return this.rows('DOCS').filter(x => x[1] === projectId && (!type || x[2] === type)).map(r => this.doc(r)); }
   saveDocument(d: DocumentRec) { this.upsert('DOCS', x => x[0] === d.documentId, TABS.DOCS.map(k => (d as unknown as Record<string, unknown>)[k] ?? '')); }
   getRevisions(documentId: string): RevisionRec[] {
@@ -46,7 +51,7 @@ export class SheetsRepo implements Repo {
     this.upsert('REVS', x => x[0] === r.documentId && Number(x[1]) === r.revNo, [r.documentId, r.revNo, r.submittedAt ?? '', r.repliedAt ?? '', r.replyCode ?? '', r.replyText ?? '', r.replyNote ?? '', JSON.stringify(r.files)]);
   }
   appendEvent(e: EventRec) { const s = this.sh('EVENTS'); s.appendRow(TABS.EVENTS.map(k => (e as unknown as Record<string, unknown>)[k] ?? '')); this.cache.EVENTS = undefined; }
-  listEvents(documentId: string) { return this.rows('EVENTS').filter(x => x[5] === documentId).map(r => { const e = this.obj<EventRec>('EVENTS', r); e.ok = String(e.ok) === 'true'; return e; }); }
+  listEvents(documentId: string) { return this.rows('EVENTS').filter(x => x[5] === documentId).map(r => { const e = this.obj<EventRec>('EVENTS', r); e.ok = String(e.ok) === 'true'; e.revNo = e.revNo == null ? null : Number(e.revNo); return e; }); }
   private kv(key: string) { const r = this.rows('KV').find(x => x[0] === key); return r ? String(r[1]) : null; }
   private setKv(key: string, v: string) { this.upsert('KV', x => x[0] === key, [key, v, new Date().toISOString()]); }
   getCounter(key: string) { return Number(this.kv('cnt:' + key) || 0); }

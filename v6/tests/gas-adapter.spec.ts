@@ -3,19 +3,23 @@ import { describe, it, expect, beforeAll } from 'vitest';
 import { readFileSync, existsSync } from 'node:fs';
 import vm from 'node:vm';
 
-function fakeSs() {
+function fakeSs(noText = false) {
   const sheets = new Map<string, any[][]>();
+  const textFmt = new Set<string>(); if (noText) textFmt.add = (() => textFmt) as any;
   const mk = (name: string) => {
     const g = () => sheets.get(name)!;
     const sh: any = {
       getName: () => name,
       getLastRow: () => g().length,
+      getMaxRows: () => 1000,
       setFrozenRows() {},
-      appendRow(row: any[]) { g().push(row.map(v => (v === null || v === undefined ? '' : v))); },
+      appendRow(row: any[]) { g().push(row.map(v => (v === null || v === undefined ? '' : (typeof v === 'string' && /^\d{4}-\d\d-\d\dT/.test(v) && !textFmt.has(name)) ? new Date(v) : v))); },
       getRange(r: number, c: number, nr = 1, nc = 1) {
         return {
           getValues: () => Array.from({ length: nr }, (_, i) => Array.from({ length: nc }, (_, j) => (g()[r - 1 + i] || [])[c - 1 + j] ?? '')),
-          setValues(v: any[][]) { v.forEach((row, i) => { const rr = (g()[r - 1 + i] ||= []); row.forEach((x, j) => { rr[c - 1 + j] = x === null || x === undefined ? '' : x; }); }); return this; },
+          // giống Sheets thật: chuỗi dạng ngày ISO tự thành Date nếu ô không định dạng văn bản
+          setValues(v: any[][]) { v.forEach((row, i) => { const rr = (g()[r - 1 + i] ||= []); row.forEach((x, j) => { rr[c - 1 + j] = x === null || x === undefined ? '' : (typeof x === 'string' && /^\d{4}-\d\d-\d\dT/.test(x) && !textFmt.has(name)) ? new Date(x) : x; }); }); return this; },
+          setNumberFormat(f: string) { if (f === '@') textFmt.add(name); return this; },
           setFontWeight() { return this; },
         };
       },
@@ -64,6 +68,9 @@ describe('Adapter Apps Script (file build thật)', () => {
     expect(v.revisions[0].files[0].name).toBe('a.pdf');
     expect(v.events.map((e: any) => e.action)).toEqual(['CREATE', 'SUBMIT', 'REPLY']);
     expect(locks).toBeGreaterThanOrEqual(3);
+    // kết quả trả về web không được chứa Date (google.script.run sẽ trả null) – lỗi thấy trên DEV 22:28
+    const l = call('apiList', 'RFI'); expect(l.length).toBe(1); expect(typeof l[0].createdAt).toBe('string');
+    expect(JSON.stringify(ctx.apiList('RFI'))).not.toMatch(/"\d{4}-\d\d-\d\dT[^"]*Z"\s*\}/ && /Date/);
   });
   it('gửi trùng (bấm 2 lần) → 1 hồ sơ; thiếu quyền → lỗi rõ, không ghi', () => {
     user = 'nt@tbc.vn';
