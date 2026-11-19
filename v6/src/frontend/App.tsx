@@ -67,7 +67,7 @@ export default function App() {
             <div className="row2">rev{String(d.currentRev).padStart(2, '0')} {d.dueAt && <>· hạn {fmt(d.dueAt)}</>} {d.overdueDays > 0 && <b className="late">· trễ {d.overdueDays} ngày</b>}</div>
           </li>)}{!shown.length && <li className="empty">Không có hồ sơ trong mục này.</li>}</ul>
         </aside>
-        <section>{v360 ? <Detail v={v360} isRev={!!isRev} isNt={!!isNt} busy={busy} act={act} /> : <div className="empty">Chọn một hồ sơ bên trái.</div>}</section>
+        <section>{v360 ? <Detail key={v360.doc.documentId + v360.doc.status + v360.doc.currentRev} v={v360} isRev={!!isRev} isNt={!!isNt} busy={busy} act={act} /> : <div className="empty">Chọn một hồ sơ bên trái.</div>}</section>
       </main>
       <footer>Bản {who?.build?.version} · {who?.build?.env} · commit {who?.build?.commit} {isDemo && '· XEM TRƯỚC – dữ liệu DEMO, không ghi vào Register'}</footer>
       {newOpen && <NewRfi close={() => setNewOpen(false)} act={act} />}
