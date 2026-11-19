@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="vi"><head><meta charset="utf-8">
+<style>
+:root{
+{% if theme == 'sang' %}
+ --bg:linear-gradient(170deg,#3a8ee6 0%,#5aa9ef 38%,#7fc0f2 70%,#a9d6f5 100%);
+ --card:rgba(255,255,255,.20); --card2:rgba(255,255,255,.14); --line:rgba(255,255,255,.35);
+ --tx:#fff; --tx2:rgba(255,255,255,.82); --tx3:rgba(255,255,255,.66); --acc:#FFD54A; --rain:#e6f4ff;
+ --brand:#1B3F7A; --badge:#1F8A8A; --shadow:0 6px 18px rgba(20,60,120,.18);
+{% else %}
+ --bg:#14171c; --card:#22262d; --card2:#1b1f25; --line:#343a43;
+ --tx:#eef1f5; --tx2:#b9c1cc; --tx3:#8b95a3; --acc:#FACC15; --rain:#60A5FA;
+ --brand:#1B3F7A; --badge:#1F8A8A; --shadow:none;
+{% endif %}
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;height:100%;overflow:hidden}
+body{font-family:Inter,"DejaVu Sans",sans-serif;background:var(--bg);color:var(--tx);
+ -webkit-font-smoothing:antialiased;font-feature-settings:"tnum"}
+.wrap{position:relative;height:100%;display:flex;flex-direction:column;padding:14px 16px 10px;gap:9px}
+.top{display:flex;align-items:center;gap:8px}
+.logo{width:38px;height:28px;white-space:nowrap;border-radius:7px;background:var(--brand);display:flex;align-items:center;justify-content:center;
+ font-weight:800;font-size:11px;letter-spacing:.3px;color:#fff;box-shadow:inset 0 0 0 1.5px #2DD4BF}
+.logo b{color:#2DD4BF}
+.ttl{font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--tx2)}
+.badge{margin-left:auto;font-size:10px;font-weight:700;padding:3px 8px;border-radius:20px;background:var(--badge);color:#fff;letter-spacing:.4px}
+.badge.run{background:#b45309;margin-left:6px}
+.hero{display:flex;align-items:flex-end;justify-content:space-between}
+.pj{font-size:17px;font-weight:700;line-height:1.15}
+.addr{font-size:11px;color:var(--tx3);margin-top:2px}
+.date{font-size:12.5px;color:var(--tx2);margin-top:6px}
+.big{font-size:52px;font-weight:300;line-height:1;letter-spacing:-1px;margin-top:2px}
+.big small{font-size:26px;color:var(--tx2)}
+.cond{font-size:14px;font-weight:600;margin-top:2px}
+.hero .ic{width:84px;height:84px}
+.sum{font-size:12px;line-height:1.45;color:var(--tx);background:var(--card2);border-radius:12px;padding:8px 11px}
+.slot{background:var(--card);border-radius:16px;padding:8px 10px 6px;box-shadow:var(--shadow)}
+.sh{display:flex;align-items:baseline;gap:6px;font-size:12px}
+.sh b{font-size:13px}
+.sh .r{color:var(--tx3)}
+.sh .m{margin-left:auto;color:var(--tx2);font-size:11px}
+.strip{position:relative;margin-top:4px}
+.cols{display:grid;grid-template-columns:repeat(6,1fr);text-align:center}
+.cols .h{font-size:11px;color:var(--tx2)}
+.cols .ic{width:28px;height:28px;margin:2px auto 0}
+.cols .t{font-size:15px;font-weight:600;margin-top:1px}
+.cols .p{font-size:10.5px;color:var(--tx2);display:flex;align-items:center;justify-content:center;gap:2px}
+.cols .p.hi{color:var(--rain);font-weight:700}
+svg.ln{display:block;width:100%;height:26px}
+.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}
+.tile{background:var(--card);border-radius:12px;padding:7px 8px}
+.tile .k{font-size:10px;color:var(--tx3);display:flex;align-items:center;gap:4px}
+.tile .v{font-size:16px;font-weight:700;margin-top:2px}
+.tile .s{font-size:10px;color:var(--tx2)}
+.days{display:flex;gap:7px}
+.day{flex:1;border-radius:12px;padding:6px 8px;background:var(--card2);display:flex;align-items:center;gap:7px;border:1.5px solid transparent}
+.day.on{border-color:var(--tx2);background:var(--card)}
+.day .ic{width:28px;height:28px}
+.day .l{font-size:11px;color:var(--tx2);line-height:1.25;white-space:nowrap}.day .v{font-size:13px;font-weight:700}
+.day .s{font-size:10px;color:var(--tx3);margin-left:auto;text-align:right}
+.foot{margin-top:auto;font-size:9.2px;line-height:1.45;color:var(--tx3);border-top:1px solid var(--line);padding-top:6px}
+.foot b{color:var(--tx2)}
+.warn{display:inline-block;margin-top:2px;padding:1px 6px;border-radius:5px;background:#1B3F7A;color:#FACC15}
+.demo{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none}
+.demo span{font-size:120px;font-weight:900;color:rgba(255,255,255,.10);transform:rotate(-28deg);letter-spacing:8px}
+{% if theme=='toi' %}.demo span{color:rgba(255,255,255,.06)}{% endif %}
+/* share 1080x1350 */
+.share .big{font-size:36px}.share .addr{display:none}.share .tile{padding:5px 8px}.share .tile .v{font-size:14px}.share .cols .h{font-size:10px}.share .hero .ic{width:64px;height:64px}.share .cols .ic{width:22px;height:22px}
+.share .cols .t{font-size:13px}.share svg.ln{height:16px}.share .wrap{gap:7px}.share .slot{padding:6px 10px 4px}
+/* desktop 16:9 */
+.desk .wrap{display:grid;grid-template-columns:330px 1fr;grid-template-rows:auto 1fr auto;gap:10px 14px;padding:16px 18px 10px}
+.desk .top{grid-column:1/3}.desk .left{display:flex;flex-direction:column;gap:9px}
+.desk .right{display:flex;flex-direction:column;gap:8px}.desk .foot{grid-column:1/3}
+.desk .tiles{grid-template-columns:1fr 1fr}.desk .big{font-size:40px}.desk .hero .ic{width:60px;height:60px}.desk .pj{font-size:15px}.desk .days{flex-direction:column;gap:5px}.desk .day{padding:4px 8px}.desk .day .ic{width:22px;height:22px}.desk .left{gap:7px}.desk .sum{font-size:11px;padding:6px 9px}.desk .slot{padding:6px 10px 4px}.desk .cols .ic{width:24px;height:24px}
+/* A4 */
+.a4 html,.a4 body{overflow:visible}
+.a4 .wrap{width:210mm;height:297mm;padding:10mm 12mm 7mm;gap:7px}.a4 .big{font-size:42px}.a4 .hero .ic{width:64px;height:64px}.a4 .slot{padding:5px 10px 3px}.a4 .cols .ic{width:22px;height:22px}.a4 svg.ln{height:18px}
+.a4 table{width:100%;border-collapse:collapse;font-size:9.6px}
+.a4 th,.a4 td{padding:1.9px 4px;text-align:center;border-bottom:1px solid var(--line)}
+.a4 th{color:var(--tx3);font-weight:600}
+.a4 td.l{text-align:left}
+.a4 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+</style></head>
+{% macro icon(cond, hour=12, cls='ic') -%}
+{%- set night = hour >= 18 or hour < 6 -%}
+<svg class="{{cls}}" viewBox="0 0 64 64">
+ {%- if cond in ['NANG','IT_MAY','MAY_RAI_RAC'] -%}
+  {%- if night -%}<path d="M40 14a18 18 0 1 0 12 30 15 15 0 0 1-12-30z" fill="#F8E7A1"/>
+  {%- else -%}<circle cx="{{ 32 if cond=='NANG' else 26 }}" cy="{{ 30 if cond=='NANG' else 24 }}" r="{{ 13 if cond=='NANG' else 11 }}" fill="#FFC93C"/>
+  <circle cx="{{ 32 if cond=='NANG' else 26 }}" cy="{{ 30 if cond=='NANG' else 24 }}" r="{{ 18 if cond=='NANG' else 15 }}" fill="#FFC93C" opacity=".25"/>{%- endif -%}
+  {%- if cond != 'NANG' -%}<path d="M22 50h24a10 10 0 0 0 0-20 13 13 0 0 0-24-3 9 9 0 0 0 0 23z" fill="#fff" opacity=".95"/>{%- endif -%}
+ {%- elif cond == 'SUONG_MU' -%}
+  <g stroke="#cfd8e3" stroke-width="4" stroke-linecap="round"><line x1="12" y1="26" x2="52" y2="26"/><line x1="8" y1="36" x2="48" y2="36"/><line x1="16" y1="46" x2="56" y2="46"/></g>
+ {%- else -%}
+  {%- if cond == 'NHIEU_MAY' -%}<path d="M16 46h30a11 11 0 0 0 0-22 15 15 0 0 0-28-2 12 12 0 0 0-2 24z" fill="#dfe6ee"/>
+  {%- else -%}<path d="M16 38h30a11 11 0 0 0 0-22 15 15 0 0 0-28-2 12 12 0 0 0-2 24z" fill="#c7d2de"/>
+   {%- if cond == 'DONG' -%}<path d="M34 38l-8 12h7l-4 10 12-15h-7l4-7z" fill="#FACC15"/>
+   {%- else -%}{%- set n = 2 if cond=='MUA_PHUN' else 3 -%}{%- set len = 4 if cond=='MUA_PHUN' else 8 -%}
+    {%- for i in range(n) -%}<line x1="{{ 22+i*10 }}" y1="44" x2="{{ 19+i*10 }}" y2="{{ 44+len }}" stroke="#4FA8F7" stroke-width="{{ 3 if cond=='MUA_PHUN' else 3.5 }}" stroke-linecap="round"/>{%- endfor -%}
+    {%- if cond=='MUA_TO' -%}<line x1="27" y1="52" x2="24" y2="60" stroke="#4FA8F7" stroke-width="3.5" stroke-linecap="round"/>{%- endif -%}
+   {%- endif -%}
+  {%- endif -%}
+ {%- endif -%}
+</svg>
+{%- endmacro %}
+{% macro drop() %}<svg width="8" height="10" viewBox="0 0 8 10"><path d="M4 0C4 0 0 5 0 6.6A4 4 0 0 0 8 6.6C8 5 4 0 4 0z" fill="currentColor"/></svg>{% endmacro %}
+{% macro slotcard(s) -%}
+<div class="slot"><div class="sh"><b>{{ s.name }}</b><span class="r">{{ s.range }}</span>
+ <span class="m">{{ s.main }} · mưa {{ s.rain_sum }} mm · gió đến {{ s.gust_max|round|int }} km/h</span></div>
+ <div class="strip">
+  <div class="cols">{% for h in s.hours %}<div><div class="h">{{ '%02d'|format(h.hour) }}:00</div>{{ icon(h.cond, h.hour) }}<div class="t">{{ h.temp_c|round|int }}°</div></div>{% endfor %}</div>
+  {% set lp = line_path(s.hours, 300, 26, 25, vm.tmin-1, vm.tmax+1) %}
+  <svg class="ln" viewBox="0 0 300 26" preserveAspectRatio="none">
+   <path d="{{ lp.d }}" fill="none" stroke="var(--acc)" stroke-width="2" vector-effect="non-scaling-stroke"/>
+   {% for x,y in lp.pts %}<circle cx="{{ x }}" cy="{{ y }}" r="2.6" fill="#fff" vector-effect="non-scaling-stroke"/>{% endfor %}
+  </svg>
+  <div class="cols">{% for h in s.hours %}<div class="p {{ 'hi' if h.pop_pct >= 70 }}">{{ drop() }}{{ h.pop_pct }}%</div>{% endfor %}</div>
+ </div></div>
+{%- endmacro %}
+{% macro tiles() -%}
+<div class="tiles">
+ <div class="tile"><div class="k">Lượng mưa</div><div class="v">{{ vm.rain_day }} mm</div><div class="s">khả năng đến {{ vm.pop_day }}%</div></div>
+ <div class="tile"><div class="k">Gió</div><div class="v">{{ vm.wind_day|round|int }} km/h</div><div class="s">giật {{ vm.gust_day|round|int }} km/h</div></div>
+ <div class="tile"><div class="k">Độ ẩm</div><div class="v">{{ vm.rh_day }}%</div><div class="s">trung bình cả ngày</div></div>
+ <div class="tile"><div class="k">Mưa cao nhất</div><div class="v">{{ vm.peak.pop_pct }}%</div><div class="s">lúc {{ '%02d'|format(vm.peak.hour) }}:00 (6–17h)</div></div>
+</div>
+{%- endmacro %}
+{% macro days() -%}
+<div class="days">{% for d in vm.days %}<div class="day {{ 'on' if d.active }}"><div class="l">{{ d.label }}<br>{{ d.date }}</div>{{ icon(d.cond) }}<div class="v">{{ d.tmax|round|int }}° / {{ d.tmin|round|int }}°</div><div class="s">{{ d.cond_text }}<br>{{ d.rain }} mm · {{ d.pop_pct }}%</div></div>{% endfor %}</div>
+{%- endmacro %}
+{% macro top() -%}
+<div class="top"><div class="logo">T<b>Q</b>N</div><div class="ttl">Bản tin thời tiết công trường</div>
+ <span class="badge">DỰ BÁO</span>{% if vm.run_kind != 'LICH_0600' %}<span class="badge run">CHẠY TAY</span>{% endif %}</div>
+{%- endmacro %}
+{% macro hero() -%}
+<div class="hero"><div><div class="pj">{{ vm.p.name }}</div><div class="addr">{{ vm.p.address }}</div>
+ <div class="date">{{ vm.date_text }} · phát hành {{ vm.issued_local }}</div>
+ <div class="big">{{ vm.tmax|round|int }}°<small> / {{ vm.tmin|round|int }}°</small></div>
+ <div class="cond">{{ vm.cond_day_text }}</div></div>{{ icon(vm.cond_day) }}</div>
+{%- endmacro %}
+{% macro foot() -%}
+<div class="foot"><b>TQN Register</b> · Dự án {{ vm.p.code }} · GPS {{ '%.6f'|format(vm.p.lat) }}, {{ '%.6f'|format(vm.p.lon) }}{% if vm.p.gps_note %} ({{ vm.p.gps_note }}){% endif %}
+ · ô lưới mô hình {{ vm.grid }} (cách {{ vm.grid_km }} km)<br>
+ Nguồn: <b>{{ vm.provider }}</b> (open-meteo.com, CC BY 4.0) · mô hình {{ vm.model }} · loại <b>{{ vm.kind }}</b> = dự báo, không phải số đo tại công trường · giờ Việt Nam (UTC+7)<br>
+ {% if vm.p.license_status != 'DA_XAC_MINH' %}<span class="warn">Bản thử nội bộ — chưa xác minh giấy phép thương mại, không phát hành ra ngoài.</span>{% endif %}</div>
+{%- endmacro %}
+<body class="{{ {'mobile':'mob','share':'share','desktop':'desk','a4':'a4'}[layout] }}">
+<div class="wrap">
+{% if layout == 'mobile' %}
+ {{ top() }}{{ hero() }}<div class="sum">{{ vm.summary }}</div>
+ {% for s in vm.slots %}{{ slotcard(s) }}{% endfor %}
+ {{ tiles() }}{{ days() }}{{ foot() }}
+{% elif layout == 'share' %}
+ {{ top() }}{{ hero() }}
+ {% for s in vm.slots %}{{ slotcard(s) }}{% endfor %}
+ {{ tiles() }}{{ foot() }}
+{% elif layout == 'desktop' %}
+ {{ top() }}
+ <div class="left">{{ hero() }}<div class="sum">{{ vm.summary }}</div>{{ tiles() }}{{ days() }}</div>
+ <div class="right">{% for s in vm.slots %}{{ slotcard(s) }}{% endfor %}</div>
+ {{ foot() }}
+{% else %}
+ {{ top() }}{{ hero() }}<div class="sum">{{ vm.summary }}</div>
+ {{ tiles() }}{{ days() }}
+ {% for s in vm.slots %}{{ slotcard(s) }}{% endfor %}
+ <table><tr><th>Giờ</th><th class="l">Hiện tượng</th><th>Nhiệt °C</th><th>Cảm giác</th><th>Ẩm %</th><th>Mưa %</th><th>Mưa mm</th><th>Gió km/h</th><th>Giật</th><th>Hướng</th></tr>
+ {% for h in vm.hours_all %}<tr><td>{{ '%02d'|format(h.hour) }}:00</td><td class="l">{{ h.cond_text }}</td><td>{{ h.temp_c }}</td><td>{{ h.feels_c }}</td><td>{{ h.rh_pct }}</td><td>{{ h.pop_pct }}</td><td>{{ h.rain_mm }}</td><td>{{ h.wind_kmh }}</td><td>{{ h.gust_kmh }}</td><td>{{ h.wind_dir }}</td></tr>{% endfor %}
+ </table>
+ {{ foot() }}
+{% endif %}
+</div>
+{% if vm.p.demo %}<div class="demo"><span>DEMO</span></div>{% endif %}
+</body></html>
