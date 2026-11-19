@@ -70,7 +70,8 @@ describe('Adapter Apps Script (file build thật)', () => {
     expect(locks).toBeGreaterThanOrEqual(3);
     // kết quả trả về web không được chứa Date (google.script.run sẽ trả null) – lỗi thấy trên DEV 22:28
     const l = call('apiList', 'RFI'); expect(l.length).toBe(1); expect(typeof l[0].createdAt).toBe('string');
-    expect(JSON.stringify(ctx.apiList('RFI'))).not.toMatch(/"\d{4}-\d\d-\d\dT[^"]*Z"\s*\}/ && /Date/);
+    const hasDate = (o: any): boolean => o instanceof Date || (o && typeof o === 'object' && Object.values(o).some(hasDate));
+    expect(hasDate(ctx.apiList('RFI'))).toBe(false);
   });
   it('gửi trùng (bấm 2 lần) → 1 hồ sơ; thiếu quyền → lỗi rõ, không ghi', () => {
     user = 'nt@tbc.vn';
@@ -87,5 +88,14 @@ describe('Adapter Apps Script (file build thật)', () => {
     expect(call('apiCreate', 'gas-busy-01', { type: 'RFI', title: 'Thử lúc bận' }).error).toMatch(/BUSY/);
     busyLock = false;
     expect(ss.sheets.get('TQN6_DOCS').length).toBe(3);
+  });
+  it('apiDo: 1 lần gọi trả cả kết quả + danh sách + hồ sơ 360 + thời gian; apiBoot đủ dữ liệu mở web', () => {
+    user = 'nt@tbc.vn';
+    const r = call('apiDo', 'create', 'do-000001', { type: 'RFI', title: 'Thử gộp 1 lần gọi', files: [{ name: 'x.pdf', url: 'https://drive.google.com/x', source: 'DRIVE' }] });
+    expect(r.result.docNo).toMatch(/RFI-\d{3}$/); expect(r.list.length).toBeGreaterThan(0); expect(r.v360.doc.documentId).toBe(r.result.documentId);
+    expect(typeof r.ms.ghi).toBe('number');
+    const s = call('apiDo', 'submit', 'do-000002', { id: r.result.documentId }); expect(s.v360.doc.status).toBe('SUBMITTED');
+    const b = call('apiBoot', r.result.documentId); expect(b.who.email).toBe('nt@tbc.vn'); expect(b.v360.doc.documentId).toBe(r.result.documentId);
+    expect(call('apiDo', 'xoa', 'do-000003', {}).code).toBe('INVALID');
   });
 });

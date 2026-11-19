@@ -23,19 +23,28 @@ export default function App() {
   const isRev = who?.roles.includes('REVIEWER') || who?.roles.includes('ADMIN');
   const isNt = who?.roles.some(r => ['CONTRACTOR', 'DC', 'ADMIN'].includes(r));
 
+  const [cache] = useState(() => new Map<string, any>());       // hồ sơ đã xem: chuyển qua lại không chờ máy chủ
+  const [pending, setPending] = useState('');
   async function load(keep?: string) {
-    const [w, l] = await Promise.all([api.whoAmI(), api.list('RFI')]);
-    setWho(w); setDocs(l);
-    const id = keep ?? sel ?? l[0]?.documentId ?? null; setSel(id);
-    setV360(id ? await api.get360(id) : null);
+    const b = await api.boot(keep);
+    setWho(b.who); setDocs(b.list);
+    if (b.v360) { cache.set(b.v360.doc.documentId, b.v360); setSel(b.v360.doc.documentId); setV360(b.v360); }
   }
   useEffect(() => { load().catch(e => setMsg([e.message, false])); }, []);
-  useEffect(() => { if (sel) api.get360(sel).then(setV360); }, [sel]);
+  function pick(id: string) {
+    setSel(id); const c = cache.get(id); if (c) setV360(c);        // hiện ngay bản đã có
+    api.get360(id).then(v => { cache.set(id, v); setSel(s => { if (s === id) setV360(v); return s; }); });
+  }
 
-  async function act(label: string, fn: () => Promise<any>) {
-    if (busy) return; setBusy(true);
-    try { await fn(); setMsg([label + ' – xong', true]); await load(sel ?? undefined); } catch (e: any) { setMsg([e.message, false]); }
-    finally { setBusy(false); }
+  /** Bấm là phản hồi ngay (trạng thái "đang lưu"), máy chủ trả kết quả + dữ liệu mới trong 1 lần gọi. */
+  async function act(label: string, op: string, idem: string, a: any) {
+    if (busy) return; setBusy(true); setPending(label + '…'); const t0 = performance.now();
+    try {
+      const r = await api.act(op, idem, a);
+      setDocs(r.list); if (r.v360) { cache.set(r.v360.doc.documentId, r.v360); setSel(r.v360.doc.documentId); setV360(r.v360); }
+      setMsg([label + ' – xong (' + ((performance.now() - t0) / 1000).toFixed(1) + ' giây)', true]);
+    } catch (e: any) { setMsg([e.message, false]); }
+    finally { setBusy(false); setPending(''); }
   }
 
   const mine = (d: Doc) => (isRev && d.status === 'SUBMITTED') || (isNt && ['DRAFT', 'NEED_INFO', 'RESUBMIT_REQUIRED'].includes(d.status));
@@ -48,12 +57,12 @@ export default function App() {
       <header>
         <div className="brand"><b>TQN</b> Register <span className="muted">· RFI</span></div>
         <div className="sp" />
-        {isDemo && <select value={who?.email} onChange={e => { setDemoUser(e.target.value); load(); }} title="Chỉ có ở bản xem trước">
+        {isDemo && <select value={who?.email} onChange={e => { setDemoUser(e.target.value); cache.clear(); load(sel ?? undefined); }} title="Chỉ có ở bản xem trước">
           <option value="nhathau@demo">Xem như: Nhà thầu (DEMO)</option><option value="cdt@demo">Xem như: CĐT (DEMO)</option></select>}
         <span className="who">{who?.email} · {who?.roles.join(', ') || 'chưa có quyền'}</span>
         {isNt && <button className="pri" onClick={() => setNewOpen(true)}>+ RFI mới</button>}
       </header>
-      {msg && <div className={'toast ' + (msg[1] ? 'ok' : 'err')} onClick={() => setMsg(null)}>{msg[0]}</div>}
+      {pending ? <div className="toast wait">{pending}</div> : msg && <div className={'toast ' + (msg[1] ? 'ok' : 'err')} onClick={() => setMsg(null)}>{msg[0]}</div>}
       <main>
         <aside>
           <div className="tabs">
@@ -61,7 +70,7 @@ export default function App() {
               {t === 'mine' ? 'Việc của tôi' : t === 'late' ? 'Quá hạn' : 'Tất cả'} <i>{cnt[t]}</i></button>)}
           </div>
           <input className="q" placeholder="Tìm mã hoặc nội dung…" value={q} onChange={e => setQ(e.target.value)} />
-          <ul>{shown.map(d => <li key={d.documentId} className={sel === d.documentId ? 'on' : ''} onClick={() => setSel(d.documentId)}>
+          <ul>{shown.map(d => <li key={d.documentId} className={sel === d.documentId ? 'on' : ''} onClick={() => pick(d.documentId)}>
             <div className="row1"><code>{d.docNo}</code><span className={'pill ' + ST[d.status][1]}>{ST[d.status][0]}</span></div>
             <div className="ttl">{d.title}</div>
             <div className="row2">rev{String(d.currentRev).padStart(2, '0')} {d.dueAt && <>· hạn {fmt(d.dueAt)}</>} {d.overdueDays > 0 && <b className="late">· trễ {d.overdueDays} ngày</b>}</div>
@@ -89,20 +98,20 @@ function Detail({ v, isRev, isNt, busy, act }: any) {
     {canEdit && <div className="box">
       <b>Bước tiếp theo: {d.status === 'DRAFT' ? 'gắn file rồi trình' : 'gắn file bổ sung cho rev' + String(draftRev).padStart(2, '0') + ' rồi trình lại'}</b>
       <div className="line"><input placeholder="Dán link file trên OneDrive / Drive (https://…)" value={file} onChange={e => setFile(e.target.value)} />
-        <button disabled={busy || !file} onClick={() => act('Gắn file', () => api.attach(idem.a + file.length, d.documentId, { name: file.split('/').pop() || 'file', url: file.trim(), source: /1drv|sharepoint|onedrive/.test(file) ? 'ONEDRIVE' : /drive\.google/.test(file) ? 'DRIVE' : 'LINK' }).then(() => setFile('')))}>Gắn</button></div>
+        <button disabled={busy || !file} onClick={() => (act('Gắn file', 'attach', idem.a + file.length, { id: d.documentId, file: { name: file.split('/').pop() || 'file', url: file.trim(), source: /1drv|sharepoint|onedrive/.test(file) ? 'ONEDRIVE' : /drive\.google/.test(file) ? 'DRIVE' : 'LINK' } }), setFile(''))}>Gắn</button></div>
       <div className="files">{(draft?.files || []).map((f: any) => <a key={f.url} href={f.url} target="_blank">📎 {f.name}</a>)}{!draft?.files?.length && <span className="muted">Chưa có file</span>}</div>
-      <button className="pri" disabled={busy || !draft?.files?.length} onClick={() => act('Trình', () => api.submit(idem.s + '-' + draftRev, d.documentId))}>{d.status === 'DRAFT' ? 'Trình CĐT' : 'Trình lại'}</button>
+      <button className="pri" disabled={busy || !draft?.files?.length} onClick={() => act('Trình', 'submit', idem.s + '-' + draftRev, { id: d.documentId })}>{d.status === 'DRAFT' ? 'Trình CĐT' : 'Trình lại'}</button>
     </div>}
 
     {canReply && <div className="box">
       <b>CĐT trả lời – chọn đúng ô trên phiếu</b>
       <textarea placeholder="Ý kiến (bắt buộc với ô 2 và 3)" value={note} onChange={e => setNote(e.target.value)} />
-      <div className="line">{opts.map((o: any) => <button key={o.code} disabled={busy} className={o.result === 'CLOSE' ? 'pri' : ''} onClick={() => act('Trả lời ô ' + o.code, () => api.reply(idem.r + o.code + '-' + d.currentRev, d.documentId, o.code, note))}>{o.code} · {o.text}</button>)}</div>
+      <div className="line">{opts.map((o: any) => <button key={o.code} disabled={busy} className={o.result === 'CLOSE' ? 'pri' : ''} onClick={() => act('Trả lời ô ' + o.code, 'reply', idem.r + o.code + '-' + d.currentRev, { id: d.documentId, code: o.code, note })}>{o.code} · {o.text}</button>)}</div>
       <div className="muted">Chỉ người có quyền CĐT mới bấm được. AI không trả lời thay.</div>
     </div>}
     {isRev && d.status === 'FORWARDED' && <div className="box"><b>Đã chuyển tiếp – ghi câu trả lời nhận được để đóng</b>
       <textarea value={note} onChange={e => setNote(e.target.value)} />
-      <button className="pri" disabled={busy} onClick={() => act('Đóng', () => api.closeForwarded(idem.c, d.documentId, note))}>Đóng hồ sơ</button></div>}
+      <button className="pri" disabled={busy} onClick={() => act('Đóng', 'closeForwarded', idem.c, { id: d.documentId, note })}>Đóng hồ sơ</button></div>}
 
     <h3>Các lần trình (revision)</h3>
     <table><thead><tr><th>Rev</th><th>Trình</th><th>Trả lời</th><th>Kết quả</th><th>File</th></tr></thead><tbody>
@@ -125,6 +134,6 @@ function NewRfi({ close, act }: any) {
     {sug && <div className={'muted ' + (sug.type && sug.type !== 'RFI' ? 'warn' : '')}>Máy đoán loại: <b>{sug.type || 'không rõ'}</b> ({Math.round(sug.confidence * 100)}%) – {sug.reason}{sug.type && sug.type !== 'RFI' && ' · kiểm lại, file có thể không phải RFI'}</div>}
     <div className="muted">Mã hồ sơ do hệ thống cấp khi lưu, không cần gõ.</div>
     <div className="line end"><button onClick={close}>Hủy</button>
-      <button className="pri" disabled={title.trim().length < 5} onClick={() => act('Tạo RFI', () => api.create(idem, { type: 'RFI', title, files: file ? [{ name: file.split('/').pop() || 'file', url: file.trim(), source: 'LINK' }] : [] }).then(close))}>Tạo &amp; cấp mã</button></div>
+      <button className="pri" disabled={title.trim().length < 5} onClick={() => (close(), act('Tạo RFI', 'create', idem, { type: 'RFI', title, files: file ? [{ name: file.split('/').pop() || 'file', url: file.trim(), source: 'LINK' }] : [] }))}>Tạo &amp; cấp mã</button></div>
   </div></div>;
 }

@@ -34,6 +34,27 @@ global.apiAttach = (idem: string, id: string, f: FileRef) => safe(() => svc().at
 global.apiSubmit = (idem: string, id: string) => safe(() => svc().submit(me(), idem, id));
 global.apiReply = (idem: string, id: string, code: string, note: string) => safe(() => svc().reply(me(), idem, id, code, note));
 global.apiCloseForwarded = (idem: string, id: string, note: string) => safe(() => svc().closeForwarded(me(), idem, id, note));
+/** Một lần gọi cho mỗi thao tác: ghi + trả luôn danh sách và hồ sơ 360 (bỏ 2 lần gọi lại). Có ghi thời gian. */
+global.apiDo = (op: string, idem: string, a: any) => safe(() => {
+  const t0 = Date.now(), s = svc(), who = me();
+  let r: any;
+  if (op === 'create') r = s.create(who, idem, a);
+  else if (op === 'attach') r = s.attach(who, idem, a.id, a.file);
+  else if (op === 'submit') r = s.submit(who, idem, a.id);
+  else if (op === 'reply') r = s.reply(who, idem, a.id, a.code, a.note || '');
+  else if (op === 'closeForwarded') r = s.closeForwarded(who, idem, a.id, a.note || '');
+  else throw new BizError('INVALID', 'Thao tác lạ: ' + op);
+  const id = (r && r.documentId) || a.id, t1 = Date.now();
+  const out = { result: r, list: s.list('RFI'), v360: id ? s.get360(id) : null, ms: { ghi: t1 - t0, doc: Date.now() - t1 } };
+  console.log(JSON.stringify({ op, ms: out.ms, ok: true }));
+  return out;
+});
+global.apiBoot = (id?: string) => safe(() => {               // mở web: 1 lần gọi lấy đủ người dùng + danh sách + hồ sơ đầu
+  const t0 = Date.now(), s = svc(), a = me(), list = s.list('RFI'), pick = id || (list[0] && list[0].documentId);
+  const out = { who: { email: a.email, roles: s.rolesOf(a.email), build: __BUILD__ }, list, v360: pick ? s.get360(pick) : null, ms: Date.now() - t0 };
+  console.log(JSON.stringify({ op: 'boot', ms: out.ms }));
+  return out;
+});
 global.apiClassify = (name: string) => classify(name);
 global.apiConfig = () => safe(() => { const c = cfg(); return { types: c.types, code: c.code }; });
 

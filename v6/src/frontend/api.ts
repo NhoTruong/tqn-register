@@ -46,6 +46,15 @@ export const api = {
   closeForwarded: (idem: string, id: string, note: string) => inGas ? run<any>('apiCloseForwarded', idem, id, note) : wrap(() => demo.closeForwarded(me(), idem, id, note)),
   classify: (name: string) => inGas ? run<any>('apiClassify', name) : wrap(() => classify(name)),
   options: () => coastalConfig().types,
+  boot: (id?: string) => inGas ? run<any>('apiBoot', id) : wrap(() => { const list = demo.list('RFI'), pick = id || list[0]?.documentId; return { who: { email: demoMe, roles: demo.rolesOf(demoMe), build: { env: 'PREVIEW', commit: 'local', version: 'demo' } }, list, v360: pick ? demo.get360(pick) : null }; }),
+  /** 1 lần gọi: ghi + nhận lại danh sách và hồ sơ (chế độ xem trước dùng chính lõi nghiệp vụ) */
+  act: (op: string, idem: string, a: any) => inGas ? run<any>('apiDo', op, idem, a) : wrap(() => {
+    const m = me(); let r: any;
+    if (op === 'create') r = demo.create(m, idem, a); else if (op === 'attach') r = demo.attach(m, idem, a.id, a.file);
+    else if (op === 'submit') r = demo.submit(m, idem, a.id); else if (op === 'reply') r = demo.reply(m, idem, a.id, a.code, a.note || '');
+    else r = demo.closeForwarded(m, idem, a.id, a.note || '');
+    const id = r?.documentId || a.id; return { result: r, list: demo.list('RFI'), v360: id ? demo.get360(id) : null };
+  }),
 };
 
 /** idem_key: sinh 1 lần cho mỗi thao tác của người dùng; bấm 2 lần / mạng gửi lại vẫn dùng cùng khóa. */
