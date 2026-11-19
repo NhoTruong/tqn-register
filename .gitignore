@@ -8,3 +8,4 @@ test/sidebar_data.json
 *.xlsm
 weather-poc/out/
 __pycache__/
+preview/site/data.json

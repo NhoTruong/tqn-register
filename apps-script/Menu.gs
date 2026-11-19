@@ -79,6 +79,7 @@ function tqnSidebarData() {
       canhBao: r.qc.rows.filter(function (x) { return x[0] === 'CẢNH BÁO'; }).length,
       chiTiet: r.imp.counts.chi_tiet, ghep: r.imp.counts.ghep_duoc
     },
+    remindTotal: r.rem.length,
     remind: r.rem.slice(0, 12).map(function (x) { return { g: x[0], han: tqnFmtDate_(x[1], tz), d: x[2], ma: x[4] || x[3], nd: x[6], at: x[9] }; }),
     qc: tqnGroupQC_(r.qc.rows.filter(function (x) { return x[0] !== 'THÔNG TIN'; })).slice(0, 15),
     qcTotal: r.qc.rows.length,

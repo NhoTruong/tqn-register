@@ -38,7 +38,7 @@ function draw(d){
   kp('Lỗi dữ liệu',k.loi,'#A32D2D')+kp('Cảnh báo',k.canhBao,'#854F0B')+'</div>'+
   '<div class="st">Sổ chi tiết '+k.chiTiet+' hồ sơ, ghép được với sổ tổng '+k.ghep+'</div>'+
   '<button class="btn" onclick="load()">Nhập & kiểm tra lại</button>'+
-  '<h4>Việc cần nhắc ('+d.remind.length+')</h4>'+(d.remind.length?d.remind.map(function(x){
+  '<h4>Việc cần nhắc ('+(d.remindTotal||d.remind.length)+(d.remindTotal>d.remind.length?', hiện '+d.remind.length+' việc gần nhất':'')+')</h4>'+(d.remind.length?d.remind.map(function(x){
    return '<div class="it" style="border-left-color:'+C[x.g]+'" onclick="go(\''+esc(x.at)+'\')"><span class="pill" style="background:'+C[x.g]+'22;color:'+C[x.g]+'">'+esc(x.g)+(x.d!==''?' · '+esc(x.d)+' ngày':'')+'</span> <span class="t">hạn '+esc(x.han)+'</span><div class="c">'+esc(x.ma)+'</div><div>'+esc(String(x.nd).slice(0,90))+'</div></div>'}).join(''):'<div class="st">Không có hồ sơ quá hạn hoặc sắp đến hạn.</div>')+
   '<h4>Lỗi và cảnh báo ('+d.qcTotal+' mục, '+d.qc.length+' nhóm)</h4>'+d.qc.map(function(x){
    return '<div class="it" style="border-left-color:'+C[x.lv]+'" onclick="go(\''+esc(x.at)+'\')"><span class="pill" style="background:'+C[x.lv]+'22;color:'+C[x.lv]+'">'+esc(x.lv)+(x.n>1?' · '+x.n+' mục':'')+'</span> <span class="t">'+esc(x.rule)+'</span><div class="t">'+esc(String(x.where).slice(0,80))+'</div><div>'+esc(String(x.msg).slice(0,150))+'</div></div>'}).join('')+

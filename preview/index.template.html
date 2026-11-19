@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TQN Register — bản xem thử chạy đúng code</title>
+<style>
+:root{--navy:#1B3F7A;--teal:#1F8A8A;--teal2:#2DD4BF;--bd:#dadce0;--bg:#f8f9fa;--tx:#202124;--tx2:#5f6368}
+*{box-sizing:border-box}html,body{margin:0;height:100%}
+body{font:13px Inter,Segoe UI,Arial,sans-serif;color:var(--tx);display:flex;flex-direction:column;background:#fff}
+.bar{display:flex;align-items:center;gap:10px;padding:8px 12px;border-bottom:1px solid var(--bd);flex-wrap:wrap}
+.logo{width:40px;height:26px;border-radius:7px;background:var(--navy);color:#fff;font-weight:800;font-size:12px;display:flex;align-items:center;justify-content:center;box-shadow:inset 0 0 0 1.5px var(--teal2)}
+.logo b{color:var(--teal2)}
+.doc{font-size:15px;font-weight:600}.doc small{display:block;font-size:11px;font-weight:400;color:var(--tx2)}
+.note{margin-left:auto;font-size:11px;background:#fff7e0;border:1px solid #f3d27a;color:#7a5600;padding:4px 8px;border-radius:6px;max-width:520px}
+.menus{display:flex;gap:2px;padding:2px 8px;border-bottom:1px solid var(--bd);position:relative}
+.mbtn{padding:6px 10px;border-radius:5px;cursor:pointer;border:0;background:none;font:inherit;color:var(--tx)}
+.mbtn:hover,.mbtn.on{background:#e8f0fe}
+.mbtn.tqn{font-weight:700;color:var(--navy)}
+.drop{position:absolute;top:100%;background:#fff;border:1px solid var(--bd);border-radius:8px;box-shadow:0 6px 24px rgba(0,0,0,.15);min-width:270px;padding:6px 0;z-index:20;display:none}
+.drop.show{display:block}
+.drop button{display:block;width:100%;text-align:left;border:0;background:none;padding:8px 16px;font:inherit;cursor:pointer}
+.drop button:hover{background:#f1f3f4}.drop hr{border:0;border-top:1px solid var(--bd);margin:5px 0}
+.main{flex:1;display:flex;min-height:0}
+.gridwrap{flex:1;overflow:auto;background:#fff}
+table.g{border-collapse:collapse;font-size:12px}
+table.g td,table.g th{border:1px solid #e2e3e5;padding:2px 5px;white-space:nowrap;max-width:260px;overflow:hidden;text-overflow:ellipsis;height:21px}
+table.g th{background:var(--bg);color:var(--tx2);font-weight:500;position:sticky;top:0;z-index:2}
+table.g td.rn{background:var(--bg);color:var(--tx2);text-align:center;position:sticky;left:0;z-index:1;min-width:38px}
+table.g tr.hl td{background:#fff3c4 !important}
+table.g td.ed{background:#eef8f7;cursor:text;outline:1px dashed var(--teal)}
+td.num{text-align:right}
+.side{width:380px;border-left:1px solid var(--bd);display:none;flex-direction:column}
+.side.show{display:flex}
+.side .sh{display:flex;align-items:center;padding:8px 10px;border-bottom:1px solid var(--bd);font-weight:600}
+.side .sh button{margin-left:auto;border:0;background:none;font-size:18px;cursor:pointer}
+.side iframe{flex:1;border:0;width:100%}
+.tabs{display:flex;gap:2px;overflow-x:auto;border-top:1px solid var(--bd);background:var(--bg);padding:0 6px}
+.tab{padding:7px 12px;white-space:nowrap;cursor:pointer;border:0;background:none;font:inherit;color:var(--tx2);border-bottom:3px solid transparent}
+.tab.on{color:var(--navy);background:#fff;border-bottom-color:var(--teal);font-weight:600}
+.tab.tqn{color:var(--teal)}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.35);display:none;align-items:center;justify-content:center;z-index:50}
+.modal.show{display:flex}
+.box{background:#fff;border-radius:10px;max-width:640px;width:92%;max-height:80vh;overflow:auto;padding:18px 20px;box-shadow:0 10px 40px rgba(0,0,0,.3)}
+.box h3{margin:0 0 10px;font-size:15px;color:var(--navy)}
+.box pre{white-space:pre-wrap;font:13px/1.55 Inter,Arial,sans-serif;margin:0}
+.box .ok{margin-top:14px;float:right;background:var(--navy);color:#fff;border:0;border-radius:6px;padding:7px 16px;cursor:pointer}
+.toast{position:fixed;bottom:44px;left:50%;transform:translateX(-50%);background:#323232;color:#fff;padding:8px 14px;border-radius:6px;font-size:12px;display:none;z-index:60}
+@media (max-width:800px){.side{position:fixed;inset:0;width:auto;z-index:30;background:#fff}.note{max-width:none}}
+</style></head>
+<body>
+<div class="bar"><div class="logo">T<b>Q</b>N</div>
+ <div class="doc">HAUS QUANG NGAI- Register<small id="src"></small></div>
+ <div class="note"><b>Bản xem thử:</b> chạy đúng code TQN Register trên bản chụp Register (chỉ đọc). Không ghi gì vào Google Sheets thật, không gửi mail, không đặt lịch thật. Bản dùng thật: cài <code>TQN_Code.gs</code> vào Google Sheets.</div></div>
+<div class="menus" id="menus"><button class="mbtn">Tệp</button><button class="mbtn">Chỉnh sửa</button><button class="mbtn">Xem</button></div>
+<div class="main"><div class="gridwrap" id="grid"></div>
+ <div class="side" id="side"><div class="sh" id="sideT">TQN Register<button onclick="closeSide()">×</button></div><iframe id="sideF"></iframe></div></div>
+<div class="tabs" id="tabs"></div>
+<div class="modal" id="modal"><div class="box"><h3 id="mT"></h3><pre id="mB"></pre><button class="ok" onclick="hideModal()">OK</button></div></div>
+<div class="toast" id="toast"></div>
+<script>
+/* ===== MD5 (chuẩn RFC 1321) cho Utilities.computeDigest ===== */
+function md5bytes(str){const b=new TextEncoder().encode(str);const n=((b.length+8>>6)+1)*16,w=new Array(n).fill(0);
+for(let i=0;i<b.length;i++)w[i>>2]|=b[i]<<(i%4*8);w[b.length>>2]|=0x80<<(b.length%4*8);w[n-2]=b.length*8;
+const K=[],S=[7,12,17,22,5,9,14,20,4,11,16,23,6,10,15,21];for(let i=0;i<64;i++)K[i]=Math.floor(Math.abs(Math.sin(i+1))*4294967296)|0;
+let a0=0x67452301,b0=0xefcdab89|0,c0=0x98badcfe|0,d0=0x10325476;
+for(let k=0;k<n;k+=16){let A=a0,B=b0,C=c0,D=d0;for(let i=0;i<64;i++){let F,g;const r=i>>4;
+ if(r===0){F=(B&C)|(~B&D);g=i}else if(r===1){F=(D&B)|(~D&C);g=(5*i+1)%16}else if(r===2){F=B^C^D;g=(3*i+5)%16}else{F=C^(B|~D);g=(7*i)%16}
+ F=(F+A+K[i]+w[k+g])|0;A=D;D=C;C=B;const s=S[r*4+i%4];B=(B+((F<<s)|(F>>>(32-s))))|0}
+ a0=(a0+A)|0;b0=(b0+B)|0;c0=(c0+C)|0;d0=(d0+D)|0}
+const out=[];[a0,b0,c0,d0].forEach(v=>{for(let i=0;i<4;i++){let x=(v>>>(i*8))&255;out.push(x>127?x-256:x)}});return out}
+
+/* ===== Giả lập SpreadsheetApp (cùng hành vi với bộ test Node) ===== */
+const ORIGINAL=new Set(); const dec=v=>(v&&typeof v==='object'&&v.__d)?new Date(v.__d):(v===null||v===undefined?'':v);
+class Range{constructor(sh,r,c,nr,nc){Object.assign(this,{sh,r,c,nr,nc})}
+ getValues(){const o=[];for(let i=0;i<this.nr;i++){const row=[];for(let j=0;j<this.nc;j++)row.push(this.sh.get(this.r+i,this.c+j));o.push(row)}return o}
+ getFormulas(){const o=[];for(let i=0;i<this.nr;i++){const row=[];for(let j=0;j<this.nc;j++)row.push(this.sh.f[(this.r+i)+','+(this.c+j)]||'');o.push(row)}return o}
+ setValues(v){this.sh.w('setValues');v.forEach((row,i)=>row.forEach((x,j)=>this.sh.set(this.r+i,this.c+j,x)));return this}
+ setValue(x){this.sh.w('setValue');this.sh.set(this.r,this.c,x);return this}
+ getValue(){return this.sh.get(this.r,this.c)}
+ clearContent(){this.sh.w('clear');for(let i=0;i<this.nr;i++)for(let j=0;j<this.nc;j++)this.sh.set(this.r+i,this.c+j,'');return this}}
+['setFontWeight','setBackground','setFontColor','setNumberFormat','setWrap','setHorizontalAlignment'].forEach(m=>Range.prototype[m]=function(){return this});
+class Sheet{constructor(name,data){this.name=name;this.v=(data?data.values:[]).map(r=>r.map(dec));this.f=data?data.formulas:{}}
+ w(a){if(ORIGINAL.has(this.name)&&this.name!=='Theo dõi thời tiết')throw new Error('Chặn ghi vào tab gốc: '+this.name)} /* tab thời tiết là tab được phép ghi theo yêu cầu 6h */
+ get(r,c){const x=(this.v[r-1]||[])[c-1];return x===undefined||x===null?'':x}
+ set(r,c,x){while(this.v.length<r)this.v.push([]);const row=this.v[r-1];while(row.length<c)row.push('');row[c-1]=x}
+ getName(){return this.name}
+ getLastRow(){for(let i=this.v.length;i>0;i--)if(this.v[i-1].some(x=>x!==''&&x!==null))return i;return 0}
+ getLastColumn(){let m=0;this.v.forEach(r=>{for(let j=r.length;j>m;j--)if(r[j-1]!==''&&r[j-1]!==null){m=j;break}});return m}
+ getRange(r,c,nr=1,nc=1){return new Range(this,r,c,nr,nc)}
+ appendRow(row){this.w('appendRow');const r=this.getLastRow()+1;row.forEach((x,j)=>this.set(r,j+1,x))}
+ setFrozenRows(){}setFrozenColumns(){}setColumnWidth(){}setColumnWidths(){}autoResizeColumns(){}
+ activate(){showSheet(this.name)}setActiveRange(rg){hlRow=rg.r;showSheet(this.name)}}
+const book=[],byName={};let active=null,hlRow=0;
+const ss={getSheetByName:n=>byName[n]||null,insertSheet:n=>{const s=new Sheet(n);book.push(s);byName[n]=s;return s},setActiveSheet:s=>{s&&showSheet(s.name)},getSheets:()=>book.slice(),getName:()=>'HAUS QUANG NGAI- Register'};
+const menuItems=[];const props={};const triggers=[];const mails=[];let WEATHER_RAW=null;
+const fmt2=n=>String(n).padStart(2,'0');
+const G={
+ SpreadsheetApp:{getActiveSpreadsheet:()=>ss,getUi:()=>({ButtonSet:{OK:'OK'},
+  alert:(a,b)=>showModal(b!==undefined?a:'TQN Register',b!==undefined?b:a),
+  showSidebar:(h)=>openSide(),
+  createMenu:(title)=>{const m={addItem:(l,f)=>{menuItems.push([l,f]);return m},addSeparator:()=>{menuItems.push(null);return m},addToUi:()=>m};return m}})},
+ Utilities:{DigestAlgorithm:{MD5:'md5'},Charset:{UTF_8:'utf8'},computeDigest:(a,s)=>md5bytes(s),sleep:()=>{},
+  formatDate:(d,tz,f)=>f.replace('yyyy',d.getFullYear()).replace('MM',fmt2(d.getMonth()+1)).replace('dd',fmt2(d.getDate())).replace('HH',fmt2(d.getHours())).replace('mm',fmt2(d.getMinutes()))},
+ Session:{getActiveUser:()=>({getEmail:()=>'xem-thu@tqn'})},
+ LockService:{getDocumentLock:()=>({tryLock:()=>true,waitLock:()=>true,releaseLock(){}})},
+ PropertiesService:{getDocumentProperties:()=>({getProperty:k=>props[k]||null,setProperty:(k,v)=>{props[k]=v},deleteProperty:k=>{delete props[k]}})},
+ MailApp:{sendEmail:o=>{mails.push(o)},getRemainingDailyQuota:()=>100},
+ UrlFetchApp:{fetch:(url)=>({getResponseCode:()=>200,getContentText:()=>JSON.stringify(WEATHER_RAW)})},
+ HtmlService:{createTemplateFromFile:()=>({evaluate:()=>({setTitle:()=>({})})}),createHtmlOutputFromFile:()=>({setTitle:()=>({})})},
+ ScriptApp:{getProjectTriggers:()=>triggers.slice(),deleteTrigger:t=>{triggers.splice(triggers.indexOf(t),1)},
+  newTrigger:(fn)=>{const t={fn,h:null,getHandlerFunction:()=>fn};const b={timeBased:()=>b,atHour:h=>{t.h=h;return b},nearMinute:()=>b,everyDays:()=>b,inTimezone:()=>b,create:()=>{triggers.push(t);return t}};return b}},
+ Logger:{log:()=>{}}
+};
+Object.assign(window,G);
+</script>
+<script src="tqn.js"></script>
+<script>
+/* ===== Giao diện ===== */
+const $=id=>document.getElementById(id);
+function showModal(t,b){$('mT').textContent=t;$('mB').textContent=b;$('modal').classList.add('show')}
+function hideModal(){$('modal').classList.remove('show')}
+function toast(t){const e=$('toast');e.textContent=t;e.style.display='block';clearTimeout(e._t);e._t=setTimeout(()=>e.style.display='none',2600)}
+function cellText(x){if(x instanceof Date&&!isNaN(x))return fmt2(x.getDate())+'/'+fmt2(x.getMonth()+1)+'/'+x.getFullYear();if(typeof x==='number')return String(Math.round(x*100)/100);return x===undefined||x===null?'':String(x)}
+function colL(n){let s='';while(n>0){const m=(n-1)%26;s=String.fromCharCode(65+m)+s;n=(n-m-1)/26}return s}
+function showSheet(name){active=name;const sh=byName[name];if(!sh)return;
+ const R=Math.max(sh.getLastRow(),1),C=Math.min(Math.max(sh.getLastColumn(),1),60);const edit=name==='TQN_CONFIG';
+ let h='<table class="g"><tr><th></th>';for(let c=1;c<=C;c++)h+='<th>'+colL(c)+'</th>';h+='</tr>';
+ for(let r=1;r<=R;r++){h+='<tr'+(r===hlRow?' class="hl" id="hlr"':'')+'><td class="rn">'+r+'</td>';
+  for(let c=1;c<=C;c++){const x=sh.get(r,c),t=cellText(x).replace(/[&<>]/g,s=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[s]));
+   const ed=edit&&c===2&&r>1;h+='<td'+(typeof x==='number'?' class="num"':'')+(ed?' class="ed" contenteditable data-r="'+r+'"':'')+' title="'+t.slice(0,300)+'">'+t+'</td>'}h+='</tr>'}
+ $('grid').innerHTML=h+'</table>';
+ if(edit)$('grid').querySelectorAll('td.ed').forEach(td=>td.addEventListener('blur',()=>{byName.TQN_CONFIG.set(+td.dataset.r,2,td.textContent.trim());toast('Đã sửa '+byName.TQN_CONFIG.get(+td.dataset.r,1))}));
+ const hl=$('hlr');if(hl)hl.scrollIntoView({block:'center'});hlRow=0;drawTabs()}
+function drawTabs(){$('tabs').innerHTML=book.map(s=>'<button class="tab'+(s.name===active?' on':'')+(s.name.startsWith('TQN_')?' tqn':'')+'" data-n="'+s.name.replace(/"/g,'&quot;')+'">'+s.name+'</button>').join('');
+ $('tabs').querySelectorAll('.tab').forEach(b=>b.onclick=()=>showSheet(b.dataset.n))}
+function runFn(fn){try{window[fn]();if(fn==='tqnDailyJob'||/Remind|Daily/.test(fn))showMailsIfAny();if(active)showSheet(active)}catch(e){showModal('Lỗi',String(e.message||e))}}
+function showMailsIfAny(){if(!mails.length)return;const m=mails[mails.length-1];showModal('Thư nhắc hạn (xem thử, không gửi)','Đến: '+m.to+'\nTiêu đề: '+m.subject+'\n\n'+String(m.htmlBody||m.body||'').replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').slice(0,1500))}
+function buildMenu(){const box=$('menus');const b=document.createElement('button');b.className='mbtn tqn';b.textContent='TQN Register ▾';
+ const d=document.createElement('div');d.className='drop';d.style.left=b.offsetLeft+'px';
+ menuItems.forEach(it=>{if(!it){d.appendChild(document.createElement('hr'));return}const x=document.createElement('button');x.textContent=it[0];x.onclick=()=>{d.classList.remove('show');runFn(it[1])};d.appendChild(x)});
+ const sch=document.createElement('button');sch.textContent='(Xem thử) Lịch đã bật';sch.onclick=()=>{d.classList.remove('show');showModal('Lịch tự chạy (xem thử)',triggers.length?triggers.map(t=>t.fn+' lúc ~'+t.h+':00 hằng ngày').join('\n')+'\n\nBản thật: Google tự chạy cả khi máy tắt.':'Chưa bật lịch nào.')};
+ d.appendChild(document.createElement('hr'));d.appendChild(sch);
+ b.onclick=e=>{e.stopPropagation();d.style.left=b.offsetLeft+'px';d.classList.toggle('show')};box.appendChild(b);box.appendChild(d);document.addEventListener('click',()=>d.classList.remove('show'))}
+let sideSrc='';
+function openSide(){$('side').classList.add('show');
+ const shim='<script>window.google={script:{run:(function(){function mk(ok,fail){return new Proxy({},{get:function(_,k){if(k==="withSuccessHandler")return function(f){return mk(f,fail)};if(k==="withFailureHandler")return function(f){return mk(ok,f)};return function(){try{var r=parent[k].apply(parent,arguments);if(k!=="tqnSidebarData")parent.afterGoto();setTimeout(function(){ok&&ok(r)},0)}catch(e){fail&&fail(e)}}}})}return mk()})()}};<\/script>';
+ $('sideF').srcdoc=sideSrc.replace('<script>',shim+'<script>')}
+function closeSide(){$('side').classList.remove('show')}
+window.afterGoto=()=>{if(innerWidth<800)closeSide()};
+(async()=>{const data=await (await fetch('data.json')).json();WEATHER_RAW=data.weather_raw;sideSrc=await (await fetch('sidebar.html')).text();
+ data.sheets.forEach(s=>{const sh=new Sheet(s.name,s);book.push(sh);byName[s.name]=sh;ORIGINAL.add(s.name)});
+ $('src').textContent='Bản chụp Register · '+data.sheets.length+' tab · ẩn '+data.pii_hidden.length+' tab có SĐT/email';
+ onOpen();buildMenu();showSheet('Sổ trình duyệt');
+ window.__ready=true})();
+</script>
+</body></html>
