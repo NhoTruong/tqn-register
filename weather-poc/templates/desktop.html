@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="vi"><head><meta charset="utf-8">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:960px;height:540px;overflow:hidden}
+body{font-family:Inter,Arial,"DejaVu Sans",sans-serif;-webkit-font-smoothing:antialiased;font-feature-settings:"tnum"}
+{% if theme=='toi' %}
+body{background:#202124;color:#e8eaed}.m{color:#bdc1c6}.mm{color:#9aa0a6}.ln{border-color:#3c4043}.sel{background:#303134}.area{fill:#5b4d1d}.lbl{fill:#bdc1c6}.rn{fill:#8ab4f8}.cl{fill:#dadce0}
+{% else %}
+body{background:#fff;color:#202124}.m{color:#4d5156}.mm{color:#70757a}.ln{border-color:#dadce0}.sel{background:#f1f3f4}.area{fill:#fdeeb7}.lbl{fill:#5f6368}.rn{fill:#1a73e8}.cl{fill:#b5bcc4}
+{% endif %}
+.wrap{position:relative;height:100%;padding:16px 26px 10px;display:flex;flex-direction:column}
+.brand{display:flex;align-items:center;gap:8px;font-size:11px;font-weight:700;letter-spacing:.5px}
+.logo{width:36px;height:22px;border-radius:6px;background:#1B3F7A;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:10px;box-shadow:inset 0 0 0 1.4px #2DD4BF}
+.logo b{color:#2DD4BF}
+.pill{font-size:9.5px;font-weight:700;padding:2px 7px;border-radius:20px;color:#fff;background:#1F8A8A}.pill.o{background:#b45309}
+.brand .pill:first-of-type{margin-left:auto}
+.loc{display:flex;align-items:center;gap:6px;margin-top:12px;font-size:14px}
+.loc b{font-weight:700}.loc span{color:#8ab4f8}
+.row{display:flex;align-items:flex-start;margin-top:12px}
+.row svg.ic{width:70px;height:70px}
+.t{font-size:56px;line-height:1;margin-left:10px;font-weight:400}
+.u{font-size:15px;margin:6px 0 0 4px}
+.st{font-size:12.5px;line-height:1.45;margin-left:16px;margin-top:2px}
+.rt{margin-left:auto;text-align:right}
+.rt .a{font-size:21px}.rt .b{font-size:15px;line-height:1.35}
+.tabs{display:flex;gap:18px;margin-top:12px;font-size:13.5px}
+.tabs div{padding-bottom:5px}.tabs .on{border-bottom:3px solid #fbbc04}
+.chart{display:block;width:100%;height:150px;margin-top:6px}
+.days{display:grid;grid-template-columns:repeat(8,1fr);gap:4px;margin-top:2px;text-align:center}
+.day{border-radius:10px;padding:5px 0}
+.day .n{font-size:14px}.day svg.ic{width:38px;height:38px;margin:2px auto}.day .v{font-size:13px}.day .v i{font-style:normal}
+.foot{margin-top:auto;border-top:1px solid;padding-top:6px;font-size:9px;line-height:1.45}
+.warn{display:inline-block;padding:1px 6px;border-radius:5px;background:#1B3F7A;color:#FACC15}
+.demo{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none}
+.demo span{font-size:120px;font-weight:900;transform:rotate(-18deg);letter-spacing:8px;color:rgba(128,128,128,.12)}
+</style></head>
+{% macro icon(cond, hour=12) -%}
+{%- set night = hour >= 18 or hour < 6 -%}
+<svg class="ic" viewBox="0 0 64 64">
+{%- if cond in ['NANG','IT_MAY','MAY_RAI_RAC'] -%}
+ {%- if night -%}<path d="M40 12a19 19 0 1 0 13 32 16 16 0 0 1-13-32z" fill="#F8E7A1"/>
+ {%- else -%}<circle cx="{{ 32 if cond=='NANG' else 26 }}" cy="{{ 30 if cond=='NANG' else 24 }}" r="{{ 13 if cond=='NANG' else 12 }}" fill="#fbbc04"/>{%- endif -%}
+ {%- if cond != 'NANG' -%}<path d="M22 50h24a10 10 0 0 0 0-20 13 13 0 0 0-24-3 9 9 0 0 0 0 23z" fill="#f1f3f4"/>{%- endif -%}
+{%- elif cond == 'NHIEU_MAY' -%}<path d="M16 46h30a11 11 0 0 0 0-22 15 15 0 0 0-28-2 12 12 0 0 0-2 24z" class="cl"/>
+{%- elif cond == 'SUONG_MU' -%}<g stroke="#bdc1c6" stroke-width="4" stroke-linecap="round"><line x1="12" y1="26" x2="52" y2="26"/><line x1="8" y1="36" x2="48" y2="36"/><line x1="16" y1="46" x2="56" y2="46"/></g>
+{%- else -%}<path d="M14 36h32a11 11 0 0 0 0-22 15 15 0 0 0-29-2 12 12 0 0 0-3 24z" class="cl"/>
+ {%- if cond == 'DONG' -%}<path d="M34 36l-8 12h7l-4 10 12-15h-7l4-7z" fill="#fbbc04"/>
+ {%- else -%}{%- set n = 1 if cond=='MUA_PHUN' else 3 -%}
+  {%- for i in range(n) -%}<path d="M{{ (32 if n==1 else 20+i*12) }} {{ 42 if i!=1 else 48 }}c0 0-5 6-5 9a5 5 0 0 0 10 0c0-3-5-9-5-9z" fill="#1a73e8"/>{%- endfor -%}
+ {%- endif -%}
+{%- endif -%}
+</svg>
+{%- endmacro %}
+{% set pts = vm.chart3h %}
+{% set lo = (pts|map(attribute='temp_c')|min) - 3 %}{% set hi = (pts|map(attribute='temp_c')|max) + 2 %}
+<body><div class="wrap">
+ <div class="brand"><div class="logo">T<b>Q</b>N</div>BẢN TIN THỜI TIẾT CÔNG TRƯỜNG · TỔNG HỢP NGÀY<span class="pill">DỰ BÁO</span>{% if vm.run_kind != 'LICH_0600' %}<span class="pill o">CHẠY TAY</span>{% endif %}</div>
+ <div class="loc"><svg width="12" height="16" viewBox="0 0 12 16"><path d="M6 0a6 6 0 0 0-6 6c0 4.5 6 10 6 10s6-5.5 6-10a6 6 0 0 0-6-6zm0 8.2A2.2 2.2 0 1 1 6 3.8a2.2 2.2 0 0 1 0 4.4z" fill="currentColor"/></svg><b>{{ vm.p.name }}</b><span>· {{ vm.p.address }}</span></div>
+ <div class="row">{{ icon(vm.cond_day) }}<div class="t">{{ vm.tmax|round|int }}</div><div class="u">°C</div>
+  <div class="st m">Khả năng có mưa: {{ vm.pop_day }}%<br>Độ ẩm: {{ vm.rh_day }}%<br>Gió: {{ vm.wind_day|round|int }} km/h (giật {{ vm.gust_day|round|int }})<br>Lượng mưa: {{ vm.rain_day }} mm</div>
+  <div class="rt"><div class="a">Thời tiết</div><div class="b m">{{ vm.date_text.split(',')[0] }}, {{ vm.local_date[8:10] }}/{{ vm.local_date[5:7] }}<br>{{ 'Có mưa' if vm.pop_day >= 50 else vm.cond_day_text }}</div></div></div>
+ <div class="tabs"><div class="on">Nhiệt độ (°C)</div><div class="m">Khả năng mưa · lượng mưa</div><div class="m">Gió · hướng</div></div>
+ <svg class="chart" viewBox="0 0 908 150" preserveAspectRatio="none">
+  {% set n = pts|length %}{% set step = 908 / n %}
+  {% set ys = [] %}{% for p in pts %}{% set _ = ys.append(78 - (p.temp_c - lo) / (hi - lo) * 60) %}{% endfor %}
+  <path class="area" d="M0,{{ ys[0] }} {% for y in ys %}L{{ (loop.index0 + 0.5) * step }},{{ y }} {% endfor %}L908,{{ ys[-1] }} L908,86 L0,86 Z"/>
+  <path d="M0,{{ ys[0] }} {% for y in ys %}L{{ (loop.index0 + 0.5) * step }},{{ y }} {% endfor %}L908,{{ ys[-1] }}" fill="none" stroke="#fbbc04" stroke-width="2.2"/>
+  {% for p in pts %}{% set x = (loop.index0 + 0.5) * step %}
+   <text class="lbl" x="{{ x }}" y="{{ ys[loop.index0] - 8 }}" font-size="11" font-weight="700" text-anchor="middle">{{ p.temp_c|round|int }}</text>
+   <text class="lbl" x="{{ x }}" y="106" font-size="12" text-anchor="middle">{{ '%02d'|format(p.hour) }}:00</text>
+   <text class="rn" x="{{ x }}" y="122" font-size="11" font-weight="600" text-anchor="middle">{{ p.pop_pct }}%</text><text class="rn" x="{{ x }}" y="134" font-size="10" text-anchor="middle">{{ p.rain_mm }} mm</text>
+   <text class="lbl" x="{{ x }}" y="148" font-size="10.5" text-anchor="middle">{{ p.wind_kmh|round|int }} km/h {{ p.wind_dir }}</text>
+  {% endfor %}
+ </svg>
+ <div class="days">{% for d in vm.days8 %}<div class="day {{ 'sel' if d.active }}"><div class="n">{{ d.label }}</div>{{ icon(d.cond) }}<div class="v">{{ d.tmax|round|int }}° <i class="mm">{{ d.tmin|round|int }}°</i></div></div>{% endfor %}</div>
+ <div class="foot ln mm"><b>TQN Register</b> · {{ vm.p.code }} · GPS {{ '%.6f'|format(vm.p.lat) }}, {{ '%.6f'|format(vm.p.lon) }} · ô lưới {{ vm.grid }} ({{ vm.grid_km }} km) · Nguồn {{ vm.provider }} (open-meteo.com, CC BY 4.0) · {{ vm.model }} · <b>DỰ BÁO</b>, không phải số đo tại công trường · phát hành {{ vm.issued_local }} (UTC+7)
+  {% if vm.p.license_status != 'DA_XAC_MINH' %} · <span class="warn">Bản thử nội bộ — chưa xác minh giấy phép thương mại</span>{% endif %}</div>
+</div>{% if vm.p.demo %}<div class="demo"><span>DEMO</span></div>{% endif %}</body></html>

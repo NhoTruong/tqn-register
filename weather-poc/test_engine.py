@@ -21,7 +21,7 @@ ba = normalize(pa, ra, ra["_fetch"]["http_date"]); bb = normalize(pb, rb, rb["_f
 
 # W1 đúng số liệu API: so view model với raw
 vm = view_model(pa, ba, "2026-11-19", "06:00", "CHAY_TAY")
-check("W1 nhiệt cao/thấp ngày = daily API", (vm["tmax"], vm["tmin"]) == (28.9, 23.5), f'{vm["tmax"]}/{vm["tmin"]}')
+check("W1 nhiệt cao/thấp ngày = daily API", (vm["tmax"], vm["tmin"]) == (ra["body"]["daily"]["temperature_2m_max"][0], ra["body"]["daily"]["temperature_2m_min"][0]), f'{vm["tmax"]}/{vm["tmin"]}')
 h12 = [x for x in ba["hours"] if x["time"].startswith("2026-11-19T12:00")][0]
 check("W2 giờ 12:00 = raw (28.7°C, 100%, 0.5 mm)", (h12["temp_c"], h12["pop_pct"], h12["rain_mm"]) == (28.7, 100, 0.5))
 check("W3 đúng múi giờ (+07:00)", h12["time"].endswith("+07:00"), h12["time"])
@@ -37,6 +37,8 @@ check("W7 manifest ghi provider/kind/issued/giấy phép", ma["kind"] == "FORECA
 from engine import line_path
 lp = line_path([{"temp_c": 24}, {"temp_c": 29}], 300, 34, 25)
 check("W15 đường nhiệt: nhiệt tăng thì điểm đi lên", lp["pts"][1][1] < lp["pts"][0][1], str(lp["pts"]))
+check("W16 dải 8 ngày đúng daily API, đánh dấu hôm nay", [d["tmax"] for d in vm["days8"]] == ra["daily8"]["daily"]["temperature_2m_max"] and vm["days8"][0]["active"])
+check("W17 biểu đồ 3 giờ: 00..21 + 00 ngày sau, đúng giá trị", [x["hour"] for x in vm["chart3h"]] == [0,3,6,9,12,15,18,21,0] and vm["chart3h"][4]["temp_c"] == ra["body"]["hourly"]["temperature_2m"][12])
 # W8 chạy trùng cùng slot, cùng dữ liệu -> bỏ qua, không phát hành bản thứ hai
 st, m = run(pa, os.path.join(HERE, fa), out, "2026-11-19", log=lambda *_: None)
 check("W8 chạy trùng -> SKIPPED_DUPLICATE, vẫn version 1", st == "SKIPPED_DUPLICATE" and m["version"] == 1, st)

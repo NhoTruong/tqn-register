@@ -93,7 +93,7 @@ def normalize(project: Project, raw: dict, http_date: str) -> dict:
     return {"kind": "FORECAST", "provider": "Open-Meteo", "model": "best_match",
             "issued_at_utc": issued.isoformat(), "grid_lat": b["latitude"], "grid_lon": b["longitude"],
             "elevation_m": b.get("elevation"), "current": b.get("current"), "daily": b.get("daily"),
-            "hours": hours}
+            "hours": hours, "daily8": (raw.get("daily8") or {}).get("daily")}
 
 
 def require_complete(bundle: dict, local_date: str):
@@ -136,6 +136,12 @@ def view_model(project: Project, bundle: dict, local_date: str, slot_label: str,
                      "cond": wmo(daily["weather_code"][j])[0], "cond_text": wmo(daily["weather_code"][j])[1],
                      "rain": daily["precipitation_sum"][j], "pop_pct": daily["precipitation_probability_max"][j],
                      "active": ds == local_date})
+    THU_NGAN = ["Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7", "CN"]
+    d8 = bundle.get("daily8") or daily
+    days8 = [{"label": THU_NGAN[dt.date.fromisoformat(ds).weekday()], "tmax": d8["temperature_2m_max"][j],
+              "tmin": d8["temperature_2m_min"][j], "cond": wmo(d8["weather_code"][j])[0], "active": ds == local_date}
+             for j, ds in enumerate(d8["time"])]
+    pick = [x for x in day if x["hour"] % 3 == 0] + [x for x in tomorrow if x["hour"] == 0]
     dist_km = haversine(project.lat, project.lon, bundle["grid_lat"], bundle["grid_lon"])
     return {"p": asdict(project), "date_text": f'{THU[d.weekday()]}, {d.strftime("%d/%m/%Y")}',
             "local_date": local_date, "slot": slot_label, "run_kind": run_kind,
@@ -149,7 +155,7 @@ def view_model(project: Project, bundle: dict, local_date: str, slot_label: str,
             "sunrise": daily["sunrise"][di][11:16], "sunset": daily["sunset"][di][11:16],
             "cond_day": wmo(daily["weather_code"][di])[0], "cond_day_text": wmo(daily["weather_code"][di])[1],
             "summary": summary, "slots": slots, "days": days, "tomorrow_hours": tomorrow,
-            "peak": peak, "hours_all": [x for x in day if x["hour"] >= 6]}
+            "peak": peak, "days8": days8, "chart3h": pick, "hours_all": [x for x in day if x["hour"] >= 6]}
 
 
 def haversine(a1, o1, a2, o2):
@@ -161,7 +167,7 @@ def haversine(a1, o1, a2, o2):
 def render_html(vm: dict, layout: str, theme: str, si: int = 0) -> str:
     env = Environment(loader=FileSystemLoader(os.path.join(HERE, "templates")), autoescape=select_autoescape())
     env.globals.update(line_path=line_path)
-    tpl = "mobile.html" if layout == "mobile" else "report.html"
+    tpl = {"mobile": "mobile.html", "desktop": "desktop.html"}.get(layout, "report.html")
     return env.get_template(tpl).render(vm=vm, layout=layout, theme=theme, si=si)
 
 
