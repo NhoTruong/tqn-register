@@ -2,7 +2,7 @@
 import json, os, shutil
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 A, D = os.path.join(ROOT, "apps-script"), os.path.join(ROOT, "dist")
-GS = ["Config", "Read", "Import", "QC", "Remind", "Weather", "Workflow", "Ai", "Theme", "Docs", "Manager", "Auto", "Menu"]
+GS = ["Config", "Read", "Import", "QC", "Remind", "Weather", "Workflow", "Ai", "Theme", "Docs", "Manager", "KhoiPhuc", "Auto", "Menu"]
 HT = ["Sidebar", "Workflow", "NewDoc", "Manager"]
 code = "".join(f"\n// ===== {g}.gs =====\n" + open(os.path.join(A, g + ".gs"), encoding="utf-8").read() for g in GS)
 emb = {h: open(os.path.join(A, h + ".html"), encoding="utf-8").read() for h in HT}
