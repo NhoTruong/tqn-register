@@ -69,8 +69,7 @@ function tqnMenuSetup() { tqnEnsureConfig_(); tqnEnsureWeatherConfig_(); tqnEnsu
 
 /* ---------------- Thanh bên ---------------- */
 function tqnShowSidebar() {
-  var t = HtmlService.createTemplateFromFile('Sidebar');
-  SpreadsheetApp.getUi().showSidebar(t.evaluate().setTitle('TQN Register'));
+  SpreadsheetApp.getUi().showSidebar(tqnHtml_('Sidebar').setTitle('TQN Register'));
 }
 
 /** Dữ liệu cho thanh bên (gọi từ google.script.run). */
@@ -115,4 +114,13 @@ function tqnGroupQC_(rows) {
     g[k].n++; g[k].pos.push(x[2]);
   });
   return order.map(function (k) { var o = g[k]; o.where = o.pos.join(', '); delete o.pos; return o; });
+}
+
+/** Lấy giao diện HTML: ưu tiên file HTML cùng tên trong dự án; nếu không có thì dùng bản gộp sẵn trong code (bản 1 file). */
+function tqnHtml_(name) {
+  try { return HtmlService.createHtmlOutputFromFile(name); }
+  catch (e) {
+    if (typeof TQN_HTML_EMBED !== 'undefined' && TQN_HTML_EMBED[name]) return HtmlService.createHtmlOutput(TQN_HTML_EMBED[name]);
+    throw e;
+  }
 }

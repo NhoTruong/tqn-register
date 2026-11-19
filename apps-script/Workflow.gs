@@ -227,12 +227,12 @@ function tqnWorkflowData() {
   return { steps: TQN_WF_STEPS.slice(1), cols: cols, late: wf.late, total: wf.rows.length, at: Utilities.formatDate(new Date(), r.cfg.timezone, 'dd/MM/yyyy HH:mm') };
 }
 function tqnMenuWorkflow() {
-  var html = HtmlService.createHtmlOutputFromFile('Workflow').setWidth(1100).setHeight(640);
+  var html = tqnHtml_('Workflow').setWidth(1100).setHeight(640);
   SpreadsheetApp.getUi().showModalDialog(html, 'Quy trình hồ sơ – ai đang giữ việc');
 }
 function tqnMenuNewDoc() {
   tqnEnsureCodeConfig_();
-  var html = HtmlService.createHtmlOutputFromFile('NewDoc').setWidth(520).setHeight(560);
+  var html = tqnHtml_('NewDoc').setWidth(520).setHeight(560);
   SpreadsheetApp.getUi().showModalDialog(html, 'Tạo hồ sơ mới / Trình lại – cấp mã');
 }
 

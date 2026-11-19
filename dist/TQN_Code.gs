@@ -1,4 +1,4 @@
-// TQN Register — gộp 11 file (Config, Read, Import, QC, Remind, Weather, Workflow, Ai, Theme, Auto, Menu). Dán toàn bộ vào 1 file Code.gs trong Apps Script
+// TQN Register — gộp 11 file. Dán vào Code.gs + tạo 3 file HTML Sidebar/Workflow/NewDoc (hoặc dùng TQN_Register_1_FILE.gs).
 
 // ===== Config.gs =====
 /**
@@ -1051,12 +1051,12 @@ function tqnWorkflowData() {
   return { steps: TQN_WF_STEPS.slice(1), cols: cols, late: wf.late, total: wf.rows.length, at: Utilities.formatDate(new Date(), r.cfg.timezone, 'dd/MM/yyyy HH:mm') };
 }
 function tqnMenuWorkflow() {
-  var html = HtmlService.createHtmlOutputFromFile('Workflow').setWidth(1100).setHeight(640);
+  var html = tqnHtml_('Workflow').setWidth(1100).setHeight(640);
   SpreadsheetApp.getUi().showModalDialog(html, 'Quy trình hồ sơ – ai đang giữ việc');
 }
 function tqnMenuNewDoc() {
   tqnEnsureCodeConfig_();
-  var html = HtmlService.createHtmlOutputFromFile('NewDoc').setWidth(520).setHeight(560);
+  var html = tqnHtml_('NewDoc').setWidth(520).setHeight(560);
   SpreadsheetApp.getUi().showModalDialog(html, 'Tạo hồ sơ mới / Trình lại – cấp mã');
 }
 
@@ -1476,8 +1476,7 @@ function tqnMenuSetup() { tqnEnsureConfig_(); tqnEnsureWeatherConfig_(); tqnEnsu
 
 /* ---------------- Thanh bên ---------------- */
 function tqnShowSidebar() {
-  var t = HtmlService.createTemplateFromFile('Sidebar');
-  SpreadsheetApp.getUi().showSidebar(t.evaluate().setTitle('TQN Register'));
+  SpreadsheetApp.getUi().showSidebar(tqnHtml_('Sidebar').setTitle('TQN Register'));
 }
 
 /** Dữ liệu cho thanh bên (gọi từ google.script.run). */
@@ -1522,4 +1521,13 @@ function tqnGroupQC_(rows) {
     g[k].n++; g[k].pos.push(x[2]);
   });
   return order.map(function (k) { var o = g[k]; o.where = o.pos.join(', '); delete o.pos; return o; });
+}
+
+/** Lấy giao diện HTML: ưu tiên file HTML cùng tên trong dự án; nếu không có thì dùng bản gộp sẵn trong code (bản 1 file). */
+function tqnHtml_(name) {
+  try { return HtmlService.createHtmlOutputFromFile(name); }
+  catch (e) {
+    if (typeof TQN_HTML_EMBED !== 'undefined' && TQN_HTML_EMBED[name]) return HtmlService.createHtmlOutput(TQN_HTML_EMBED[name]);
+    throw e;
+  }
 }
