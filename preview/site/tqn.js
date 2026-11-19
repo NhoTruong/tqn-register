@@ -28,6 +28,7 @@ var TQN_DEFAULT_CONFIG = [
   ['remind_hour', '7', 'Giờ chạy nhắc hạn hằng ngày (giờ dự án). Apps Script có thể lệch ±15 phút'],
   ['remind_email_enabled', 'Không', 'Có = gửi mail; Không = chỉ ghi tab TQN_NHAC_HAN'],
   ['remind_recipients', '', 'Email nhận nhắc hạn, cách nhau dấu phẩy'],
+  ['han_mac_dinh', '4', 'Số ngày chờ phản hồi để tự tính hạn khi Sổ trình duyệt không có hạn (ngày trình + số ngày)'],
   ['detail_first_row', '6', 'Dòng dữ liệu đầu tiên của sổ chi tiết'],
   ['header_rows', '1-5', 'Vùng dòng tiêu đề để dò cột']
 ];
@@ -389,6 +390,12 @@ function tqnImport_(cfg) {
     r[12] = d.tvgsDate; r[13] = d.tvgsNote; r[14] = d.tvtkDate; r[15] = d.tvtkNote; r[16] = d.cdtDate; r[17] = d.cdtNote; r[18] = d.ret;
     r[19] = L.wf || ''; r[20] = L.to || ''; r[21] = L.due || ''; r[22] = L.reply || ''; r[23] = L.result || ''; r[24] = L.status || '';
     r[25] = L.link || ''; r[26] = d.matchHow || '';
+    // Không có hạn từ Sổ trình duyệt (sổ thiếu / chưa ghép) → tự tính: ngày trình + han_mac_dinh ngày (TQN_CONFIG)
+    if (!r[21] && tqnIsDate_(d.submitted)) {
+      var nd = parseInt(cfg.han_mac_dinh, 10); if (isNaN(nd)) nd = 4;
+      r[21] = new Date(d.submitted.getFullYear(), d.submitted.getMonth(), d.submitted.getDate() + nd);
+      r[26] = (r[26] ? r[26] + ' · ' : '') + 'Hạn tự tính (+' + nd + ' ngày)';
+    }
     put(cfg.project_id + '|DET|' + d.sheet + '|' + d.code.toUpperCase() + '|' + d.rev + '|' + tqnHash8_(d.subject), r);
   });
   src.logUnmatched.forEach(function (L) {
@@ -1342,9 +1349,11 @@ function tqnApplyTheme() {
     var sh = tqnSs_().getSheetByName(name); if (!sh) return;
     var n = tqnThemeSheet_(sh, cfg); total += n; out.push(name + ': ' + n + ' ô');
   });
-  try { tqnApplyStatusColors(); } catch (e) { }
-  try { tqnApplyOptionColors(); } catch (e) { }
-  try { tqnApplyTabColors(); } catch (e) { }
+  var loi = [];
+  try { tqnApplyStatusColors(); } catch (e) { loi.push('Tô màu Sổ trình duyệt: ' + e.message); }
+  try { tqnApplyOptionColors(); } catch (e) { loi.push('Màu ô chọn: ' + e.message); }
+  try { tqnApplyTabColors(); } catch (e) { loi.push('Màu tab: ' + e.message); }
+  if (loi.length) tqnAudit_('GIAO_DIEN_LOI', loi.join(' | '), { loi: loi.length });
   tqnAudit_('GIAO_DIEN', 'Áp giao diện dễ nhìn', { o_doi: total, tab: out.length });
   return { total: total, tabs: out };
 }
@@ -1401,11 +1410,12 @@ function tqnListValues_(rule) {
 /** Thêm màu cho mọi ô chọn (Kết quả, Trình đến, Tình trạng hồ sơ…) của các sổ: chọn giá trị nào, ô đổi màu theo giá trị đó. Chỉ định dạng. */
 function tqnApplyOptionColors() {
   var cfg = tqnConfig_(), added = 0, cols = [];
-  tqnThemeSheets_(cfg).forEach(function (name) {
-    var sh = tqnSs_().getSheetByName(name); if (!sh || !sh.getDataValidations) return;
+  var loi = [];
+  tqnThemeSheets_(cfg).forEach(function (name) { try {
+    var sh = tqnSs_().getSheetByName(name); if (!sh) return;
     var R = Math.min(Math.max(sh.getLastRow(), 1), TQN_THEME_ROWS), C = Math.min(Math.max(sh.getLastColumn(), 1), TQN_THEME_COLS);
     var dv = sh.getRange(1, 1, R, C).getDataValidations(), seen = {}, rules = sh.getConditionalFormatRules(), mine = {}, add = [];
-    rules.forEach(function (ru) { var c = ru.getBooleanCondition && ru.getBooleanCondition(); if (c) (c.getCriteriaValues() || []).forEach(function (v) { mine[String(v) + '|' + String(c.getBackground ? c.getBackground() : '').toUpperCase() + '|' + (ru.getRanges ? ru.getRanges()[0].getColumn() : '')] = 1; }); });
+    rules.forEach(function (ru) { var c = ru.getBooleanCondition && ru.getBooleanCondition(); if (c) (c.getCriteriaValues() || []).forEach(function (v) { mine[String(v) + '|' + String(c.getBackground ? c.getBackground() : '').toUpperCase() + '|' + (ru.getRanges && ru.getRanges().length ? ru.getRanges()[0].getColumn() : '')] = 1; }); });
     for (var j = 0; j < C; j++) {
       var first = -1, last = -1, opts = null;
       for (var i = 0; i < R; i++) { var v = tqnListValues_(dv[i][j]); if (v.length) { if (first < 0) { first = i; opts = v; } last = i; } }
@@ -1418,8 +1428,8 @@ function tqnApplyOptionColors() {
       cols.push(name + '!' + tqnColLetter_(j + 1));
     }
     if (add.length) { sh.setConditionalFormatRules(add.concat(rules)); added += add.length; }
-  });
-  tqnAudit_('MAU_O_CHON', cols.join(', '), { them: added });
+  } catch (e) { loi.push(name + ': ' + e.message); } });
+  tqnAudit_('MAU_O_CHON', cols.join(', ') + (loi.length ? ' | LỖI: ' + loi.join('; ') : ''), { them: added, loi: loi.length });
   return { added: added, cols: cols };
 }
 
@@ -1450,8 +1460,7 @@ function tqnApplyTabColors() {
   var n = 0;
   tqnSs_().getSheets().forEach(function (sh) {
     var c = tqnTabColorOf_(sh.getName()); if (!c) return;
-    if (!(sh.getName() in goc)) goc[sh.getName()] = sh.getTabColor() || '';
-    sh.setTabColor(c); n++;
+    try { if (!(sh.getName() in goc)) goc[sh.getName()] = sh.getTabColor() || ''; sh.setTabColor(c); n++; } catch (e) { }
   });
   props.setProperty('tqn_tab_goc', JSON.stringify(goc));
   return n;

@@ -177,7 +177,7 @@ function tqnApplyOptionColors() {
   var cfg = tqnConfig_(), added = 0, cols = [];
   var loi = [];
   tqnThemeSheets_(cfg).forEach(function (name) { try {
-    var sh = tqnSs_().getSheetByName(name); if (!sh || !sh.getDataValidations) return;
+    var sh = tqnSs_().getSheetByName(name); if (!sh) return;
     var R = Math.min(Math.max(sh.getLastRow(), 1), TQN_THEME_ROWS), C = Math.min(Math.max(sh.getLastColumn(), 1), TQN_THEME_COLS);
     var dv = sh.getRange(1, 1, R, C).getDataValidations(), seen = {}, rules = sh.getConditionalFormatRules(), mine = {}, add = [];
     rules.forEach(function (ru) { var c = ru.getBooleanCondition && ru.getBooleanCondition(); if (c) (c.getCriteriaValues() || []).forEach(function (v) { mine[String(v) + '|' + String(c.getBackground ? c.getBackground() : '').toUpperCase() + '|' + (ru.getRanges && ru.getRanges().length ? ru.getRanges()[0].getColumn() : '')] = 1; }); });
