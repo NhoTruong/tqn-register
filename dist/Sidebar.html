@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html><head><base target="_top"><meta charset="utf-8">
+<style>
+:root{--navy:#1B3F7A;--teal:#0F6E56;--red:#A32D2D;--amb:#854F0B;--blu:#185FA5;--mut:#6b7280;--line:#e5e7eb}
+*{box-sizing:border-box}body{margin:0;font-family:Arial,"Segoe UI",sans-serif;font-size:12px;color:#1f2937;background:#f4f6f9}
+.hd{background:var(--navy);color:#fff;padding:10px 12px;position:relative;overflow:hidden}
+.hd b{font-size:14px}.hd .s{font-size:11px;opacity:.8;margin-top:2px}
+.hd:after{content:"";position:absolute;top:0;left:-40%;width:40%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.14),transparent);animation:sw 5s linear infinite}
+@keyframes sw{to{left:140%}}
+.wrap{padding:10px}
+.kp{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.k{background:#fff;border:1px solid var(--line);border-radius:10px;padding:8px}
+.k .l{color:var(--mut);font-size:11px}.k .v{font-size:20px;font-weight:700}
+.btn{display:block;width:100%;border:0;border-radius:8px;padding:9px;color:#fff;font-weight:700;margin-top:8px;cursor:pointer;background:var(--teal)}
+.btn.g{background:#5F5E5A;font-weight:400}.btn:active{transform:scale(.98)}
+h4{margin:14px 0 6px;font-size:12px;color:var(--navy)}
+.it{background:#fff;border:1px solid var(--line);border-left:4px solid var(--blu);border-radius:0;padding:6px 8px;margin-bottom:5px;cursor:pointer}
+.it:hover{background:#f8fafc}.it .t{font-size:11px;color:var(--mut);word-break:break-word}.it .c{font-family:Consolas,monospace;font-size:11px;word-break:break-all}
+.pill{display:inline-block;padding:1px 6px;border-radius:6px;font-size:10px;font-weight:700}
+.st{color:var(--mut);font-size:11px;margin-top:8px}
+.load{padding:24px;text-align:center;color:var(--mut)}
+.err{background:#FCEBEB;color:var(--red);padding:8px;border-radius:8px}
+@media (prefers-reduced-motion:reduce){.hd:after{animation:none}}
+</style></head>
+<body>
+<div class="hd"><b>TQN Register</b><div class="s" id="pj">Đang tải…</div></div>
+<div class="wrap" id="app"><div class="load">Đang đọc Register và kiểm tra…</div></div>
+<script>
+var C={'QUÁ HẠN':'#A32D2D','HẠN HÔM NAY':'#854F0B','SẮP ĐẾN HẠN':'#185FA5','LỖI':'#A32D2D','CẢNH BÁO':'#854F0B'};
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+function load(){document.getElementById('app').innerHTML='<div class="load">Đang đọc Register và kiểm tra…</div>';
+ google.script.run.withSuccessHandler(draw).withFailureHandler(function(e){document.getElementById('app').innerHTML='<div class="err">'+esc(e.message||e)+'</div>'}).tqnSidebarData();}
+function go(at){google.script.run.tqnGoto(at)}
+function draw(d){
+ document.getElementById('pj').textContent=d.project+' · '+d.at;
+ var k=d.kpi,h='<div class="kp">'+
+  kp('Sổ trình duyệt',k.tong,'')+kp('Đang chờ',k.cho,'#854F0B')+kp('Quá hạn',k.quaHan,'#A32D2D')+kp('Đã duyệt',k.duyet,'#0F6E56')+
+  kp('Lỗi dữ liệu',k.loi,'#A32D2D')+kp('Cảnh báo',k.canhBao,'#854F0B')+'</div>'+
+  '<div class="st">Sổ chi tiết '+k.chiTiet+' hồ sơ, ghép được với sổ tổng '+k.ghep+'</div>'+
+  '<button class="btn" onclick="load()">Nhập & kiểm tra lại</button>'+
+  '<h4>Việc cần nhắc ('+d.remind.length+')</h4>'+(d.remind.length?d.remind.map(function(x){
+   return '<div class="it" style="border-left-color:'+C[x.g]+'" onclick="go(\''+esc(x.at)+'\')"><span class="pill" style="background:'+C[x.g]+'22;color:'+C[x.g]+'">'+esc(x.g)+(x.d!==''?' · '+esc(x.d)+' ngày':'')+'</span> <span class="t">hạn '+esc(x.han)+'</span><div class="c">'+esc(x.ma)+'</div><div>'+esc(String(x.nd).slice(0,90))+'</div></div>'}).join(''):'<div class="st">Không có hồ sơ quá hạn hoặc sắp đến hạn.</div>')+
+  '<h4>Lỗi và cảnh báo ('+d.qcTotal+' mục, '+d.qc.length+' nhóm)</h4>'+d.qc.map(function(x){
+   return '<div class="it" style="border-left-color:'+C[x.lv]+'" onclick="go(\''+esc(x.at)+'\')"><span class="pill" style="background:'+C[x.lv]+'22;color:'+C[x.lv]+'">'+esc(x.lv)+(x.n>1?' · '+x.n+' mục':'')+'</span> <span class="t">'+esc(x.rule)+'</span><div class="t">'+esc(String(x.where).slice(0,80))+'</div><div>'+esc(String(x.msg).slice(0,150))+'</div></div>'}).join('')+
+  '<div class="st">Bấm vào một mục để nhảy tới dòng đó. Chi tiết đủ ở tab TQN_QC, TQN_NHAC_HAN. Bản '+esc(d.version)+'</div>';
+ document.getElementById('app').innerHTML=h;}
+function kp(l,v,c){return '<div class="k"><div class="l">'+l+'</div><div class="v" style="color:'+(c||'inherit')+'">'+v+'</div></div>'}
+load();
+</script>
+</body></html>
