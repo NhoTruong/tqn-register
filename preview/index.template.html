@@ -24,7 +24,7 @@ body{font:13px Inter,Segoe UI,Arial,sans-serif;color:var(--tx);display:flex;flex
 .quick button.pr{background:var(--navy);border-color:var(--navy);color:#fff}.quick button.pr:hover{background:#163566}
 .main{flex:1;display:flex;min-height:0}
 .gridwrap{flex:1;overflow:auto;background:#fff}
-table.g{border-collapse:collapse;font-size:12px}
+table.g{border-collapse:collapse;font-size:12px;table-layout:fixed}
 table.g td,table.g th{border:1px solid #e2e3e5;padding:2px 5px;white-space:nowrap;max-width:260px;overflow:hidden;text-overflow:ellipsis;height:21px}
 table.g th{background:var(--bg);color:var(--tx2);font-weight:500;position:sticky;top:0;z-index:2}
 table.g td.rn{background:var(--bg);color:var(--tx2);text-align:center;position:sticky;left:0;z-index:1;min-width:38px}
@@ -92,14 +92,15 @@ class Sheet{constructor(name,data){this.name=name;this.v=(data?data.values:[]).m
  getLastColumn(){let m=0;this.v.forEach(r=>{for(let j=r.length;j>m;j--)if(r[j-1]!==''&&r[j-1]!==null){m=j;break}});return m}
  getRange(r,c,nr=1,nc=1){return new Range(this,r,c,nr,nc)}
  appendRow(row){this.w('appendRow');const r=this.getLastRow()+1;row.forEach((x,j)=>this.set(r,j+1,x))}
+ getMaxRows(){return Math.max(this.v.length,600)} getConditionalFormatRules(){return (this.cfr||[]).slice()} setConditionalFormatRules(r){this.cfr=r}
  setFrozenRows(){}setFrozenColumns(){}setColumnWidth(){}setColumnWidths(){}autoResizeColumns(){}
  activate(){showSheet(this.name)}setActiveRange(rg){hlRow=rg.r;showSheet(this.name)}}
-const book=[],byName={};let active=null,hlRow=0;
+const book=[],byName={};let STYLES={};let active=null,hlRow=0;
 const ss={getSheetByName:n=>byName[n]||null,insertSheet:n=>{const s=new Sheet(n);book.push(s);byName[n]=s;return s},setActiveSheet:s=>{s&&showSheet(s.name)},getSheets:()=>book.slice(),getName:()=>'HAUS QUANG NGAI- Register'};
 const menuItems=[];const props={};const triggers=[];const mails=[];let WEATHER_RAW=null;
 const fmt2=n=>String(n).padStart(2,'0');
 const G={
- SpreadsheetApp:{getActiveSpreadsheet:()=>ss,getUi:()=>({ButtonSet:{OK:'OK'},
+ SpreadsheetApp:{getActiveSpreadsheet:()=>ss,newConditionalFormatRule:()=>{const o={};const b={whenTextEqualTo:v=>(o.v=v,b),setBackground:c=>(o.bg=c,b),setFontColor:c=>(o.fc=c,b),setRanges:r=>(o.r=r,b),build:()=>({o,getBooleanCondition:()=>({getCriteriaValues:()=>[o.v]})})};return b},getUi:()=>({ButtonSet:{OK:'OK'},
   alert:(a,b)=>showModal(b!==undefined?a:'TQN Register',b!==undefined?b:a),
   showSidebar:(h)=>openSide(),
   showModalDialog:(h,title)=>openDialog(h.name,title),
@@ -136,12 +137,25 @@ function hideModal(){$('modal').classList.remove('show')}
 function toast(t){const e=$('toast');e.textContent=t;e.style.display='block';clearTimeout(e._t);e._t=setTimeout(()=>e.style.display='none',2600)}
 function cellText(x){if(x instanceof Date&&!isNaN(x))return fmt2(x.getDate())+'/'+fmt2(x.getMonth()+1)+'/'+x.getFullYear();if(typeof x==='number')return String(Math.round(x*100)/100);return x===undefined||x===null?'':String(x)}
 function colL(n){let s='';while(n>0){const m=(n-1)%26;s=String.fromCharCode(65+m)+s;n=(n-m-1)/26}return s}
+function a1(ref){const m=/^([A-Z]+)(\d+)$/.exec(ref);let c=0;for(const ch of m[1])c=c*26+ch.charCodeAt(0)-64;return [+m[2],c]}
+function rngOf(sq){return String(sq).split(' ').map(p=>{const [a,b]=p.split(':');const x=a1(a),y=a1(b||a);return [x[0],x[1],y[0],y[1]]})}
 function showSheet(name){active=name;const sh=byName[name];if(!sh)return;
+ const ST=(STYLES[name]||{}),sty=ST.s||{},cw=ST.cw||{};
  const R=Math.max(sh.getLastRow(),1),C=Math.min(Math.max(sh.getLastColumn(),1),60);const edit=name==='TQN_CONFIG';
- let h='<table class="g"><tr><th></th>';for(let c=1;c<=C;c++)h+='<th>'+colL(c)+'</th>';h+='</tr>';
+ const cond=[];(ST.cf||[]).forEach(r=>rngOf(r[0]).forEach(g=>cond.push({g,v:r[1],bg:r[2],fc:r[3]})));
+ (sh.cfr||[]).forEach(r=>{const g=r.o.r[0];cond.push({g:[g.r,g.c,g.r+g.nr-1,g.c+g.nc-1],v:r.o.v,bg:r.o.bg,fc:r.o.fc})});
+ const skip={},span={};(ST.m||[]).forEach(m=>{const [r1,c1,r2,c2]=rngOf(m)[0];span[r1+','+c1]=[r2-r1+1,c2-c1+1];for(let r=r1;r<=r2;r++)for(let c=c1;c<=c2;c++)if(r!==r1||c!==c1)skip[r+','+c]=1});
+ const isT=name.startsWith('TQN_');
+ let h='<table class="g"><colgroup><col style="width:42px">';for(let c=1;c<=C;c++){const w=cw[colL(c)];h+='<col style="width:'+(w?Math.min(w,420):isT?150:96)+'px">'}h+='</colgroup><tr><th></th>';
+ for(let c=1;c<=C;c++)h+='<th>'+colL(c)+'</th>';h+='</tr>';
  for(let r=1;r<=R;r++){h+='<tr'+(r===hlRow?' class="hl" id="hlr"':'')+'><td class="rn">'+r+'</td>';
-  for(let c=1;c<=C;c++){const x=sh.get(r,c),t=cellText(x).replace(/[&<>]/g,s=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[s]));
-   const ed=edit&&c===2&&r>1;h+='<td'+(typeof x==='number'?' class="num"':'')+(ed?' class="ed" contenteditable data-r="'+r+'"':'')+' title="'+t.slice(0,300)+'">'+t+'</td>'}h+='</tr>'}
+  for(let c=1;c<=C;c++){if(skip[r+','+c])continue;const x=sh.get(r,c),t=cellText(x).replace(/[&<>]/g,q=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[q]));
+   const k=r+','+c,s0=sty[k]||[],sp=span[k];let css='';
+   if(s0[0])css+='background:'+s0[0]+';';if(s0[1])css+='color:'+s0[1]+';';if(s0[2])css+='font-weight:700;';if(s0[3])css+='text-align:'+s0[3]+';';
+   if(isT&&r===1)css+='background:#1B3F7A;color:#fff;font-weight:700;';
+   const hit=cond.find(q=>r>=q.g[0]&&r<=q.g[2]&&c>=q.g[1]&&c<=q.g[3]&&String(x).trim()===q.v);if(hit){if(hit.bg)css+='background:'+hit.bg+';';if(hit.fc)css+='color:'+hit.fc+';';css+='font-weight:600;'}
+   const ed=edit&&c===2&&r>1;
+   h+='<td'+(sp?' rowspan="'+sp[0]+'" colspan="'+sp[1]+'"':'')+(typeof x==='number'&&!s0[3]?' class="num"':'')+(ed?' class="ed" contenteditable data-r="'+r+'"':'')+(css?' style="'+css+'"':'')+' title="'+t.slice(0,300)+'">'+t+'</td>'}h+='</tr>'}
  $('grid').innerHTML=h+'</table>';
  if(edit)$('grid').querySelectorAll('td.ed').forEach(td=>td.addEventListener('blur',()=>{byName.TQN_CONFIG.set(+td.dataset.r,2,td.textContent.trim());toast('Đã sửa '+byName.TQN_CONFIG.get(+td.dataset.r,1))}));
  const hl=$('hlr');if(hl)hl.scrollIntoView({block:'center'});hlRow=0;drawTabs()}
@@ -154,7 +168,7 @@ function buildMenu(){const box=$('menus');const b=document.createElement('button
  menuItems.forEach(it=>{if(!it){d.appendChild(document.createElement('hr'));return}const x=document.createElement('button');x.textContent=it[0];x.onclick=()=>{d.classList.remove('show');runFn(it[1])};d.appendChild(x)});
  const sch=document.createElement('button');sch.textContent='(Xem thử) Lịch đã bật';sch.onclick=()=>{d.classList.remove('show');showModal('Lịch tự chạy (xem thử)',triggers.length?triggers.map(t=>t.fn+(String(t.h).startsWith('mỗi')?' '+t.h:' lúc ~'+t.h+':00 hằng ngày')).join('\n')+'\n\nBản thật: Google tự chạy cả khi máy tắt.':'Chưa bật lịch nào.')};
  d.appendChild(document.createElement('hr'));d.appendChild(sch);
- const q=$('quick');[['★ Bật tự động tất cả','tqnMenuSetupAll',1],['Kiểm soát quy trình + AI','tqnMenuWorkflow',1],['Tạo hồ sơ / cấp mã','tqnMenuNewDoc',1],['Trạng thái tự động','tqnMenuAutoStatus'],['Bảng điều khiển','tqnShowSidebar',1],['Nhập & kiểm tra','tqnMenuRun',1],['Nhắc hạn hôm nay','tqnMenuRemindPreview'],['Thời tiết ngay','tqnMenuWeatherNow'],['Bật thời tiết 06:00','tqnMenuWeatherOn'],['Bật nhắc hạn 07:00','tqnMenuInstallDaily'],['Cài đặt','tqnMenuSetup']].forEach(([l,f,pr])=>{if(!menuItems.some(m=>m&&m[1]===f))return;const x=document.createElement('button');x.textContent=l;if(pr)x.className='pr';x.onclick=()=>runFn(f);q.appendChild(x)});
+ const q=$('quick');[['★ Bật tự động tất cả','tqnMenuSetupAll',1],['Kiểm soát quy trình + AI','tqnMenuWorkflow',1],['Tô màu Tình trạng','tqnMenuStatusColors'],['Tạo hồ sơ / cấp mã','tqnMenuNewDoc',1],['Trạng thái tự động','tqnMenuAutoStatus'],['Bảng điều khiển','tqnShowSidebar',1],['Nhập & kiểm tra','tqnMenuRun',1],['Nhắc hạn hôm nay','tqnMenuRemindPreview'],['Thời tiết ngay','tqnMenuWeatherNow'],['Bật thời tiết 06:00','tqnMenuWeatherOn'],['Bật nhắc hạn 07:00','tqnMenuInstallDaily'],['Cài đặt','tqnMenuSetup']].forEach(([l,f,pr])=>{if(!menuItems.some(m=>m&&m[1]===f))return;const x=document.createElement('button');x.textContent=l;if(pr)x.className='pr';x.onclick=()=>runFn(f);q.appendChild(x)});
  b.onclick=e=>{e.stopPropagation();d.style.left=b.offsetLeft+'px';d.classList.toggle('show')};box.appendChild(b);box.appendChild(d);document.addEventListener('click',()=>d.classList.remove('show'))}
 let sideSrc='',HTML={};
 const GSHIM='<script>window.google={script:{run:(function(){function mk(ok,fail){return new Proxy({},{get:function(_,k){if(k==="withSuccessHandler")return function(f){return mk(f,fail)};if(k==="withFailureHandler")return function(f){return mk(ok,f)};return function(){var a=arguments;setTimeout(function(){try{Promise.resolve(parent[k].apply(parent,a)).then(function(r){parent.afterCall(k);ok&&ok(r)},function(e){fail&&fail(e)})}catch(e){fail&&fail(e)}},0)}}})}return mk()})()},host:{close:function(){parent.closeDialog()}}};<\/script>';
@@ -166,7 +180,7 @@ function openSide(){$('side').classList.add('show');
  $('sideF').srcdoc=withShim(sideSrc)}
 function closeSide(){$('side').classList.remove('show')}
 
-(async()=>{const data=await (await fetch('data.json')).json();WEATHER_RAW=data.weather_raw;HTML=data.html;sideSrc=HTML.Sidebar;
+(async()=>{const data=await (await fetch('data.json')).json();WEATHER_RAW=data.weather_raw;STYLES=data.styles||{};HTML=data.html;sideSrc=HTML.Sidebar;
  data.sheets.forEach(s=>{const sh=new Sheet(s.name,s);book.push(sh);byName[s.name]=sh;ORIGINAL.add(s.name)});
  $('src').textContent='Bản chụp Register · '+data.sheets.length+' tab · ẩn '+data.pii_hidden.length+' tab có SĐT/email';
  onOpen();buildMenu();showSheet('Sổ trình duyệt');toast('Bấm các nút phía trên để chạy thử: Nhập & kiểm tra, Bảng điều khiển, Thời tiết…');

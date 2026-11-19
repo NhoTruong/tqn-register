@@ -37,6 +37,7 @@ function tqnSetupAll() {
   var wc = tqnWeatherCfg_(), why = tqnWeatherBlocked_(wc);
   if (why) { tqnRemoveWeather(true); out.push('✖ Thời tiết 06:00 CHƯA bật: ' + why + ' → sửa ở tab TQN_CONFIG rồi bấm lại nút này'); }
   else out.push('✔ Thời tiết: hằng ngày khoảng ' + tqnInstallWeather() + ':00');
+  try { var nc = tqnApplyStatusColors(); out.push('✔ Tô màu cột Tình trạng (thêm ' + nc + ' quy tắc)'); } catch (e) { out.push('✖ Tô màu: ' + e.message); }
   try { tqnHourlyJob(); out.push('✔ Đã chạy nhập & kiểm lần đầu'); } catch (e) { out.push('✖ Chạy lần đầu lỗi: ' + e.message); }
   tqnAudit_('BAT_TU_DONG', out.join(' | '), {});
   return out;

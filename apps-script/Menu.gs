@@ -11,6 +11,7 @@ function onOpen() {
     .addItem('Quy trình hồ sơ (ai đang giữ việc)', 'tqnMenuWorkflow')
     .addItem('Tạo hồ sơ mới / Trình lại – cấp mã', 'tqnMenuNewDoc')
     .addItem('✦ AI rà hồ sơ cần xử lý (bản nháp)', 'tqnMenuAiBatch')
+    .addItem('Tô màu cột Tình trạng', 'tqnMenuStatusColors')
     .addSeparator()
     .addItem('1. Nhập & kiểm tra ngay', 'tqnMenuRun')
     .addItem('2. Xem nhắc hạn hôm nay', 'tqnMenuRemindPreview')

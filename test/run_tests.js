@@ -31,13 +31,16 @@ class Sheet {
   appendRow(row) { this.w('appendRow'); const r = this.getLastRow() + 1; row.forEach((x, j) => this.set(r, j + 1, x)); }
   setFrozenRows() { this.w('freeze'); } setFrozenColumns() { this.w('freeze'); } setColumnWidth() { this.w('width'); }
   activate() { } setActiveRange() { }
+  getMaxRows() { return Math.max(this.v.length, 1000); }
+  getConditionalFormatRules() { return (this.cfr || []).slice(); }
+  setConditionalFormatRules(r) { this.cfr = r; }
 }
 const sheets = {}; Object.keys(fx).forEach(n => sheets[n] = new Sheet(n, fx[n]));
 const ss = { getSheetByName: n => sheets[n] || null, insertSheet: n => (sheets[n] = new Sheet(n)), setActiveSheet() { } };
 const mails = [], props = {}, TRIG = [], sprops = {}, fetches = []; let AI_RES = () => ({ getResponseCode: () => 500, getContentText: () => '' });
 const ctx = {
   console, Date, JSON, Math, String, Object, Array, RegExp, Error, parseInt, isNaN,
-  SpreadsheetApp: { getActiveSpreadsheet: () => ss, getUi: () => ({ alert() { }, ButtonSet: {} }) },
+  SpreadsheetApp: { getActiveSpreadsheet: () => ss, newConditionalFormatRule() { const o = {}; const b = { whenTextEqualTo: v => (o.v = v, b), setBackground: c => (o.bg = c, b), setFontColor: c => (o.fc = c, b), setRanges: r => (o.r = r, b), build: () => ({ o, getBooleanCondition: () => ({ getCriteriaValues: () => [o.v] }) }) }; return b; }, getUi: () => ({ alert() { }, ButtonSet: {} }) },
   Utilities: {
     sleep: () => {},
     DigestAlgorithm: { MD5: 'md5' }, Charset: { UTF_8: 'utf8' },
@@ -166,6 +169,9 @@ T('U42 AI trả lời sai khuôn → báo lỗi, không ghi gì vào TQN_AI', ex
 let n429 = 0; AI_RES = () => { n429++; return { getResponseCode: () => 429, getContentText: () => 'rate' }; };
 T('U43 Bị giới hạn 429 → thử lại 3 lần rồi báo lỗi rõ', expectErr("tqnAiAnalyze('" + atRFI + "')", /429/) && n429 === 3);
 T('U44 AI không ghi vào tab gốc', !writes.slice(aiBefore).some(w => ORIGINAL.has(w[0])));
+const ncf = run('tqnApplyStatusColors()'), cfr = sheets['Sổ trình duyệt'].cfr || [];
+T('U45 Tô màu cột Tình trạng (đã chạy trong nút ★): đủ 7 quy tắc, đúng cột O từ dòng 23, không đổi dữ liệu', cfr.length === 7 && cfr.every(r => r.o.r[0].c === 15 && r.o.r[0].r === 23) && !writes.some(w => w[0] === 'Sổ trình duyệt'), 'thêm ' + ncf);
+T('U46 Bấm lại không thêm trùng quy tắc', run('tqnApplyStatusColors()') === 0);
 const qcRows = sheets['TQN_QC'].getLastRow() - 1;
 console.log(`\nTQN_DATA ${n2} dòng · TQN_QC ${qcRows} dòng · TQN_NHAC_HAN ${sheets['TQN_NHAC_HAN'].getLastRow() - 1} dòng`);
 console.log(`KẾT QUẢ: ${pass} PASS / ${fail} FAIL`);

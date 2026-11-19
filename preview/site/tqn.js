@@ -1051,6 +1051,32 @@ function tqnMenuNewDoc() {
   SpreadsheetApp.getUi().showModalDialog(html, 'Tạo hồ sơ mới / Trình lại – cấp mã');
 }
 
+/* ---------------- Tô màu tình trạng (chỉ định dạng, không đổi dữ liệu) ---------------- */
+var TQN_STATUS_COLORS = [
+  ['Quá hạn', '#F8D7DA', '#9C0006'], ['Không duyệt - trình lại', '#FCE1C9', '#8A4B00'], ['Đang chờ', '#FFF2CC', '#7A5B00'],
+  ['Chưa trình', '#ECEFF3', '#4D5A6B'], ['Đã phản hồi', '#DCEBFB', '#1D4F91'], ['Duyệt có ý kiến', '#E2F3D6', '#2E6B12'], ['Đã duyệt', '#C9EBC0', '#1E5E14']
+];
+/** Thêm quy tắc tô màu cho cột Tình trạng của Sổ trình duyệt. Giữ nguyên quy tắc cũ, chỉ thêm cái còn thiếu. */
+function tqnApplyStatusColors() {
+  var cfg = tqnConfig_(), sh = tqnSs_().getSheetByName(cfg.log_sheet);
+  if (!sh) throw new Error('Không thấy tab ' + cfg.log_sheet);
+  var all = sh.getRange(1, 1, Math.min(sh.getLastRow(), 60), Math.min(sh.getLastColumn(), 30)).getValues(), h = -1, col = -1;
+  for (var r = 0; r < all.length && h < 0; r++) {
+    var t = all[r].map(function (x) { return tqnNoAccent_(tqnClean_(x)); });
+    if (t.indexOf('loai ho so') >= 0 && t.indexOf('ma ho so') >= 0) { h = r + 1; col = t.indexOf('tinh trang') + 1; }
+  }
+  if (h < 0 || col < 1) throw new Error('Không dò được cột Tình trạng');
+  var rng = sh.getRange(h + 1, col, Math.max(sh.getMaxRows() - h, 1), 1), rules = sh.getConditionalFormatRules(), have = {};
+  rules.forEach(function (ru) { var c = ru.getBooleanCondition && ru.getBooleanCondition(); if (c) (c.getCriteriaValues() || []).forEach(function (v) { have[String(v)] = 1; }); });
+  var add = TQN_STATUS_COLORS.filter(function (x) { return !have[x[0]]; }).map(function (x) {
+    return SpreadsheetApp.newConditionalFormatRule().whenTextEqualTo(x[0]).setBackground(x[1]).setFontColor(x[2]).setRanges([rng]).build();
+  });
+  if (add.length) sh.setConditionalFormatRules(rules.concat(add));
+  tqnAudit_('TO_MAU', cfg.log_sheet + ' cột ' + tqnColLetter_(col), { them: add.length });
+  return add.length;
+}
+function tqnMenuStatusColors() { SpreadsheetApp.getUi().alert('Đã thêm ' + tqnApplyStatusColors() + ' quy tắc tô màu cho cột Tình trạng (chỉ đổi màu hiển thị, không đổi dữ liệu).'); }
+
 /**
  * Ai.gs – TRỢ LÝ AI ĐỌC NỘI DUNG hồ sơ (S2).
  * Đọc nội dung + ý kiến TVGS/TVTK/CĐT của 1 hồ sơ → tóm tắt, mức độ, bên phải xử lý, việc tiếp theo,
@@ -1222,6 +1248,7 @@ function tqnSetupAll() {
   var wc = tqnWeatherCfg_(), why = tqnWeatherBlocked_(wc);
   if (why) { tqnRemoveWeather(true); out.push('✖ Thời tiết 06:00 CHƯA bật: ' + why + ' → sửa ở tab TQN_CONFIG rồi bấm lại nút này'); }
   else out.push('✔ Thời tiết: hằng ngày khoảng ' + tqnInstallWeather() + ':00');
+  try { var nc = tqnApplyStatusColors(); out.push('✔ Tô màu cột Tình trạng (thêm ' + nc + ' quy tắc)'); } catch (e) { out.push('✖ Tô màu: ' + e.message); }
   try { tqnHourlyJob(); out.push('✔ Đã chạy nhập & kiểm lần đầu'); } catch (e) { out.push('✖ Chạy lần đầu lỗi: ' + e.message); }
   tqnAudit_('BAT_TU_DONG', out.join(' | '), {});
   return out;
@@ -1266,6 +1293,7 @@ function onOpen() {
     .addItem('Quy trình hồ sơ (ai đang giữ việc)', 'tqnMenuWorkflow')
     .addItem('Tạo hồ sơ mới / Trình lại – cấp mã', 'tqnMenuNewDoc')
     .addItem('✦ AI rà hồ sơ cần xử lý (bản nháp)', 'tqnMenuAiBatch')
+    .addItem('Tô màu cột Tình trạng', 'tqnMenuStatusColors')
     .addSeparator()
     .addItem('1. Nhập & kiểm tra ngay', 'tqnMenuRun')
     .addItem('2. Xem nhắc hạn hôm nay', 'tqnMenuRemindPreview')
