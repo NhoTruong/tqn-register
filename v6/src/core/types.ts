@@ -26,7 +26,7 @@ export interface ProjectConfig {
 
 export type DocStatus = 'DRAFT' | 'SUBMITTED' | 'NEED_INFO' | 'FORWARDED' | 'CLOSED' | 'REJECTED' | 'RESUBMIT_REQUIRED';
 
-export interface FileRef { name: string; url: string; source: 'DRIVE' | 'ONEDRIVE' | 'GMAIL' | 'LINK'; sha256?: string }
+export interface FileRef { name: string; url: string; source: 'DRIVE' | 'ONEDRIVE' | 'GMAIL' | 'LINK'; sha256?: string; fileId?: string; size?: number; by?: string; at?: string }
 
 export interface DocumentRec {
   documentId: string;       // ULID – khóa nghiệp vụ, không phải số dòng
@@ -41,6 +41,7 @@ export interface DocumentRec {
   dueAt: string | null;     // ISO
   createdAt: string;
   updatedAt: string;
+  version: number;          // tăng mỗi lần đổi trạng thái – phát hiện 2 người cùng sửa
 }
 
 export interface RevisionRec {

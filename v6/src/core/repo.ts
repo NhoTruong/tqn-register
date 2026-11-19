@@ -3,6 +3,7 @@
 import type { DocumentRec, EventRec, RevisionRec, DocType } from './types';
 
 export interface Repo {
+  begin?(): void;                                  // gọi đầu mỗi lệnh ghi (trong khóa): bỏ bộ đệm đọc để đọc dữ liệu mới nhất
   getDocument(id: string): DocumentRec | null;
   listDocuments(projectId: string, type?: DocType): DocumentRec[];
   saveDocument(d: DocumentRec): void;               // insert hoặc update theo documentId

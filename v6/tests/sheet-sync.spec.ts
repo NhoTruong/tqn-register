@@ -13,6 +13,7 @@ function fake() {
     getRange: (r: number, c: number, nr = 1, nc = 1) => ({
       getValues: () => Array.from({ length: nr }, (_, i) => Array.from({ length: nc }, (_, j) => (g[r - 1 + i] || [])[c - 1 + j] ?? '')),
       setValue: (v: any) => { (g[r - 1] ||= [])[c - 1] = v; },
+      setValues: (v: any[][]) => { v[0].forEach((x, j) => { (g[r - 1] ||= [])[c - 1 + j] = x; }); },
       setRichTextValue: (v: any) => { (g[r - 1] ||= [])[c - 1] = v.t; links[r + ',' + c] = v.u; },
     }),
   };

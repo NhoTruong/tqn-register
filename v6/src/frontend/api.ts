@@ -4,6 +4,7 @@ import { MemoryRepo, NoLock } from '../core/repo';
 import { coastalConfig } from '../core/config';
 import { classify } from '../core/classify';
 import type { DocType, FileRef } from '../core/types';
+import { runUpload, MemoryFileStore, MemoryJobStore } from '../core/upload';
 
 type Res<T> = Promise<T>;
 const inGas = typeof (globalThis as any).google !== 'undefined' && !!(globalThis as any).google?.script?.run;
@@ -11,8 +12,8 @@ const inGas = typeof (globalThis as any).google !== 'undefined' && !!(globalThis
 function run<T>(fn: string, ...args: unknown[]): Res<T> {
   return new Promise((ok, bad) => {
     (globalThis as any).google.script.run
-      .withSuccessHandler((r: any) => (r && r.error ? bad(new Error(r.error)) : ok(r)))
-      .withFailureHandler((e: Error) => bad(e))[fn](...args);
+      .withSuccessHandler((r: any) => { if (r && r.error) { const e: any = new Error(r.error); e.code = r.code; e.data = r; bad(e); } else ok(r); })
+      .withFailureHandler((e: any) => { const x: any = new Error('Mất kết nối / máy chủ không trả lời: ' + (e && e.message || e) + ' – dữ liệu anh nhập vẫn giữ, bấm Thử lại'); x.code = 'NETWORK'; bad(x); })[fn](...args);
   });
 }
 
@@ -29,8 +30,14 @@ const demo = new RegisterService(coastalConfig(demoUsers), new MemoryRepo(), new
   demo.submit(a, 'seed-0004', d2.documentId); demo.reply(c, 'seed-0005', d2.documentId, '2', 'Bổ sung catalogue màu');
   demo.create(a, 'seed-0006', { type: 'RFI', title: '[DEMO] Hỏi cao độ hố ga trục 5', files: [] });
 })();
+let demoDv = 1;
+const demoFiles = new MemoryFileStore(), demoJobs = new MemoryJobStore();
 const me = () => ({ email: demoMe, kind: 'HUMAN' as const });
-const wrap = <T,>(f: () => T): Res<T> => { try { return Promise.resolve(f()); } catch (e) { return Promise.reject(e); } };
+// xem trước: giả độ trễ mạng để thấy đúng trạng thái "đang đồng bộ"
+const wrap = <T,>(f: () => T, ms = 0): Res<T> => new Promise((ok, bad) => setTimeout(() => { try { ok(f()); } catch (e) { bad(e); } }, ms));
+async function sha256Hex(buf: ArrayBuffer): Promise<string | undefined> {
+  try { const h = await crypto.subtle.digest('SHA-256', buf); return [...new Uint8Array(h)].map(b => b.toString(16).padStart(2, '0')).join(''); } catch { return undefined; }
+}
 
 export const isDemo = !inGas;
 export function setDemoUser(e: string) { demoMe = e; }
@@ -46,27 +53,30 @@ export const api = {
   closeForwarded: (idem: string, id: string, note: string) => inGas ? run<any>('apiCloseForwarded', idem, id, note) : wrap(() => demo.closeForwarded(me(), idem, id, note)),
   classify: (name: string) => inGas ? run<any>('apiClassify', name) : wrap(() => classify(name)),
   options: () => coastalConfig().types,
-  boot: (id?: string) => inGas ? run<any>('apiBoot', id) : wrap(() => { const list = demo.list('RFI'), pick = id || list[0]?.documentId; return { who: { email: demoMe, roles: demo.rolesOf(demoMe), build: { env: 'PREVIEW', commit: 'local', version: 'demo' } }, list, v360: pick ? demo.get360(pick) : null }; }),
-  /** Tải file thật: Apps Script lưu vào Drive rồi gắn; xem trước: gắn link tạm trong trình duyệt. */
-  upload: (idem: string, id: string, f: File): Res<any> => new Promise((ok, bad) => {
-    if (f.size > 25e6) return bad(new Error('File quá 25 MB – dán link OneDrive thay vì tải lên'));
-    const rd = new FileReader();
-    rd.onerror = () => bad(new Error('Không đọc được file'));
-    rd.onload = () => {
-      const b64 = String(rd.result).split(',')[1] || '';
-      if (inGas) run<any>('apiUpload', idem, id, f.name, f.type, b64).then(ok, bad);
-      else api.act('attach', idem, { id, file: { name: f.name, url: URL.createObjectURL(f), source: 'LINK' } }).then(ok, bad);
-    };
-    rd.readAsDataURL(f);
-  }),
+  boot: (id?: string) => inGas ? run<any>('apiBoot', id) : wrap(() => { const list = demo.list('RFI'), pick = id || list[0]?.documentId; return { who: { email: demoMe, roles: demo.rolesOf(demoMe), build: { env: 'PREVIEW', commit: 'local', version: 'demo' } }, list, v360: pick ? demo.get360(pick) : null, dv: String(demoDv) }; }, 300),
+  /** Tải file thật theo job: cùng jobId chạy lại không sinh file/bản ghi trùng. */
+  upload: async (jobId: string, id: string, f: File): Res<any> => {
+    if (f.size > 25e6) { const e: any = new Error('File quá 25 MB – dán link OneDrive thay vì tải lên'); e.code = 'INVALID'; throw e; }
+    const buf = await f.arrayBuffer(), sha = await sha256Hex(buf);
+    if (inGas) {
+      let bin = ''; const u = new Uint8Array(buf); for (let i = 0; i < u.length; i += 0x8000) bin += String.fromCharCode(...u.subarray(i, i + 0x8000));
+      return run<any>('apiUpload', jobId, id, f.name, f.type, btoa(bin), sha);
+    }
+    return wrap(() => {
+      const r = runUpload({ svc: demo, files: demoFiles, jobs: demoJobs, actor: me(), now: () => new Date(), folderKey: 'DEMO', sha256: () => sha || String(f.size) },
+        { jobId, documentId: id, name: f.name, mime: f.type, size: f.size, bytes: buf, clientSha256: sha });
+      demoDv++; return { job: r.job, list: demo.list('RFI'), v360: demo.get360(id), dv: String(demoDv), soRFI: '(xem trước – không ghi sổ)' };
+    }, 600);
+  },
+  peek: (): Res<{ dv: string }> => inGas ? run('apiPeek') : wrap(() => ({ dv: String(demoDv) })),
   /** 1 lần gọi: ghi + nhận lại danh sách và hồ sơ (chế độ xem trước dùng chính lõi nghiệp vụ) */
   act: (op: string, idem: string, a: any) => inGas ? run<any>('apiDo', op, idem, a) : wrap(() => {
     const m = me(); let r: any;
     if (op === 'create') r = demo.create(m, idem, a); else if (op === 'attach') r = demo.attach(m, idem, a.id, a.file);
-    else if (op === 'submit') r = demo.submit(m, idem, a.id); else if (op === 'reply') r = demo.reply(m, idem, a.id, a.code, a.note || '');
-    else r = demo.closeForwarded(m, idem, a.id, a.note || '');
-    const id = r?.documentId || a.id; return { result: r, list: demo.list('RFI'), v360: id ? demo.get360(id) : null };
-  }),
+    else if (op === 'submit') r = demo.submit(m, idem, a.id, a.ev); else if (op === 'reply') r = demo.reply(m, idem, a.id, a.code, a.note || '', a.ev);
+    else r = demo.closeForwarded(m, idem, a.id, a.note || '', a.ev);
+    const id = r?.documentId || a.id; demoDv++; return { result: r, list: demo.list('RFI'), v360: id ? demo.get360(id) : null, dv: String(demoDv) };
+  }, 500),
 };
 
 /** idem_key: sinh 1 lần cho mỗi thao tác của người dùng; bấm 2 lần / mạng gửi lại vẫn dùng cùng khóa. */

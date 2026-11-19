@@ -26,6 +26,7 @@ export class RegisterService {
   private mutate<T>(action: string, actor: Actor, idemKey: string, docId: string | null, fn: () => { result: T; revNo: number | null; detail: object; docId?: string }): T {
     if (!idemKey || idemKey.length < 8) throw new BizError('IDEM_REQUIRED', 'Thiếu idem_key cho lệnh ' + action);
     return this.lock.withLock(() => {
+      this.repo.begin?.();
       const k = this.cfg.projectId + ':' + action + ':' + idemKey;
       const old = this.repo.getIdem(k);
       if (old) return JSON.parse(old) as T;                       // gửi lại → trả đúng kết quả cũ, không ghi thêm
@@ -57,7 +58,19 @@ export class RegisterService {
     const r: RevisionRec = { documentId: d.documentId, revNo: n, submittedAt: null, repliedAt: null, replyCode: null, replyText: null, replyNote: null, files: [] };
     this.repo.saveRevision(r); return r;
   }
-  private setStatus(d: DocumentRec, s: DocStatus, holder: string, dueAt: string | null) { d.status = s; d.holder = holder; d.dueAt = dueAt; d.updatedAt = this.clock.now().toISOString(); }
+  private setStatus(d: DocumentRec, s: DocStatus, holder: string, dueAt: string | null) { d.status = s; d.holder = holder; d.dueAt = dueAt; d.updatedAt = this.clock.now().toISOString(); d.version = (Number(d.version) || 0) + 1; }
+  /** Người dùng gửi kèm version đang thấy; khác bản trên máy chủ → người khác vừa sửa, không ghi đè. */
+  private checkVersion(d: DocumentRec, ev?: number | null) {
+    if (ev != null && Number(ev) !== (Number(d.version) || 0)) throw new BizError('CONFLICT', `${d.docNo} vừa được người khác cập nhật (bạn đang xem bản ${ev}, hiện là ${Number(d.version) || 0}) – đã tải bản mới, xem lại rồi thao tác lại`);
+  }
+  /** Kiểm trước khi tải file (không ghi): quyền, trạng thái, rev đích, file đã có. */
+  attachTarget(actor: Actor, docId: string): { doc: DocumentRec; revNo: number; files: FileRef[] } {
+    this.need(actor, ['DC', 'CONTRACTOR'], 'gắn file');
+    const d = this.load(docId);
+    if (!['DRAFT', 'NEED_INFO', 'RESUBMIT_REQUIRED'].includes(d.status)) throw new BizError('STATE', 'Hồ sơ đã trình, không gắn thêm file vào bản đang chờ duyệt');
+    const n = d.status === 'DRAFT' ? d.currentRev : d.currentRev + 1, r = this.repo.getRevisions(docId).find(x => x.revNo === n);
+    return { doc: d, revNo: n, files: r ? r.files : [] };
+  }
 
   // ---------- 1. tạo hồ sơ (Numbering Engine) ----------
   create(actor: Actor, idemKey: string, input: { type: DocType; title: string; files?: FileRef[] }): DocumentRec {
@@ -70,7 +83,7 @@ export class RegisterService {
       const existing = this.repo.listDocuments(this.cfg.projectId, input.type).map(d => d.docNo);
       const { docNo, seq } = nextNumber(this.cfg, input.type, now, this.repo.getCounter(key), existing);
       this.repo.setCounter(key, seq);
-      const d: DocumentRec = { documentId: ulid(now.getTime(), this.rand), projectId: this.cfg.projectId, docType: input.type, docNo, title, status: 'DRAFT', currentRev: 0, owner: actor.email.toLowerCase(), holder: 'CONTRACTOR', dueAt: null, createdAt: now.toISOString(), updatedAt: now.toISOString() };
+      const d: DocumentRec = { documentId: ulid(now.getTime(), this.rand), projectId: this.cfg.projectId, docType: input.type, docNo, title, status: 'DRAFT', currentRev: 0, owner: actor.email.toLowerCase(), holder: 'CONTRACTOR', dueAt: null, createdAt: now.toISOString(), updatedAt: now.toISOString(), version: 1 };
       this.repo.saveDocument(d);
       this.repo.saveRevision({ documentId: d.documentId, revNo: 0, submittedAt: null, repliedAt: null, replyCode: null, replyText: null, replyNote: null, files: input.files || [] });
       return { result: d, revNo: 0, detail: { docNo, title }, docId: d.documentId };
@@ -84,15 +97,17 @@ export class RegisterService {
       if (!['DRAFT', 'NEED_INFO', 'RESUBMIT_REQUIRED'].includes(d.status)) throw new BizError('STATE', 'Hồ sơ đã trình, không gắn thêm file vào bản đang chờ duyệt – hãy tạo rev mới');
       if (!/^https:\/\//.test(file.url)) throw new BizError('INVALID', 'Link file phải là https');
       const r = this.draftRev(d); r.files.push(file); this.repo.saveRevision(r);
+      d.version = (Number(d.version) || 0) + 1; d.updatedAt = this.clock.now().toISOString(); this.repo.saveDocument(d);
       return { result: r, revNo: r.revNo, detail: { file: file.name } };
     });
   }
 
   // ---------- 2. trình ----------
-  submit(actor: Actor, idemKey: string, docId: string): DocumentRec {
+  submit(actor: Actor, idemKey: string, docId: string, ev?: number | null): DocumentRec {
     this.need(actor, ['DC', 'CONTRACTOR'], 'trình hồ sơ');
     return this.mutate('SUBMIT', actor, idemKey, docId, () => {
       const d = this.load(docId), t = this.cfg.types[d.docType]!;
+      this.checkVersion(d, ev);
       if (!['DRAFT', 'NEED_INFO', 'RESUBMIT_REQUIRED'].includes(d.status)) throw new BizError('STATE', 'Không trình được khi đang ' + d.status);
       const r = this.draftRev(d);                                   // trình lại → revision mới, lịch sử cũ giữ nguyên
       if (!r.files.length) throw new BizError('INVALID', 'Chưa gắn file hồ sơ' + (r.revNo ? ' cho rev' + String(r.revNo).padStart(2, '0') : '') + ', không trình được');
@@ -106,11 +121,12 @@ export class RegisterService {
   }
 
   // ---------- 3. bên duyệt trả lời theo đúng ô trên phiếu (AI không được) ----------
-  reply(actor: Actor, idemKey: string, docId: string, code: string, note: string): DocumentRec {
+  reply(actor: Actor, idemKey: string, docId: string, code: string, note: string, ev?: number | null): DocumentRec {
     if (actor.kind !== 'HUMAN') throw new BizError('FORBIDDEN', 'AI/hệ thống không được trả lời hay phê duyệt hồ sơ kỹ thuật');
     this.need(actor, ['REVIEWER'], 'trả lời/phê duyệt');
     return this.mutate('REPLY', actor, idemKey, docId, () => {
       const d = this.load(docId), t = this.cfg.types[d.docType]!;
+      this.checkVersion(d, ev);
       if (d.status !== 'SUBMITTED') throw new BizError('STATE', 'Chỉ trả lời hồ sơ đang chờ duyệt (đang ' + d.status + ')');
       const o = t.options.find(x => x.code === code);
       if (!o) throw new BizError('INVALID', 'Ô "' + code + '" không có trên phiếu ' + d.docType + ' của dự án');
@@ -125,11 +141,12 @@ export class RegisterService {
   }
 
   /** Chuyển tiếp xong, bên nhận trả lời → đóng (RFI ô 3). */
-  closeForwarded(actor: Actor, idemKey: string, docId: string, note: string): DocumentRec {
+  closeForwarded(actor: Actor, idemKey: string, docId: string, note: string, ev?: number | null): DocumentRec {
     if (actor.kind !== 'HUMAN') throw new BizError('FORBIDDEN', 'AI không được đóng hồ sơ');
     this.need(actor, ['REVIEWER'], 'đóng hồ sơ chuyển tiếp');
     return this.mutate('CLOSE_FORWARDED', actor, idemKey, docId, () => {
       const d = this.load(docId);
+      this.checkVersion(d, ev);
       if (d.status !== 'FORWARDED') throw new BizError('STATE', 'Hồ sơ không ở trạng thái chuyển tiếp');
       if (!note.trim()) throw new BizError('INVALID', 'Ghi câu trả lời của bên được chuyển tới');
       const r = this.rev(d); r.replyNote = [r.replyNote, 'Trả lời sau chuyển tiếp: ' + note.trim()].filter(Boolean).join('\n'); this.repo.saveRevision(r);

@@ -4,6 +4,8 @@ import { coastalConfig } from '../core/config';
 import { classify } from '../core/classify';
 import { SheetsRepo, gasLock } from './sheetsRepo';
 import { syncRow } from './sheetSync';
+import { P } from './perf';
+import { runUpload, type FileStore, type JobStore } from '../core/upload';
 import type { Actor, DocType, FileRef, ProjectConfig } from '../core/types';
 
 declare const global: Record<string, unknown>;
@@ -22,53 +24,110 @@ function store(): GoogleAppsScript.Spreadsheet.Spreadsheet {
 function me(): Actor { return { email: (Session.getActiveUser().getEmail() || Session.getEffectiveUser().getEmail()).toLowerCase(), kind: 'HUMAN' }; }
 function svc() { return new RegisterService(cfg(), new SheetsRepo(store()), gasLock, { now: () => new Date() }); }
 function safe<T>(fn: () => T): T | { error: string; code: string } {
-  try { return fn(); } catch (e) { const er = e as BizError; return { error: er.message, code: er.code || 'ERROR' }; }
+  try { return fn(); } catch (e) { const er = e as BizError; return { error: er.message, code: er.code || 'ERROR', ms: P.out() } as any; }
 }
 
 global.doGet = () => HtmlService.createHtmlOutputFromFile('dist/index.html').setTitle('TQN Register').addMetaTag('viewport', 'width=device-width, initial-scale=1');
 
-global.apiWhoAmI = () => safe(() => { const a = me(); return { email: a.email, roles: svc().rolesOf(a.email), build: __BUILD__ }; });
-global.apiList = (type?: DocType) => safe(() => svc().list(type));
-global.apiGet360 = (id: string) => safe(() => svc().get360(id));
-global.apiCreate = (idem: string, input: { type: DocType; title: string; files?: FileRef[] }) => safe(() => svc().create(me(), idem, input));
-global.apiAttach = (idem: string, id: string, f: FileRef) => safe(() => svc().attach(me(), idem, id, f));
-global.apiSubmit = (idem: string, id: string) => safe(() => svc().submit(me(), idem, id));
-global.apiReply = (idem: string, id: string, code: string, note: string) => safe(() => svc().reply(me(), idem, id, code, note));
-global.apiCloseForwarded = (idem: string, id: string, note: string) => safe(() => svc().closeForwarded(me(), idem, id, note));
-/** Một lần gọi cho mỗi thao tác: ghi + trả luôn danh sách và hồ sơ 360 (bỏ 2 lần gọi lại). Có ghi thời gian. */
-global.apiDo = (op: string, idem: string, a: any) => safe(() => {
-  const t0 = Date.now(), s = svc(), who = me();
-  let r: any;
-  if (op === 'create') r = s.create(who, idem, a);
-  else if (op === 'attach') r = s.attach(who, idem, a.id, a.file);
-  else if (op === 'submit') r = s.submit(who, idem, a.id);
-  else if (op === 'reply') r = s.reply(who, idem, a.id, a.code, a.note || '');
-  else if (op === 'closeForwarded') r = s.closeForwarded(who, idem, a.id, a.note || '');
-  else throw new BizError('INVALID', 'Thao tác lạ: ' + op);
-  const id = (r && r.documentId) || a.id, t1 = Date.now();
-  const v360 = id ? s.get360(id) : null;
-  let soRFI = '';
-  try { if (v360) soRFI = syncRow(store(), 'RFI', v360.doc, v360.revisions, who.email.split('@')[0]); } catch (e) { soRFI = 'Lỗi ghi sổ RFI: ' + (e as Error).message; }
-  const out = { result: r, list: s.list('RFI'), v360, soRFI, ms: { ghi: t1 - t0, doc: Date.now() - t1 } };
-  console.log(JSON.stringify({ op, ms: out.ms, ok: true }));
+const T = <F extends (...a: any[]) => any>(f: F) => ((...a: any[]) => { P.reset(); return f(...a); }) as F;
+
+// ---------- phiên bản dữ liệu + bộ đệm máy chủ ----------
+// dv đổi sau mỗi lệnh ghi thành công. Khóa cache gồm dự án + dv → không bao giờ trả dữ liệu cũ sau khi có người ghi.
+// Sửa tay thẳng vào tab TQN6_* (không qua web) thì cache tự hết hạn sau TTL.
+const TTL = 300;
+function dv(): string { return props().getProperty('TQN6_DV') || '0'; }
+function bumpDv(): string { const v = Date.now().toString(36) + Math.random().toString(36).slice(2, 6); props().setProperty('TQN6_DV', v); return v; }
+function cache() { try { return CacheService.getScriptCache(); } catch (e) { return null; } }
+function cGet<T>(k: string): T | null { const c = cache(); if (!c) return null; const v = P.time('cache', () => c.get(k)); return v ? JSON.parse(v) as T : null; }
+function cPut(k: string, o: unknown) { const c = cache(), j = JSON.stringify(o); if (c && j.length < 95000) P.time('cache', () => c.put(k, j, TTL)); }
+const proj = () => cfg().projectId;
+function listCached(s: RegisterService, ver: string) {
+  const k = 'L:' + proj() + ':' + ver, hit = cGet<any[]>(k); if (hit) return hit;
+  const l = s.list('RFI'); cPut(k, l); return l;
+}
+function v360Cached(s: RegisterService, id: string, ver: string) {
+  const k = 'V:' + id + ':' + ver, hit = cGet<any>(k); if (hit) return hit;
+  const v = s.get360(id); cPut(k, v); return v;
+}
+function syncSo(s: RegisterService, v: any, who: Actor): string {
+  try { return P.time('ghiSo', () => syncRow(store(), v.doc.docType, v.doc, v.revisions, who.email.split('@')[0])); }
+  catch (e) { return 'Lỗi ghi sổ ' + v.doc.docType + ': ' + (e as Error).message; }
+}
+/** Sau lệnh ghi: đổi dv, ghi sổ, trả đủ dữ liệu cho web (1 lần gọi), đặt sẵn cache cho người khác mở. */
+function afterWrite(s: RegisterService, who: Actor, id: string | null, extra: object) {
+  const ver = bumpDv(), list = s.list('RFI'), v360 = id ? s.get360(id) : null;
+  cPut('L:' + proj() + ':' + ver, list); if (v360) cPut('V:' + id + ':' + ver, v360);
+  const so = v360 ? syncSo(s, v360, who) : '';
+  const out = { ...extra, list, v360, soRFI: so, dv: ver, ms: P.out() };
+  console.log(JSON.stringify({ op: (extra as any).op, ms: out.ms }));
   return out;
+}
+
+global.apiWhoAmI = T(() => safe(() => { const a = me(); return { email: a.email, roles: svc().rolesOf(a.email), build: __BUILD__ }; }));
+global.apiList = T((type?: DocType) => safe(() => svc().list(type)));
+global.apiGet360 = T((id: string) => safe(() => { const ver = dv(); return { ...v360Cached(svc(), id, ver), dv: ver, ms: P.out() }; }));
+/** Hỏi nhẹ: chỉ đọc 1 thuộc tính (không mở Sheets) – web gọi định kỳ để biết có ai vừa sửa. */
+global.apiPeek = () => ({ dv: dv() });
+global.apiCreate = T((idem: string, input: { type: DocType; title: string; files?: FileRef[] }) => safe(() => svc().create(me(), idem, input)));
+global.apiAttach = T((idem: string, id: string, f: FileRef) => safe(() => svc().attach(me(), idem, id, f)));
+global.apiSubmit = T((idem: string, id: string, ev?: number) => safe(() => svc().submit(me(), idem, id, ev)));
+global.apiReply = T((idem: string, id: string, code: string, note: string, ev?: number) => safe(() => svc().reply(me(), idem, id, code, note, ev)));
+global.apiCloseForwarded = T((idem: string, id: string, note: string, ev?: number) => safe(() => svc().closeForwarded(me(), idem, id, note, ev)));
+/** Một lần gọi cho mỗi thao tác: ghi (khóa + chống trùng + kiểm version) + trả danh sách, hồ sơ 360, dv, thời gian từng chặng. */
+global.apiDo = T((op: string, idem: string, a: any) => safe(() => {
+  const s = svc(), who = me();
+  let r: any;
+  P.time('nghiepVu', () => {
+    if (op === 'create') r = s.create(who, idem, a);
+    else if (op === 'attach') r = s.attach(who, idem, a.id, a.file);
+    else if (op === 'submit') r = s.submit(who, idem, a.id, a.ev);
+    else if (op === 'reply') r = s.reply(who, idem, a.id, a.code, a.note || '', a.ev);
+    else if (op === 'closeForwarded') r = s.closeForwarded(who, idem, a.id, a.note || '', a.ev);
+    else throw new BizError('INVALID', 'Thao tác lạ: ' + op);
+  });
+  return afterWrite(s, who, (r && r.documentId) || a.id || null, { op, result: r });
+}));
+
+// ---------- Upload Drive theo job ----------
+class DriveStore implements FileStore {
+  exists(id: string) { try { return P.time('drive', () => !DriveApp.getFileById(id).isTrashed()); } catch (e) { return false; } }
+  create(folderKey: string, name: string, mime: string, bytes: unknown) {
+    return P.time('drive', () => {
+      const p = props(), k = 'TQN6_FOLDER_' + folderKey; let folder: GoogleAppsScript.Drive.Folder;
+      const fid = p.getProperty(k);
+      try { folder = DriveApp.getFolderById(String(fid)); } catch (e) { folder = DriveApp.createFolder('TQN Register – ' + folderKey + ' – file hồ sơ'); p.setProperty(k, folder.getId()); }
+      const f = folder.createFile(Utilities.newBlob(bytes as number[], mime, name));   // thư mục riêng tư của chủ sở hữu, không chia sẻ công khai
+      return { id: f.getId(), url: f.getUrl(), name: f.getName() };
+    });
+  }
+}
+const propsJobs: JobStore = {
+  get: (id) => { const v = props().getProperty('TQN6_JOB_' + id); return v ? JSON.parse(v) : null; },
+  put: (j) => {
+    props().setProperty('TQN6_JOB_' + j.jobId, JSON.stringify(j));
+    if (j.state === 'COMPLETED' && Math.random() < 0.05) {          // dọn job đã xong quá 7 ngày
+      const all = props().getProperties(), old = Date.now() - 7 * 864e5;
+      Object.keys(all).filter(k => k.indexOf('TQN6_JOB_') === 0).forEach(k => { try { const x = JSON.parse(all[k]); if (x.state === 'COMPLETED' && Date.parse(x.updatedAt) < old) props().deleteProperty(k); } catch (e) { } });
+    }
+  },
+};
+const hex = (b: number[]) => b.map(x => ('0' + ((x + 256) % 256).toString(16)).slice(-2)).join('');
+global.apiUpload = T((jobId: string, id: string, name: string, mime: string, b64: string, clientSha?: string) => {
+  try {
+    const s = svc(), who = me(), bytes = b64 ? Utilities.base64Decode(b64) : null;
+    const r = runUpload({ svc: s, files: new DriveStore(), jobs: propsJobs, actor: who, now: () => new Date(), folderKey: cfg().code + '_' + __BUILD__.env,
+      sha256: (b) => hex(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, b as number[])) },
+      { jobId, documentId: id, name, mime, size: bytes ? bytes.length : 0, bytes, clientSha256: clientSha });
+    return afterWrite(s, who, id, { op: 'upload', job: r.job });
+  } catch (e) { const er = e as BizError; return { error: er.message, code: er.code || 'ERROR', job: propsJobs.get(jobId), ms: P.out() }; }
 });
-/** Tải file thật lên Drive (thư mục riêng của môi trường), tên theo mã + rev, trả FileRef để gắn vào hồ sơ. */
-global.apiUpload = (idem: string, id: string, name: string, mime: string, b64: string) => safe(() => {
-  const s = svc(), d = s.get360(id).doc;
-  if (b64.length > 34e6) throw new BizError('INVALID', 'File quá 25 MB – dán link OneDrive thay vì tải lên');
-  const p = props(), key = 'TQN6_FOLDER_' + __BUILD__.env; let fid = p.getProperty(key), folder: GoogleAppsScript.Drive.Folder;
-  try { folder = DriveApp.getFolderById(String(fid)); } catch (e) { folder = DriveApp.createFolder('TQN Register V6 – ' + __BUILD__.env + ' – file hồ sơ'); p.setProperty(key, folder.getId()); }
-  const rev = d.status === 'DRAFT' ? d.currentRev : d.currentRev + 1, ext = (name.match(/\.[a-z0-9]+$/i) || [''])[0];
-  const file = folder.createFile(Utilities.newBlob(Utilities.base64Decode(b64), mime || 'application/octet-stream', d.docNo + '_rev' + ('0' + rev).slice(-2) + '_' + name.replace(ext, '').slice(0, 60) + ext));
-  return (global.apiDo as any)('attach', idem, { id, file: { name: file.getName(), url: file.getUrl(), source: 'DRIVE' } });
-});
-global.apiBoot = (id?: string) => safe(() => {               // mở web: 1 lần gọi lấy đủ người dùng + danh sách + hồ sơ đầu
-  const t0 = Date.now(), s = svc(), a = me(), list = s.list('RFI'), pick = id || (list[0] && list[0].documentId);
-  const out = { who: { email: a.email, roles: s.rolesOf(a.email), build: __BUILD__ }, list, v360: pick ? s.get360(pick) : null, ms: Date.now() - t0 };
+global.apiJob = (jobId: string) => propsJobs.get(jobId);
+global.apiBoot = T((id?: string) => safe(() => {               // mở web: 1 lần gọi, ưu tiên cache theo dv
+  const s = svc(), a = me(), ver = dv(), list = listCached(s, ver), pick = id || (list[0] && list[0].documentId);
+  const out = { who: { email: a.email, roles: s.rolesOf(a.email), build: __BUILD__ }, list, v360: pick ? v360Cached(s, pick, ver) : null, dv: ver, ms: P.out() };
   console.log(JSON.stringify({ op: 'boot', ms: out.ms }));
   return out;
-});
+}));
 global.apiClassify = (name: string) => classify(name);
 global.apiConfig = () => safe(() => { const c = cfg(); return { types: c.types, code: c.code }; });
 

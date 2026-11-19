@@ -37,12 +37,21 @@ export function syncRow(ss: GoogleAppsScript.Spreadsheet.Spreadsheet, tab: strin
   let r = data.findIndex(x => String(x[c.code]).trim() === d.docNo);
   if (r < 0) r = data.findIndex(x => !String(x[c.code]).trim() && !String(x[c.subject]).trim() && String(x[0]).trim() !== '' && !/^[IVX]+$/.test(String(x[0]).trim()));
   if (r < 0) r = data.length;
-  const row = first + r, cur = revs.find(x => x.revNo === d.currentRev), set = (col: number | undefined, v: unknown) => { if (col != null) sh.getRange(row, col + 1).setValue(v); };
-  set(c.code, d.docNo); set(c.subject, d.title); set(c.owner, ownerName);
-  try { set(c.status, ST[d.status] || d.status); } catch (e) { /* ô có danh sách chọn không chứa chữ này */ }
-  set(c.rev, ('0' + d.currentRev).slice(-2));
+  const row = first + r, cur = revs.find(x => x.revNo === d.currentRev), vals = new Map<number, unknown>();
+  const set = (col: number | undefined, v: unknown) => { if (col != null) vals.set(col, v); };
+  set(c.code, d.docNo); set(c.subject, d.title); set(c.owner, ownerName); set(c.rev, ('0' + d.currentRev).slice(-2));
   if (cur && cur.submittedAt) { const t = new Date(cur.submittedAt); set(c.submitted, t); set(c.ntActual, t); }
-  if (cur && cur.repliedAt) { set(c.cdtActual, new Date(cur.repliedAt)); set(c.cdtNote, cur.replyNote || ''); try { set(c.pick, cur.replyCode + ' · ' + cur.replyText); } catch (e) { } }
+  if (cur && cur.repliedAt) { set(c.cdtActual, new Date(cur.repliedAt)); set(c.cdtNote, cur.replyNote || ''); }
+  // ghi theo cụm cột liền nhau (1 lệnh/cụm), không đè cột công thức xen giữa
+  const cols = [...vals.keys()].sort((a, b) => a - b);
+  for (let i = 0; i < cols.length;) {
+    let j = i; while (j + 1 < cols.length && cols[j + 1] === cols[j] + 1) j++;
+    sh.getRange(row, cols[i] + 1, 1, j - i + 1).setValues([cols.slice(i, j + 1).map(k => vals.get(k))]);
+    i = j + 1;
+  }
+  // ô có danh sách chọn: chữ không hợp lệ thì bỏ qua ô đó, không hỏng cả dòng
+  try { if (c.status != null) sh.getRange(row, c.status + 1).setValue(ST[d.status] || d.status); } catch (e) { }
+  if (cur && cur.repliedAt && c.pick != null) { try { sh.getRange(row, c.pick + 1).setValue(cur.replyCode + ' · ' + cur.replyText); } catch (e) { } }
   const f = cur && cur.files[0]; if (f) { try { sh.getRange(row, c.code + 1).setRichTextValue(SpreadsheetApp.newRichTextValue().setText(d.docNo).setLinkUrl(f.url).build()); } catch (e) { } }
   return tab + '!' + row;
 }
