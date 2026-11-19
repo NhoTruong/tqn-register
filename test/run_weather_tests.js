@@ -44,7 +44,7 @@ const setCfg = (k, v) => { const c = sheets['TQN_CONFIG']; for (let r = 2; r <= 
 const W = sheets[WEATHER_TAB];
 run('tqnEnsureConfig_(); tqnEnsureWeatherConfig_();');
 let r = run('tqnWeatherJob(true)'); T('W01 Mặc định tắt → chặn, không gọi API', r.startsWith('CHAN') && calls === 0, r);
-setCfg('weather_enabled', 'Có'); r = run('tqnWeatherJob(true)'); T('W02 Chưa có GPS → chặn', r.includes('tọa độ') && calls === 0, r);
+setCfg('weather_enabled', 'Có'); setCfg('weather_lat', ''); setCfg('weather_gps_confirmed', 'Không'); r = run('tqnWeatherJob(true)'); T('W02 Chưa có GPS → chặn', r.includes('tọa độ') && calls === 0, r);
 setCfg('weather_lat', '15.0'); setCfg('weather_lon', '108.8'); r = run('tqnWeatherJob(true)'); T('W03 GPS chưa xác nhận → chặn', r.includes('xác nhận') && calls === 0, r);
 setCfg('weather_gps_confirmed', 'Có'); r = run('tqnWeatherJob(true)'); T('W04 Chưa xác nhận điều khoản nguồn → chặn', r.includes('điều khoản') && calls === 0, r);
 setCfg('weather_license_ok', 'Có'); apiMode = '500'; r = run('tqnWeatherJob(false)');

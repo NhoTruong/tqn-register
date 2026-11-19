@@ -146,6 +146,7 @@ def view_model(project: Project, bundle: dict, local_date: str, slot_label: str,
             "rain_day": daily["precipitation_sum"][di], "pop_day": daily["precipitation_probability_max"][di],
             "wind_day": daily["wind_speed_10m_max"][di], "gust_day": daily["wind_gusts_10m_max"][di],
             "rh_day": round(sum(x["rh_pct"] for x in day) / len(day)),
+            "sunrise": daily["sunrise"][di][11:16], "sunset": daily["sunset"][di][11:16],
             "cond_day": wmo(daily["weather_code"][di])[0], "cond_day_text": wmo(daily["weather_code"][di])[1],
             "summary": summary, "slots": slots, "days": days, "tomorrow_hours": tomorrow,
             "peak": peak, "hours_all": [x for x in day if x["hour"] >= 6]}
@@ -157,21 +158,23 @@ def haversine(a1, o1, a2, o2):
     return 2 * r * math.asin(math.sqrt(math.sin(dp / 2) ** 2 + math.cos(p1) * math.cos(p2) * math.sin(dl / 2) ** 2))
 
 
-def render_html(vm: dict, layout: str, theme: str) -> str:
+def render_html(vm: dict, layout: str, theme: str, si: int = 0) -> str:
     env = Environment(loader=FileSystemLoader(os.path.join(HERE, "templates")), autoescape=select_autoescape())
     env.globals.update(line_path=line_path)
-    return env.get_template("report.html").render(vm=vm, layout=layout, theme=theme)
+    tpl = "mobile.html" if layout == "mobile" else "report.html"
+    return env.get_template(tpl).render(vm=vm, layout=layout, theme=theme, si=si)
 
 
-def line_path(hours, w, h, pad=10, lo=None, hi=None):
+def line_path(hours, w, h, pad=10, lo=None, hi=None, pad_y=4):
+    """pad = lề ngang (căn giữa cột giờ), pad_y = lề dọc. Nhiệt cao hơn -> điểm cao hơn (y nhỏ hơn)."""
     ts = [x["temp_c"] for x in hours]
     lo = min(ts) - 1 if lo is None else lo; hi = max(ts) + 1 if hi is None else hi
     n = len(ts); step = (w - 2 * pad) / max(n - 1, 1)
-    pts = [(pad + i * step, h - pad - (t - lo) / (hi - lo) * (h - 2 * pad)) for i, t in enumerate(ts)]
+    pts = [(pad + i * step, h - pad_y - (t - lo) / (hi - lo) * (h - 2 * pad_y)) for i, t in enumerate(ts)]
     return {"d": "M" + " L".join(f"{x:.1f},{y:.1f}" for x, y in pts), "pts": pts}
 
 
-OVERFLOW_JS = """[...document.querySelectorAll('.wrap *')].some(e=>{const r=e.getBoundingClientRect();return r.height>0&&(r.bottom>innerHeight+0.5||r.right>innerWidth+0.5)})"""
+OVERFLOW_JS = """[...document.querySelectorAll('.wrap *')].some(e=>{if(e.closest('[data-deco]'))return false;const r=e.getBoundingClientRect();return r.height>0&&(r.bottom>innerHeight+0.5||r.right>innerWidth+0.5)})"""
 LAYOUTS = {"mobile": (540, 960, 2), "share": (540, 675, 2), "desktop": (960, 540, 2)}
 
 
@@ -207,15 +210,18 @@ def run(project: Project, raw_path: str, out_root: str, local_date: str, slot="0
     with sync_playwright() as pw:
         br = pw.chromium.launch(executable_path="/usr/bin/google-chrome", args=["--no-sandbox"])
         for theme in themes:
-            for lay, (w, h, s) in LAYOUTS.items():
-                html = render_html(vm, lay, theme)
+            jobs = [("mobile", si) for si in range(3)] + [("share", 0), ("desktop", 0)]
+            for lay, si in jobs:
+                w, h, s = LAYOUTS[lay]
+                html = render_html(vm, lay, theme, si)
                 pg = br.new_page(viewport={"width": w, "height": h}, device_scale_factor=s)
                 pg.route("**/*", lambda r: r.abort() if not r.request.url.startswith(("data:", "about:")) else r.continue_())
                 pg.set_content(html, wait_until="load")
                 overflow = pg.evaluate(OVERFLOW_JS)
                 if overflow:
                     raise EngineError("FAILED", f"Bố cục {lay}/{theme} bị tràn — không phát hành ảnh cắt chữ")
-                name = f"weather_{slot.replace(':', '')}_forecast_{lay}_{theme}.png"
+                part = SLOTS[si][0] + "_" if lay == "mobile" else "tonghop_"
+                name = f"weather_{slot.replace(':', '')}_forecast_{part}{lay}_{theme}.png"
                 pg.screenshot(path=os.path.join(out_dir, name), full_page=False)
                 files[name] = None
                 pg.close()
@@ -224,7 +230,7 @@ def run(project: Project, raw_path: str, out_root: str, local_date: str, slot="0
             pg.set_content(render_html(vm, "a4", theme), wait_until="load")
             if pg.evaluate(OVERFLOW_JS):
                 raise EngineError("FAILED", f"Bố cục A4/{theme} bị tràn — không phát hành PDF thiếu dòng")
-            name = f"weather_{slot.replace(':', '')}_forecast_A4_{theme}.pdf"
+            name = f"weather_{slot.replace(':', '')}_forecast_tonghop_A4_{theme}.pdf"
             pg.pdf(path=os.path.join(out_dir, name), format="A4", print_background=True,
                    margin={"top": "0", "bottom": "0", "left": "0", "right": "0"})
             files[name] = None

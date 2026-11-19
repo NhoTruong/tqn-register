@@ -6,9 +6,9 @@
  */
 var TQN_WEATHER_DEFAULTS = [
   ['weather_enabled', 'Không', 'Có = bật cập nhật thời tiết 06:00'],
-  ['weather_lat', '', 'Vĩ độ công trường (vd 15.0xxxx). Phải là tọa độ thật đã xác nhận'],
-  ['weather_lon', '', 'Kinh độ công trường (vd 108.8xxxx)'],
-  ['weather_gps_confirmed', 'Không', 'Có = người quản lý đã xác nhận tọa độ đúng công trường'],
+  ['weather_lat', '15.099038', 'Vĩ độ công trường (vd 15.0xxxx). Phải là tọa độ thật đã xác nhận'],
+  ['weather_lon', '108.894552', 'Kinh độ công trường (vd 108.8xxxx)'],
+  ['weather_gps_confirmed', 'Có', 'Có = người quản lý đã xác nhận tọa độ đúng công trường (anh Nho gửi 11:12 19/11/2026)'],
   ['weather_sheet', 'Theo dõi thời tiết', 'Tab ghi thời tiết (giữ đúng format cột của Register)'],
   ['weather_hour', '6', 'Giờ chạy (giờ dự án). Apps Script có thể lệch ±15 phút'],
   ['weather_provider', 'OPEN_METEO', 'Nguồn dữ liệu'],

@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="vi"><head><meta charset="utf-8">
+{% set s = vm.slots[si] %}{% set first = s.hours[0] %}
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:540px;height:960px;overflow:hidden}
+body{font-family:Inter,"DejaVu Sans",sans-serif;-webkit-font-smoothing:antialiased;font-feature-settings:"tnum"}
+.wrap{position:relative;height:100%;display:flex;flex-direction:column}
+.brand{display:flex;align-items:center;gap:7px;font-size:10.5px;font-weight:700;letter-spacing:.5px}
+.logo{width:34px;height:22px;border-radius:6px;background:#1B3F7A;display:flex;align-items:center;justify-content:center;
+ color:#fff;font-weight:800;font-size:10px;box-shadow:inset 0 0 0 1.4px #2DD4BF}
+.logo b{color:#2DD4BF}
+.pill{font-size:9.5px;font-weight:700;padding:2px 7px;border-radius:20px;color:#fff;background:#1F8A8A}
+.pill.o{background:#b45309}
+.drop{display:inline-block;width:9px;height:11px;vertical-align:-1px}
+.foot{font-size:8.6px;line-height:1.45}
+.warn{display:inline-block;margin-top:2px;padding:1px 6px;border-radius:5px;background:#1B3F7A;color:#FACC15}
+.demo{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none}
+.demo span{font-size:120px;font-weight:900;transform:rotate(-28deg);letter-spacing:8px;color:rgba(255,255,255,.10)}
+
+{% if theme == 'sang' %}
+/* ===== Mẫu xanh (tham chiếu ảnh 01–03) ===== */
+body{background:linear-gradient(180deg,#4f9fe8 0%,#7cbcf0 34%,#9fd0f3 52%,#5ea6e4 78%,#3f86da 100%);color:#fff}
+.sky{position:absolute;inset:0 0 auto 0;height:420px;overflow:hidden;z-index:0}
+.wrap>*:not(.sky):not(.site){position:relative;z-index:1}
+.wrap{padding:14px 22px 10px}
+.brand{color:rgba(255,255,255,.9)}.brand .pill{margin-left:auto}
+.loc{font-size:22px;font-weight:600;margin-top:22px;text-shadow:0 1px 6px rgba(0,60,140,.25)}
+.temp{font-size:104px;font-weight:200;line-height:1;margin-top:10px;letter-spacing:-3px;text-shadow:0 2px 10px rgba(0,60,140,.25)}
+.cond{font-size:22px;font-weight:600;margin-top:6px}
+.meta{font-size:13.5px;line-height:1.5;margin-top:22px;text-shadow:0 1px 4px rgba(0,60,140,.3)}
+.site{position:absolute;right:18px;top:150px;width:200px;height:250px}
+.card{background:rgba(255,255,255,.18);backdrop-filter:blur(6px);border-radius:22px;padding:14px 16px}
+.c1{margin-top:auto}
+.c1 .txt{font-size:13.5px;line-height:1.55;padding-bottom:10px;border-bottom:1px solid rgba(255,255,255,.28)}
+.hrs{display:grid;grid-template-columns:repeat(6,1fr);text-align:center;margin-top:10px}
+.hrs .h{font-size:11.5px;color:rgba(255,255,255,.85)}
+.hrs svg.ic{width:32px;height:32px;margin:6px auto 2px}
+.hrs .t{font-size:18px;font-weight:600}
+.ln{display:block;width:100%;height:34px;margin:4px 0 2px}
+.hrs .p{font-size:11px;color:rgba(255,255,255,.88)}
+.c2{margin-top:10px;display:flex;align-items:center}
+.c2 .k{font-size:11.5px;color:rgba(255,255,255,.85)}.c2 .v{font-size:14px;font-weight:600;margin-top:6px}
+.c2 .big{margin-left:auto;font-size:30px;font-weight:600}
+.c3{margin-top:10px;display:flex;align-items:center;font-size:15px;font-weight:600;padding:12px 16px}
+.c3 .r{margin-left:auto;font-size:16px}
+.c3 .s{font-size:11px;font-weight:400;color:rgba(255,255,255,.85);margin-left:10px}
+.foot{margin-top:10px;color:rgba(255,255,255,.85)}
+{% else %}
+/* ===== Mẫu tối (tham chiếu ảnh 04–06) ===== */
+body{background:#1f1f1f;color:#e8eaed}
+.wrap{padding:16px 16px 10px;gap:12px}
+.brand{color:#bdc1c6}.brand .pill{margin-left:auto}
+.box{background:#2a2b2e;border-radius:22px;padding:16px 16px 0;overflow:hidden}
+.d{font-size:15px;color:#e8eaed}
+.top{display:flex;align-items:center;margin-top:4px}
+.hl{font-size:46px;font-weight:400;letter-spacing:-1px}
+.top svg.ic{width:52px;height:52px;margin-left:6px}
+.lab{margin-left:auto;font-size:15px}
+.hrs{display:grid;grid-template-columns:repeat(6,1fr);text-align:center;margin-top:12px}
+.hrs .t{font-size:14px}.hrs .p{font-size:11.5px;color:#8ab4f8;height:15px;margin-top:2px}
+.hrs svg.ic{width:34px;height:34px;margin:4px auto}.hrs .h{font-size:13px;color:#bdc1c6}
+.band{margin:10px -16px 0;height:92px;display:block;width:calc(100% + 32px)}
+.days{display:flex;gap:8px}
+.day{flex:1;border-radius:16px;background:#2a2b2e;text-align:center;padding:9px 4px;border:1.5px solid transparent}
+.day.on{border-color:#e8eaed;background:#303134}
+.day .l{font-size:13px;color:#bdc1c6}.day svg.ic{width:34px;height:34px;margin:4px auto}.day .v{font-size:13px}
+.day .s{font-size:10.5px;color:#9aa0a6;margin-top:2px}
+.rows{border-top:1px solid #3c4043;border-bottom:1px solid #3c4043;padding:4px 0}
+.row{display:flex;align-items:center;gap:14px;padding:9px 4px;font-size:15px}
+.row .i{width:40px;height:40px;border-radius:10px;background:#303134;display:grid;place-items:center}
+.row .i svg{width:22px;height:22px}
+.row .x{color:#9aa0a6}
+.row .sub{margin-left:auto;font-size:11.5px;color:#9aa0a6;text-align:right}
+.foot{margin-top:auto;color:#9aa0a6}
+{% endif %}
+</style></head>
+{% macro icon(cond, hour=12) -%}
+{%- set night = hour >= 18 or hour < 6 -%}
+<svg class="ic" viewBox="0 0 64 64">
+{%- if cond in ['NANG','IT_MAY','MAY_RAI_RAC'] -%}
+ {%- if night -%}<path d="M40 12a19 19 0 1 0 13 32 16 16 0 0 1-13-32z" fill="#F8E7A1"/>
+ {%- else -%}<circle cx="{{ 32 if cond=='NANG' else 26 }}" cy="{{ 30 if cond=='NANG' else 24 }}" r="{{ 18 if cond=='NANG' else 15 }}" fill="#FFC93C" opacity=".25"/><circle cx="{{ 32 if cond=='NANG' else 26 }}" cy="{{ 30 if cond=='NANG' else 24 }}" r="{{ 13 if cond=='NANG' else 11 }}" fill="#FFC93C"/>{%- endif -%}
+ {%- if cond != 'NANG' -%}<path d="M22 50h24a10 10 0 0 0 0-20 13 13 0 0 0-24-3 9 9 0 0 0 0 23z" fill="#fff" opacity=".96"/>{%- endif -%}
+{%- elif cond == 'SUONG_MU' -%}<g stroke="#cfd8e3" stroke-width="4" stroke-linecap="round"><line x1="12" y1="26" x2="52" y2="26"/><line x1="8" y1="36" x2="48" y2="36"/><line x1="16" y1="46" x2="56" y2="46"/></g>
+{%- elif cond == 'NHIEU_MAY' -%}<path d="M16 46h30a11 11 0 0 0 0-22 15 15 0 0 0-28-2 12 12 0 0 0-2 24z" fill="#e3e8ee"/>
+{%- else -%}<path d="M16 38h30a11 11 0 0 0 0-22 15 15 0 0 0-28-2 12 12 0 0 0-2 24z" fill="#cfd8e2"/>
+ {%- if cond == 'DONG' -%}<path d="M34 38l-8 12h7l-4 10 12-15h-7l4-7z" fill="#FACC15"/>
+ {%- else -%}{%- set n = 2 if cond=='MUA_PHUN' else 3 -%}{%- set len = 5 if cond=='MUA_PHUN' else 9 -%}
+  {%- for i in range(n) -%}<line x1="{{ 23+i*9 }}" y1="45" x2="{{ 20+i*9 }}" y2="{{ 45+len }}" stroke="#4FA8F7" stroke-width="3.2" stroke-linecap="round"/>{%- endfor -%}
+ {%- endif -%}
+{%- endif -%}
+</svg>
+{%- endmacro %}
+{% macro drop(fill) %}<svg class="drop" viewBox="0 0 8 10"><path d="M4 0C4 0 0 5 0 6.6A4 4 0 0 0 8 6.6C8 5 4 0 4 0z" fill="{{ fill }}"/></svg>{% endmacro %}
+{% macro foot() -%}
+<div class="foot"><b>TQN Register</b> · {{ vm.p.code }} · GPS {{ '%.6f'|format(vm.p.lat) }}, {{ '%.6f'|format(vm.p.lon) }} · ô lưới {{ vm.grid }} ({{ vm.grid_km }} km)<br>
+ Nguồn {{ vm.provider }} (open-meteo.com, CC BY 4.0) · {{ vm.model }} · <b>DỰ BÁO</b>, không phải số đo tại công trường · phát hành {{ vm.issued_local }} (UTC+7)
+ {% if vm.p.license_status != 'DA_XAC_MINH' %}<br><span class="warn">Bản thử nội bộ — chưa xác minh giấy phép thương mại</span>{% endif %}</div>
+{%- endmacro %}
+{% macro brand() -%}
+<div class="brand"><div class="logo">T<b>Q</b>N</div>BẢN TIN THỜI TIẾT · {{ s.name|upper }} {{ s.range }}<span class="pill">DỰ BÁO</span>{% if vm.run_kind != 'LICH_0600' %}<span class="pill o">CHẠY TAY</span>{% endif %}</div>
+{%- endmacro %}
+{% set nxt = vm.slots[si+1] if si < 2 else None %}
+{% set rainy = vm.slots|sort(attribute='pop_max')|last %}
+<body><div class="wrap">
+{% if theme == 'sang' %}
+ <svg class="sky" data-deco viewBox="0 0 540 420" preserveAspectRatio="none">
+  <defs><radialGradient id="g1" cx="80%" cy="10%" r="70%"><stop offset="0" stop-color="#fff" stop-opacity=".55"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>
+  <filter id="b"><feGaussianBlur stdDeviation="14"/></filter></defs>
+  <rect width="540" height="420" fill="url(#g1)"/>
+  <g filter="url(#b)" fill="#fff" opacity=".55"><ellipse cx="430" cy="60" rx="140" ry="40"/><ellipse cx="120" cy="110" rx="120" ry="26"/><ellipse cx="360" cy="170" rx="150" ry="22" opacity=".6"/></g>
+ </svg>
+ {{ brand() }}
+ <div class="loc">{{ vm.p.name }}</div>
+ <div class="temp">{{ first.temp_c|round|int }}°</div>
+ <div class="cond">{{ first.cond_text }}</div>
+ <div class="meta">↑{{ vm.tmax|round|int }}° / ↓{{ vm.tmin|round|int }}°<br>Cảm giác như {{ first.feels_c|round|int }}°<br>{{ vm.date_text }} · lúc {{ '%02d'|format(first.hour) }}:00</div>
+ <svg class="site" data-deco viewBox="0 0 200 250">
+  <g fill="none" stroke="#fff" stroke-opacity=".75" stroke-width="2.2" stroke-linejoin="round">
+   <path d="M60 248V40M48 248V40M48 40h12"/>{% for y in range(56,240,22) %}<path d="M48 {{y}}l12 22M60 {{y}}l-12 22"/>{% endfor %}
+   <path d="M30 40h168M54 40l-6-18h12zM54 22l100 18M54 22l-20 18"/><path d="M170 40v54"/><rect x="162" y="94" width="16" height="12" fill="#fff" fill-opacity=".5"/>
+   <path d="M30 40v14h-12v-14"/>
+   <path d="M100 248V150h80v98M100 182h80M100 214h80M126 150v98M154 150v98" stroke-opacity=".55"/>
+  </g></svg>
+ <div class="card c1">
+  <div class="txt">{{ s.main }} buổi {{ s.name|lower }}. Cao {{ s.tmax|round|int }}° và thấp {{ s.tmin|round|int }}°. Mưa {{ s.rain_sum }} mm, khả năng cao nhất {{ s.pop_max }}% lúc {{ s.pop_max_at }}; gió giật đến {{ s.gust_max|round|int }} km/h.</div>
+  <div class="hrs">{% for h in s.hours %}<div><div class="h">{{ '%02d'|format(h.hour) }}:00</div>{{ icon(h.cond, h.hour) }}<div class="t">{{ h.temp_c|round|int }}°</div></div>{% endfor %}</div>
+  {% set lp = line_path(s.hours, 300, 34, 25, vm.tmin-1, vm.tmax+1) %}
+  <svg class="ln" viewBox="0 0 300 34" preserveAspectRatio="none"><path d="{{ lp.d }}" fill="none" stroke="#FFE27A" stroke-width="2" vector-effect="non-scaling-stroke"/>
+   {% for x,y in lp.pts %}<circle cx="{{x}}" cy="{{y}}" r="3" fill="#fff" vector-effect="non-scaling-stroke"/>{% endfor %}</svg>
+  <div class="hrs">{% for h in s.hours %}<div class="p">{{ drop('#fff') }} {{ h.pop_pct }}%</div>{% endfor %}</div>
+ </div>
+ <div class="card c2"><div><div class="k">{{ drop('#fff') }} Mưa sắp tới</div><div class="v">{% if nxt %}Khả năng mưa buổi {{ nxt.name|lower }} ({{ nxt.range }}){% else %}Khả năng mưa cao nhất trong ngày: buổi {{ rainy.name|lower }}{% endif %}</div></div>
+  <div class="big">{{ (nxt.pop_max if nxt else rainy.pop_max) }}%</div></div>
+ <div class="card c3">Ngày mai {{ vm.days[1].date }}<span class="s">{{ vm.days[1].cond_text }} · {{ vm.days[1].rain }} mm</span><span class="r">{{ vm.days[1].tmax|round|int }}° {{ vm.days[1].tmin|round|int }}°</span></div>
+ {{ foot() }}
+{% else %}
+ {{ brand() }}
+ <div class="box">
+  <div class="d">{{ vm.date_text }} · {{ vm.p.name }}</div>
+  <div class="top"><span class="hl">{{ vm.tmax|round|int }}°/{{ vm.tmin|round|int }}°</span>{{ icon(vm.cond_day) }}<span class="lab">{{ 'Có mưa' if vm.pop_day >= 50 else vm.cond_day_text }}</span></div>
+  <div class="hrs">{% for h in s.hours %}<div><div class="t">{{ h.temp_c|round|int }}°</div><div class="p">{{ h.pop_pct ~ '%' if h.pop_pct >= 30 else '' }}</div>{{ icon(h.cond, h.hour) }}<div class="h">{{ h.hour }}:00</div></div>{% endfor %}</div>
+  {% set wet = s.pop_max >= 50 %}
+  <svg class="band" viewBox="0 0 540 92" preserveAspectRatio="xMidYMax slice">
+   <defs><linearGradient id="sk" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="{{ '#5f6b78' if wet else '#7aa7d6' }}"/><stop offset="1" stop-color="{{ '#c7cdd4' if wet else '#d8e6f3' }}"/></linearGradient></defs>
+   <rect width="540" height="92" fill="url(#sk)"/>
+   <g fill="#9aa4ae" opacity=".7"><rect x="20" y="38" width="46" height="54"/><rect x="74" y="24" width="34" height="68"/><rect x="380" y="30" width="40" height="62"/><rect x="430" y="44" width="56" height="48"/><rect x="494" y="20" width="30" height="72"/></g>
+   <g stroke="#3d4650" stroke-width="2.4" fill="none"><path d="M220 92V14M232 92V14M220 14h12"/>{% for y in range(20,92,14) %}<path d="M220 {{y}}l12 14M232 {{y}}l-12 14"/>{% endfor %}<path d="M190 14h170M226 14l60-12M226 2v12"/><path d="M330 14v34"/></g>
+   <rect x="322" y="48" width="16" height="10" fill="#f59e0b"/>
+   <g fill="#5b6570"><rect x="260" y="56" width="90" height="36"/><rect x="260" y="56" width="90" height="5" fill="#f59e0b"/></g>
+   <rect y="84" width="540" height="8" fill="#6b747d"/>
+   {% if wet %}<g stroke="#e8eef5" stroke-width="1.3" opacity=".6">{% for i in range(0,540,18) %}<line x1="{{ i+6 }}" y1="{{ (i*7)%40 }}" x2="{{ i }}" y2="{{ (i*7)%40+16 }}"/>{% endfor %}</g>{% endif %}
+  </svg>
+ </div>
+ <div class="days">{% for d in vm.days %}<div class="day {{ 'on' if d.active }}"><div class="l">{{ d.label }} {{ d.date }}</div>{{ icon(d.cond) }}<div class="v">{{ d.tmax|round|int }}°/{{ d.tmin|round|int }}°</div><div class="s">{{ d.cond_text }}</div></div>{% endfor %}</div>
+ <div class="rows">
+  <div class="row"><div class="i"><svg viewBox="0 0 24 24"><path d="M6 14h11a4 4 0 0 0 0-8 6 6 0 0 0-11-1 4 4 0 0 0 0 9z" fill="none" stroke="#e8eaed" stroke-width="1.6"/><path d="M8 17l-1 3M12 17l-1 3M16 17l-1 3" stroke="#e8eaed" stroke-width="1.6" stroke-linecap="round"/></svg></div>Khả năng mưa <span class="x">· {{ s.pop_max }}%</span><span class="sub">{{ s.rain_sum }} mm trong {{ s.range }}<br>cả ngày {{ vm.rain_day }} mm</span></div>
+  <div class="row"><div class="i"><svg viewBox="0 0 24 24"><path d="M3 9h12a3 3 0 1 0-3-3M3 13h16a3 3 0 1 1-3 3M3 17h8" fill="none" stroke="#e8eaed" stroke-width="1.6" stroke-linecap="round"/></svg></div>Gió <span class="x">· {{ s.wind_max|round|int }} km/h</span><span class="sub">giật {{ s.gust_max|round|int }} km/h<br>hướng {{ s.hours[0].wind_dir }}</span></div>
+  <div class="row"><div class="i"><svg viewBox="0 0 24 24"><path d="M12 3s-6 7-6 11a6 6 0 0 0 12 0c0-4-6-11-6-11z" fill="none" stroke="#e8eaed" stroke-width="1.6"/></svg></div>Độ ẩm <span class="x">· {{ s.rh_avg }}%</span><span class="sub">trung bình {{ s.range }}</span></div>
+  <div class="row"><div class="i"><svg viewBox="0 0 24 24"><path d="M10 4v10a4 4 0 1 0 4 0V4a2 2 0 0 0-4 0z" fill="none" stroke="#e8eaed" stroke-width="1.6"/></svg></div>Cảm giác <span class="x">· {{ (s.hours|map(attribute='feels_c')|max)|round|int }}°</span><span class="sub">cao nhất trong {{ s.range }}</span></div>
+  <div class="row"><div class="i"><svg viewBox="0 0 24 24"><path d="M4 18h16M7 18a5 5 0 0 1 10 0M12 4v4M5 9l2 2M19 9l-2 2" fill="none" stroke="#e8eaed" stroke-width="1.6" stroke-linecap="round"/></svg></div>Mặt trời <span class="x">· mọc {{ vm.sunrise }} · lặn {{ vm.sunset }}</span></div>
+ </div>
+ {{ foot() }}
+{% endif %}
+</div>{% if vm.p.demo %}<div class="demo"><span>DEMO</span></div>{% endif %}</body></html>

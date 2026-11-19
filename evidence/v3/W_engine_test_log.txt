@@ -1,11 +1,12 @@
-# 2026-11-19T04:20:38Z
+# 2026-11-19T04:24:59Z
 PASS W1 nhiệt cao/thấp ngày = daily API — 28.9/23.5
 PASS W2 giờ 12:00 = raw (28.7°C, 100%, 0.5 mm)
 PASS W3 đúng múi giờ (+07:00) — 2026-11-19T12:00:00+07:00
 PASS W4 tổng mưa ca sáng = tổng raw 06–11 — 1.5
 PASS W5 hai dự án khác dữ liệu — 28.9 vs 33
-PASS W6 mỗi dự án đủ 8 file (6 PNG + 2 PDF), có SHA256
+PASS W6 mỗi dự án đủ 12 file (3 khung x 2 theme mobile + share + desktop + PDF A4), có SHA256
 PASS W7 manifest ghi provider/kind/issued/giấy phép
+PASS W15 đường nhiệt: nhiệt tăng thì điểm đi lên — [(25.0, 26.285714285714285), (275.0, 7.714285714285715)]
 PASS W8 chạy trùng -> SKIPPED_DUPLICATE, vẫn version 1 — SKIPPED_DUPLICATE
 PASS W9 thiếu giờ 15–23 -> PARTIAL (không phát hành báo cáo thiếu) — PARTIAL: Thiếu giờ [15, 16, 17, 18, 19, 20, 21, 22, 23] của ngày 2026-11-19 — không render
 PASS W10 đơn vị °F -> FAILED — FAILED: Đơn vị temperature_2m không phải °C
@@ -13,4 +14,4 @@ PASS W11 phản hồi UTC thay vì +7 -> FAILED — FAILED: Múi giờ phản h�
 PASS W12 GPS chưa xác nhận -> BLOCKED — BLOCKED: GPS chưa xác nhận — không chạy
 PASS W13 JSON hỏng -> FAILED — FAILED: JSON hỏng: Expecting property name enclosed in double quotes: line 1 column 2 (char 1)
 PASS W14 job lỗi không để lại manifest
-TONG: PASS=14 FAIL=0
+TONG: PASS=15 FAIL=0

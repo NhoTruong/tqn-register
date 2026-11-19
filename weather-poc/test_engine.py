@@ -32,8 +32,11 @@ check("W5 hai dự án khác dữ liệu", (vm["tmax"], vm["grid"]) != (vb["tmax
 out = os.path.join(HERE, "out")
 ma = json.load(open(os.path.join(out, "COASTAL_QNG/WEATHER/2026/11/20261119/manifest.json"), encoding="utf-8"))
 mb = json.load(open(os.path.join(out, "DEMO_B/WEATHER/2026/11/20261119/manifest.json"), encoding="utf-8"))
-check("W6 mỗi dự án đủ 8 file (6 PNG + 2 PDF), có SHA256", len(ma["files"]) == 8 == len(mb["files"]) and all(ma["files"].values()))
+check("W6 mỗi dự án đủ 12 file (3 khung x 2 theme mobile + share + desktop + PDF A4), có SHA256", len(ma["files"]) == 12 == len(mb["files"]) and all(ma["files"].values()))
 check("W7 manifest ghi provider/kind/issued/giấy phép", ma["kind"] == "FORECAST" and ma["provider"] == "Open-Meteo" and ma["license_status"] == "CHUA_XAC_MINH")
+from engine import line_path
+lp = line_path([{"temp_c": 24}, {"temp_c": 29}], 300, 34, 25)
+check("W15 đường nhiệt: nhiệt tăng thì điểm đi lên", lp["pts"][1][1] < lp["pts"][0][1], str(lp["pts"]))
 # W8 chạy trùng cùng slot, cùng dữ liệu -> bỏ qua, không phát hành bản thứ hai
 st, m = run(pa, os.path.join(HERE, fa), out, "2026-11-19", log=lambda *_: None)
 check("W8 chạy trùng -> SKIPPED_DUPLICATE, vẫn version 1", st == "SKIPPED_DUPLICATE" and m["version"] == 1, st)
