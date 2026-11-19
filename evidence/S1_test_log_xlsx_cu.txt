@@ -1,0 +1,50 @@
+Số liệu lần 1: {"chi_tiet":79,"so_tong":42,"ghep_duoc":1,"chi_co_so_tong":41,"khong_con_nguon":0,"tong_dong":120,"tab_thieu":""}
+  SD              mã=B nd=C tt=E rev=F NT=H[TT=I VM=K SN=-] TVGS=M[TT=M VM=P SN=O] CĐT=R[TT=R VM=T SN=S] TVTK=-
+  M0S             mã=B nd=C tt=E rev=F NT=H[TT=I VM=K SN=-] TVGS=M[TT=N VM=P SN=O] CĐT=R[TT=R VM=T SN=S] TVTK=-
+  MAT             mã=B nd=C tt=E rev=F NT=H[TT=I VM=K SN=-] TVGS=M[TT=M VM=O SN=N] CĐT=Q[TT=Q VM=S SN=R] TVTK=-
+  OTS             mã=B nd=C tt=E rev=F NT=H[TT=I VM=K SN=-] TVGS=M[TT=M VM=P SN=O] CĐT=R[TT=R VM=T SN=S] TVTK=-
+  SCH             mã=B nd=C tt=E rev=F NT=H[TT=I VM=J SN=-] TVGS=L[TT=L VM=O SN=N] CĐT=Q[TT=Q VM=S SN=R] TVTK=-
+  RFA             mã=B nd=C tt=E rev=F NT=H[TT=I VM=J SN=-] TVGS=L[TT=L VM=N SN=M] CĐT=P[TT=P VM=R SN=Q] TVTK=U[TT=U VM=Y SN=V]
+  RFI             mã=B nd=C tt=E rev=F NT=H[TT=I VM=J SN=-] TVGS=L[TT=L VM=P SN=M] CĐT=X[TT=X VM=Z SN=Y] TVTK=R[TT=R VM=V SN=S]
+  RFC             mã=B nd=C tt=E rev=F NT=H[TT=I VM=J SN=-] TVGS=L[TT=L VM=N SN=M] CĐT=P[TT=P VM=R SN=Q] TVTK=U[TT=U VM=Y SN=V]
+  CRP- Báo cáo    mã=B nd=C tt=E rev=F NT=H[TT=I VM=J SN=-] TVGS=L[TT=L VM=N SN=M] CĐT=P[TT=P VM=R SN=Q] TVTK=-
+  Hồ sơ an toàn   mã=B nd=C tt=E rev=F NT=H[TT=I VM=J SN=-] TVGS=L[TT=L VM=N SN=M] CĐT=P[TT=P VM=R SN=Q] TVTK=-
+  TRN-GNHS        mã=B nd=C tt=- rev=- NT=- TVGS=- CĐT=- TVTK=-
+PASS U01 Không ghi vào tab gốc  | tab được ghi: TQN_CONFIG, TQN_DATA, TQN_QC, TQN_NHAC_HAN
+PASS U02 Đủ 79 hồ sơ chi tiết (SD58+M0S11+RFA4+RFI3+RFC3), không mất dòng trùng mã  | chi_tiet=79
+PASS U03 Khóa bản ghi không trùng  | 120 dòng
+PASS U04 Nhập lần 2 không sinh thêm dòng (idempotent)  | 120 → 120
+PASS U05 Giữ "Nhập lần đầu" khi nhập lại
+PASS U06 SDS-025 giữ cả 2 hồ sơ (thang bộ + cột)
+PASS U07 M0S: lấy được ngày TVGS (cột N) và ý kiến (cột M)  | note=Bổ sung biện pháp neo từng sàn bê tông từng tầng | ngày trình=Fri Nov 13 2026 00:00:00 GMT+0700 (Indochina Time)
+PASS U08 Ghép WF↔TBC: RFI-001 ↔ 20261116.COT.TC38.COA2B.V1.001.R00  | KEY+REV
+FAIL U09 Ghép được dù tên file sai ngày (260611 thay vì 261116)
+FAIL U10 Ghép đủ 10/10 RFI-RFA-RFC còn hiệu lực có trong sổ tổng  | ghep_duoc=1
+QC theo luật: {"Q01_TRUNG_MA":2,"Q09_CONG_THUC":3,"Q02_KHOANG_TRANG":12,"Q05_CHUA_VAO_SO_TONG":17,"Q07_LECH_TINH_TRANG":1,"Q08_Y_KIEN_LAP":1,"Q11_NGAY_TUONG_LAI":6,"Q06_SO_TONG_CHUA_GHEP":7,"Q10_QUA_HAN":9}
+PASS U11 Q01 bắt trùng mã SDS-025 và SDS-026
+PASS U12 Q02 bắt khoảng trắng RFI-003
+PASS U13 Q05 bắt SDS-001 đã trình nhưng chưa vào Sổ trình duyệt
+PASS U14 Q08 bắt ý kiến CĐT chép lặp RFC-001 / RFA-COS-001
+PASS U15 Q09 bắt công thức sai số ngày CĐT ở RFA, RFC, Hồ sơ an toàn
+PASS U16 Q07 bắt lệch tình trạng RFI-001 (sổ tổng Đã duyệt, sổ chi tiết Đã trình duyệt)
+Nhắc hạn ngày 2026-11-19:
+    QUÁ HẠN 15/08/2026 -96 20260814.DESCOS.DB01.COA07.001.R00 | Cập nhật nội dung chỉnh sửa BVTC nhà TM3
+    QUÁ HẠN 20/08/2026 -91 20260819.DESCOS.DB01.HAUS07.001.R00 | Thông báo nhà thầu Catinat trình duyệt vật liệu, thiết bị cò
+    QUÁ HẠN 23/09/2026 -57 20260922.DESCOS.DB01.DE08.COA07.001.R00 | Công văn Yêu cầu sự có mặt của Giám đốc nhà thầu tại dự án đ
+    QUÁ HẠN 23/09/2026 -57 20260922.DESCOS.DB01.DE08.COA07.002.R00 | Công văn Cảnh báo chậm trễ đệ trình hồ sơ phê duyệt vật liệu
+    QUÁ HẠN 13/10/2026 -37 20261011.GEN.HAUS04.001.R00 | 261006.QNG.COA.NHSL.MOM_Weekly Meeting_REV16_Biên bản cuộc h
+    QUÁ HẠN 13/10/2026 -37 20261012.DESCOS.DB01.DE08.COA07.001.R00 | Công văn chấn chỉnh tiến độ thi công, phạt chậm trễ tiến độ 
+    QUÁ HẠN 16/10/2026 -34 20261015.DESCOS.DB01.DE08.COA07.001.R00 | Công văn chấn chỉnh tiến độ thi công, yêu cầu thay thế nhân 
+    QUÁ HẠN 25/10/2026 -25 20261024.DESCOS.DB01.DE08.COA07.001.R00 | Công văn chậm trễ hoàn thiện và thi công hệ thống MEP phòng 
+    QUÁ HẠN 18/11/2026 -1 20261112.COT.TC39.NTP01.C07.TBCONS.02C.001.R00 | COA_TBC_Đệ trình Hồ sơ tạm ứng vật tư_Long Thịnh Phát
+    SẮP ĐẾN HẠN 20/11/2026 1 20261116.COT.TC38.COA2B.V1.002.R00 | Yêu cầu làm rõ thông tin - Yêu cầu thông tin gạch Mosaic
+    SẮP ĐẾN HẠN 20/11/2026 1 20261116.COT.TC38.COA2B.V1.003.R00 | Yêu cầu làm rõ thông tin - Cấu tạo nền công viên giai đoạn 2
+    SẮP ĐẾN HẠN 20/11/2026 1 20261116.COT.TC38.COA3.V1.001.R00 | Yêu cầu phê duyệt - Tiến độ Gói thầu Công viên giai đoạn 2
+    SẮP ĐẾN HẠN 20/11/2026 1 20261116.COT.TC38.COA6A.002.R00 | Yêu cầu thay đổi - Thay đổi chủng loại bulong neo
+    SẮP ĐẾN HẠN 21/11/2026 2 20261119.COT.TC38.C01.TBCONS01.001.R00 | COA_TBC_Đệ trình Đề xuất chủ trương Chỉ định NCC_Bản mã_Công
+PASS U17 Nhắc hạn: không đưa hồ sơ đã có Kết quả
+PASS U18 Mặc định không gửi mail
+PASS U19 Job hằng ngày chạy 2 lần cùng ngày thì lần 2 bỏ qua  | Bỏ qua: hôm nay đã chạy COASTAL_QNG:2026-11-19:remind
+
+TQN_DATA 120 dòng · TQN_QC 58 dòng · TQN_NHAC_HAN 14 dòng
+KẾT QUẢ: 17 PASS / 2 FAIL

@@ -1,0 +1,4 @@
+test/fixture_*.json
+test/out_*_DATA.tsv
+test/sidebar_preview.html
+test/sidebar_data.json
