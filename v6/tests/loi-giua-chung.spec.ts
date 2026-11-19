@@ -27,3 +27,18 @@ describe('Fault injection – hiện trạng (19/11)', () => {
     it(op + ' lỗi ở ' + b, () => { const r = chay(b, op); kq.push(r); expect(r).toBeTruthy(); });
   it('in bảng', () => { console.table(kq); });
 });
+
+// ===== Acceptance (ChatGPT issue #2 điểm 5): assert đầy đủ. Hiện CHƯA ĐẠT → đánh dấu it.fails;
+// sau khi có journal + khôi phục phải đổi it.fails → it và PASS. =====
+describe('Acceptance sau journal – hiện phải FAIL', () => {
+  for (const op of ['create', 'submit'] as const) for (const b of ['setCounter', 'saveDocument', 'saveRevision', 'appendEvent', 'putIdem'] as Buoc[]) {
+    const ky = op === 'create' && (b === 'setCounter' || b === 'saveDocument') || op === 'submit' && (b === 'setCounter' || b === 'saveDocument' || b === 'saveRevision');
+    (ky ? it : it.fails)(op + ' lỗi ở ' + b + ': thử lại → OK, 1 hồ sơ, 1 mã, 0 mồ côi, 1 sự kiện thành công', () => {
+      const r = chay(b, op);
+      expect(r.lan2).toBe('OK');
+      if (op === 'create') { expect(r.soHoSo).toBe(1); expect(r.soMa).toBe(1); }
+      expect(r.hoSoThieuRev).toBe(0);
+      expect(r.suKienOK).toBe(1);
+    });
+  }
+});
