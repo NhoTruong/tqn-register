@@ -1841,7 +1841,7 @@ function tqnKhoiPhucSoTrinhDuyet() {
   var sh = ss.insertSheet(name, at);
   var v = TQN_SO_TD_CHUP.v.map(function (r) { return r.map(function (x) { return (x && typeof x === 'object' && x.__d) ? new Date(x.__d) : x; }); });
   sh.getRange(1, 1, v.length, v[0].length).setValues(v);
-  TQN_SO_TD_CHUP.f.forEach(function (x) { sh.getRange(x[0], x[1]).setFormula(x[2]); });
+  tqnGhiCongThucSoTD_(sh);
   tqnDinhDangNgaySoTD();
   tqnAudit_('KHOI_PHUC_SO_TD', 'Tạo tab Sổ trình duyệt từ bản chụp 19/11 10:28 (' + v.length + ' dòng, ' + TQN_SO_TD_CHUP.f.length + ' công thức)', {});
   return v.length;
@@ -1853,6 +1853,26 @@ function tqnDinhDangNgaySoTD() {
   var n = Math.max(sh.getMaxRows() - 22, 1);
   ['I', 'K', 'L'].forEach(function (c) { sh.getRange(c + '23:' + c + (22 + n)).setNumberFormat('dd/MM/yyyy'); });
   return n;
+}
+
+/** Đổi dấu ngăn tham số "," → ";" (ngoài chuỗi) khi bảng tính dùng kiểu số Việt Nam / châu Âu. */
+function tqnCongThucTheoLocale_(f, locale) {
+  if (!/^(vi|de|fr|es|it|pt|ru|nl|pl|tr|id)/i.test(String(locale || ''))) return f;
+  var out = '', q = false;
+  for (var i = 0; i < f.length; i++) { var ch = f[i]; if (ch === '"') q = !q; out += (!q && ch === ',') ? ';' : ch; }
+  return out;
+}
+function tqnGhiCongThucSoTD_(sh) {
+  var loc = SpreadsheetApp.getActiveSpreadsheet().getSpreadsheetLocale();
+  TQN_SO_TD_CHUP.f.forEach(function (x) { sh.getRange(x[0], x[1]).setFormula(tqnCongThucTheoLocale_(x[2], loc)); });
+}
+/** Sửa lại công thức tab Sổ trình duyệt đã khôi phục (khi trước đó bị #ERROR! vì dấu ngăn). */
+function tqnSuaCongThucSoTD() {
+  var sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Sổ trình duyệt'); if (!sh) throw new Error('Chưa có tab Sổ trình duyệt');
+  tqnGhiCongThucSoTD_(sh); tqnDinhDangNgaySoTD(); SpreadsheetApp.flush();
+  var k = sh.getRange('K36').getValue(), o = sh.getRange('O36').getValue();
+  console.log('K36=' + k + ' | O36=' + o);
+  return [String(k), String(o)];
 }
 
 // ===== Auto.gs =====
