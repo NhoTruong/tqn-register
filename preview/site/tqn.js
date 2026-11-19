@@ -1052,11 +1052,12 @@ function tqnMenuNewDoc() {
 }
 
 /* ---------------- Tô màu tình trạng (chỉ định dạng, không đổi dữ liệu) ---------------- */
-var TQN_STATUS_COLORS = [
-  ['Quá hạn', '#F8D7DA', '#9C0006'], ['Không duyệt - trình lại', '#FCE1C9', '#8A4B00'], ['Đang chờ', '#FFF2CC', '#7A5B00'],
-  ['Chưa trình', '#ECEFF3', '#4D5A6B'], ['Đã phản hồi', '#DCEBFB', '#1D4F91'], ['Duyệt có ý kiến', '#E2F3D6', '#2E6B12'], ['Đã duyệt', '#C9EBC0', '#1E5E14']
+var TQN_STATUS_COLORS = [   // bảng màu nhạt dễ nhìn (kiểu nhãn của Google Sheets)
+  ['Quá hạn', '#FCE8E6', '#C5221F'], ['Không duyệt - trình lại', '#FDECE0', '#B4500A'], ['Đang chờ', '#FEF7E0', '#8A6100'],
+  ['Chưa trình', '#F1F3F4', '#5F6368'], ['Đã phản hồi', '#E8F0FE', '#1A56B8'], ['Duyệt có ý kiến', '#EEF6E0', '#4D7C0F'], ['Đã duyệt', '#E6F4EA', '#1E7B3A']
 ];
-/** Thêm quy tắc tô màu cho cột Tình trạng của Sổ trình duyệt. Giữ nguyên quy tắc cũ, chỉ thêm cái còn thiếu. */
+/** Thêm quy tắc tô màu nhạt cho cột Tình trạng của Sổ trình duyệt, đặt LÊN TRƯỚC quy tắc cũ (quy tắc cũ vẫn giữ, không xóa).
+ *  Chỉ đổi màu hiển thị, không đổi dữ liệu. Bấm lại không thêm trùng. */
 function tqnApplyStatusColors() {
   var cfg = tqnConfig_(), sh = tqnSs_().getSheetByName(cfg.log_sheet);
   if (!sh) throw new Error('Không thấy tab ' + cfg.log_sheet);
@@ -1066,12 +1067,17 @@ function tqnApplyStatusColors() {
     if (t.indexOf('loai ho so') >= 0 && t.indexOf('ma ho so') >= 0) { h = r + 1; col = t.indexOf('tinh trang') + 1; }
   }
   if (h < 0 || col < 1) throw new Error('Không dò được cột Tình trạng');
-  var rng = sh.getRange(h + 1, col, Math.max(sh.getMaxRows() - h, 1), 1), rules = sh.getConditionalFormatRules(), have = {};
-  rules.forEach(function (ru) { var c = ru.getBooleanCondition && ru.getBooleanCondition(); if (c) (c.getCriteriaValues() || []).forEach(function (v) { have[String(v)] = 1; }); });
-  var add = TQN_STATUS_COLORS.filter(function (x) { return !have[x[0]]; }).map(function (x) {
+  var rng = sh.getRange(h + 1, col, Math.max(sh.getMaxRows() - h, 1), 1), rules = sh.getConditionalFormatRules(), mine = {};
+  var key = function (v, bg) { return String(v) + '|' + String(bg || '').toUpperCase(); };
+  rules.forEach(function (ru) {
+    var c = ru.getBooleanCondition && ru.getBooleanCondition(); if (!c) return;
+    var bg = c.getBackground ? c.getBackground() : '';
+    (c.getCriteriaValues() || []).forEach(function (v) { mine[key(v, bg)] = 1; });
+  });
+  var add = TQN_STATUS_COLORS.filter(function (x) { return !mine[key(x[0], x[1])]; }).map(function (x) {
     return SpreadsheetApp.newConditionalFormatRule().whenTextEqualTo(x[0]).setBackground(x[1]).setFontColor(x[2]).setRanges([rng]).build();
   });
-  if (add.length) sh.setConditionalFormatRules(rules.concat(add));
+  if (add.length) sh.setConditionalFormatRules(add.concat(rules));
   tqnAudit_('TO_MAU', cfg.log_sheet + ' cột ' + tqnColLetter_(col), { them: add.length });
   return add.length;
 }

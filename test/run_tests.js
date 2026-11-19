@@ -40,7 +40,7 @@ const ss = { getSheetByName: n => sheets[n] || null, insertSheet: n => (sheets[n
 const mails = [], props = {}, TRIG = [], sprops = {}, fetches = []; let AI_RES = () => ({ getResponseCode: () => 500, getContentText: () => '' });
 const ctx = {
   console, Date, JSON, Math, String, Object, Array, RegExp, Error, parseInt, isNaN,
-  SpreadsheetApp: { getActiveSpreadsheet: () => ss, newConditionalFormatRule() { const o = {}; const b = { whenTextEqualTo: v => (o.v = v, b), setBackground: c => (o.bg = c, b), setFontColor: c => (o.fc = c, b), setRanges: r => (o.r = r, b), build: () => ({ o, getBooleanCondition: () => ({ getCriteriaValues: () => [o.v] }) }) }; return b; }, getUi: () => ({ alert() { }, ButtonSet: {} }) },
+  SpreadsheetApp: { getActiveSpreadsheet: () => ss, newConditionalFormatRule() { const o = {}; const b = { whenTextEqualTo: v => (o.v = v, b), setBackground: c => (o.bg = c, b), setFontColor: c => (o.fc = c, b), setRanges: r => (o.r = r, b), build: () => ({ o, getBooleanCondition: () => ({ getCriteriaValues: () => [o.v], getBackground: () => o.bg }) }) }; return b; }, getUi: () => ({ alert() { }, ButtonSet: {} }) },
   Utilities: {
     sleep: () => {},
     DigestAlgorithm: { MD5: 'md5' }, Charset: { UTF_8: 'utf8' },

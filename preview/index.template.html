@@ -100,7 +100,7 @@ const ss={getSheetByName:n=>byName[n]||null,insertSheet:n=>{const s=new Sheet(n)
 const menuItems=[];const props={};const triggers=[];const mails=[];let WEATHER_RAW=null;
 const fmt2=n=>String(n).padStart(2,'0');
 const G={
- SpreadsheetApp:{getActiveSpreadsheet:()=>ss,newConditionalFormatRule:()=>{const o={};const b={whenTextEqualTo:v=>(o.v=v,b),setBackground:c=>(o.bg=c,b),setFontColor:c=>(o.fc=c,b),setRanges:r=>(o.r=r,b),build:()=>({o,getBooleanCondition:()=>({getCriteriaValues:()=>[o.v]})})};return b},getUi:()=>({ButtonSet:{OK:'OK'},
+ SpreadsheetApp:{getActiveSpreadsheet:()=>ss,newConditionalFormatRule:()=>{const o={};const b={whenTextEqualTo:v=>(o.v=v,b),setBackground:c=>(o.bg=c,b),setFontColor:c=>(o.fc=c,b),setRanges:r=>(o.r=r,b),build:()=>({o,getBooleanCondition:()=>({getCriteriaValues:()=>[o.v],getBackground:()=>o.bg})})};return b},getUi:()=>({ButtonSet:{OK:'OK'},
   alert:(a,b)=>showModal(b!==undefined?a:'TQN Register',b!==undefined?b:a),
   showSidebar:(h)=>openSide(),
   showModalDialog:(h,title)=>openDialog(h.name,title),
@@ -142,8 +142,8 @@ function rngOf(sq){return String(sq).split(' ').map(p=>{const [a,b]=p.split(':')
 function showSheet(name){active=name;const sh=byName[name];if(!sh)return;
  const ST=(STYLES[name]||{}),sty=ST.s||{},cw=ST.cw||{};
  const R=Math.max(sh.getLastRow(),1),C=Math.min(Math.max(sh.getLastColumn(),1),60);const edit=name==='TQN_CONFIG';
- const cond=[];(ST.cf||[]).forEach(r=>rngOf(r[0]).forEach(g=>cond.push({g,v:r[1],bg:r[2],fc:r[3]})));
- (sh.cfr||[]).forEach(r=>{const g=r.o.r[0];cond.push({g:[g.r,g.c,g.r+g.nr-1,g.c+g.nc-1],v:r.o.v,bg:r.o.bg,fc:r.o.fc})});
+ const cond=[];(sh.cfr||[]).forEach(r=>{const g=r.o.r[0];cond.push({g:[g.r,g.c,g.r+g.nr-1,g.c+g.nc-1],v:r.o.v,bg:r.o.bg,fc:r.o.fc})});
+ (ST.cf||[]).forEach(r=>rngOf(r[0]).forEach(g=>cond.push({g,v:r[1],bg:r[2],fc:r[3]})));
  const skip={},span={};(ST.m||[]).forEach(m=>{const [r1,c1,r2,c2]=rngOf(m)[0];span[r1+','+c1]=[r2-r1+1,c2-c1+1];for(let r=r1;r<=r2;r++)for(let c=c1;c<=c2;c++)if(r!==r1||c!==c1)skip[r+','+c]=1});
  const isT=name.startsWith('TQN_');
  let h='<table class="g"><colgroup><col style="width:42px">';for(let c=1;c<=C;c++){const w=cw[colL(c)];h+='<col style="width:'+(w?Math.min(w,420):isT?150:96)+'px">'}h+='</colgroup><tr><th></th>';
@@ -153,7 +153,7 @@ function showSheet(name){active=name;const sh=byName[name];if(!sh)return;
    const k=r+','+c,s0=sty[k]||[],sp=span[k];let css='';
    if(s0[0])css+='background:'+s0[0]+';';if(s0[1])css+='color:'+s0[1]+';';if(s0[2])css+='font-weight:700;';if(s0[3])css+='text-align:'+s0[3]+';';
    if(isT&&r===1)css+='background:#1B3F7A;color:#fff;font-weight:700;';
-   const hit=cond.find(q=>r>=q.g[0]&&r<=q.g[2]&&c>=q.g[1]&&c<=q.g[3]&&String(x).trim()===q.v);if(hit){if(hit.bg)css+='background:'+hit.bg+';';if(hit.fc)css+='color:'+hit.fc+';';css+='font-weight:600;'}
+   const hit=cond.find(q=>r>=q.g[0]&&r<=q.g[2]&&c>=q.g[1]&&c<=q.g[3]&&String(x).trim()===q.v);if(hit){if(hit.bg)css+='background:'+hit.bg+';';if(hit.fc)css+='color:'+hit.fc+';';css+='font-weight:500;'}
    const ed=edit&&c===2&&r>1;
    h+='<td'+(sp?' rowspan="'+sp[0]+'" colspan="'+sp[1]+'"':'')+(typeof x==='number'&&!s0[3]?' class="num"':'')+(ed?' class="ed" contenteditable data-r="'+r+'"':'')+(css?' style="'+css+'"':'')+' title="'+t.slice(0,300)+'">'+t+'</td>'}h+='</tr>'}
  $('grid').innerHTML=h+'</table>';
