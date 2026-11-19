@@ -47,6 +47,18 @@ export const api = {
   classify: (name: string) => inGas ? run<any>('apiClassify', name) : wrap(() => classify(name)),
   options: () => coastalConfig().types,
   boot: (id?: string) => inGas ? run<any>('apiBoot', id) : wrap(() => { const list = demo.list('RFI'), pick = id || list[0]?.documentId; return { who: { email: demoMe, roles: demo.rolesOf(demoMe), build: { env: 'PREVIEW', commit: 'local', version: 'demo' } }, list, v360: pick ? demo.get360(pick) : null }; }),
+  /** Tải file thật: Apps Script lưu vào Drive rồi gắn; xem trước: gắn link tạm trong trình duyệt. */
+  upload: (idem: string, id: string, f: File): Res<any> => new Promise((ok, bad) => {
+    if (f.size > 25e6) return bad(new Error('File quá 25 MB – dán link OneDrive thay vì tải lên'));
+    const rd = new FileReader();
+    rd.onerror = () => bad(new Error('Không đọc được file'));
+    rd.onload = () => {
+      const b64 = String(rd.result).split(',')[1] || '';
+      if (inGas) run<any>('apiUpload', idem, id, f.name, f.type, b64).then(ok, bad);
+      else api.act('attach', idem, { id, file: { name: f.name, url: URL.createObjectURL(f), source: 'LINK' } }).then(ok, bad);
+    };
+    rd.readAsDataURL(f);
+  }),
   /** 1 lần gọi: ghi + nhận lại danh sách và hồ sơ (chế độ xem trước dùng chính lõi nghiệp vụ) */
   act: (op: string, idem: string, a: any) => inGas ? run<any>('apiDo', op, idem, a) : wrap(() => {
     const m = me(); let r: any;

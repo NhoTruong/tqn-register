@@ -3,6 +3,7 @@ import { RegisterService, BizError } from '../core/service';
 import { coastalConfig } from '../core/config';
 import { classify } from '../core/classify';
 import { SheetsRepo, gasLock } from './sheetsRepo';
+import { syncRow } from './sheetSync';
 import type { Actor, DocType, FileRef, ProjectConfig } from '../core/types';
 
 declare const global: Record<string, unknown>;
@@ -45,9 +46,22 @@ global.apiDo = (op: string, idem: string, a: any) => safe(() => {
   else if (op === 'closeForwarded') r = s.closeForwarded(who, idem, a.id, a.note || '');
   else throw new BizError('INVALID', 'Thao tác lạ: ' + op);
   const id = (r && r.documentId) || a.id, t1 = Date.now();
-  const out = { result: r, list: s.list('RFI'), v360: id ? s.get360(id) : null, ms: { ghi: t1 - t0, doc: Date.now() - t1 } };
+  const v360 = id ? s.get360(id) : null;
+  let soRFI = '';
+  try { if (v360) soRFI = syncRow(store(), 'RFI', v360.doc, v360.revisions, who.email.split('@')[0]); } catch (e) { soRFI = 'Lỗi ghi sổ RFI: ' + (e as Error).message; }
+  const out = { result: r, list: s.list('RFI'), v360, soRFI, ms: { ghi: t1 - t0, doc: Date.now() - t1 } };
   console.log(JSON.stringify({ op, ms: out.ms, ok: true }));
   return out;
+});
+/** Tải file thật lên Drive (thư mục riêng của môi trường), tên theo mã + rev, trả FileRef để gắn vào hồ sơ. */
+global.apiUpload = (idem: string, id: string, name: string, mime: string, b64: string) => safe(() => {
+  const s = svc(), d = s.get360(id).doc;
+  if (b64.length > 34e6) throw new BizError('INVALID', 'File quá 25 MB – dán link OneDrive thay vì tải lên');
+  const p = props(), key = 'TQN6_FOLDER_' + __BUILD__.env; let fid = p.getProperty(key), folder: GoogleAppsScript.Drive.Folder;
+  try { folder = DriveApp.getFolderById(String(fid)); } catch (e) { folder = DriveApp.createFolder('TQN Register V6 – ' + __BUILD__.env + ' – file hồ sơ'); p.setProperty(key, folder.getId()); }
+  const rev = d.status === 'DRAFT' ? d.currentRev : d.currentRev + 1, ext = (name.match(/\.[a-z0-9]+$/i) || [''])[0];
+  const file = folder.createFile(Utilities.newBlob(Utilities.base64Decode(b64), mime || 'application/octet-stream', d.docNo + '_rev' + ('0' + rev).slice(-2) + '_' + name.replace(ext, '').slice(0, 60) + ext));
+  return (global.apiDo as any)('attach', idem, { id, file: { name: file.getName(), url: file.getUrl(), source: 'DRIVE' } });
 });
 global.apiBoot = (id?: string) => safe(() => {               // mở web: 1 lần gọi lấy đủ người dùng + danh sách + hồ sơ đầu
   const t0 = Date.now(), s = svc(), a = me(), list = s.list('RFI'), pick = id || (list[0] && list[0].documentId);

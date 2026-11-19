@@ -37,13 +37,18 @@ export default function App() {
   }
 
   /** Bấm là phản hồi ngay (trạng thái "đang lưu"), máy chủ trả kết quả + dữ liệu mới trong 1 lần gọi. */
-  async function act(label: string, op: string, idem: string, a: any) {
+  // Trạng thái đoán trước: đổi ngay trên màn hình, máy chủ trả về thì thay bằng số thật; lỗi thì hoàn lại.
+  const GUESS: Record<string, string> = { submit: 'SUBMITTED', closeForwarded: 'CLOSED' };
+  async function act(label: string, op: string, idem: string, a: any, file?: File) {
     if (busy) return; setBusy(true); setPending(label + '…'); const t0 = performance.now();
+    const oldDocs = docs, oldV = v360;
+    const st = op === 'reply' ? (a.code === '1' ? 'CLOSED' : a.code === '3' ? 'FORWARDED' : 'NEED_INFO') : GUESS[op];
+    if (st && a.id) { setDocs(ds => ds.map(d => d.documentId === a.id ? { ...d, status: st } : d)); if (v360?.doc.documentId === a.id) setV360({ ...v360, doc: { ...v360.doc, status: st }, guess: true }); }
     try {
-      const r = await api.act(op, idem, a);
+      const r = file ? await api.upload(idem, a.id, file) : await api.act(op, idem, a);
       setDocs(r.list); if (r.v360) { cache.set(r.v360.doc.documentId, r.v360); setSel(r.v360.doc.documentId); setV360(r.v360); }
-      setMsg([label + ' – xong (' + ((performance.now() - t0) / 1000).toFixed(1) + ' giây)', true]);
-    } catch (e: any) { setMsg([e.message, false]); }
+      setMsg([label + ' – xong (' + ((performance.now() - t0) / 1000).toFixed(1) + ' giây)' + (r.soRFI ? ' · sổ ' + r.soRFI : ''), !/^Lỗi|Không/.test(r.soRFI || '')]);
+    } catch (e: any) { setDocs(oldDocs); setV360(oldV); setMsg([e.message + ' – đã hoàn lại', false]); }
     finally { setBusy(false); setPending(''); }
   }
 
@@ -99,6 +104,7 @@ function Detail({ v, isRev, isNt, busy, act }: any) {
       <b>Bước tiếp theo: {d.status === 'DRAFT' ? 'gắn file rồi trình' : 'gắn file bổ sung cho rev' + String(draftRev).padStart(2, '0') + ' rồi trình lại'}</b>
       <div className="line"><input placeholder="Dán link file trên OneDrive / Drive (https://…)" value={file} onChange={e => setFile(e.target.value)} />
         <button disabled={busy || !file} onClick={() => (act('Gắn file', 'attach', idem.a + file.length, { id: d.documentId, file: { name: file.split('/').pop() || 'file', url: file.trim(), source: /1drv|sharepoint|onedrive/.test(file) ? 'ONEDRIVE' : /drive\.google/.test(file) ? 'DRIVE' : 'LINK' } }), setFile(''))}>Gắn</button></div>
+      <label className="up">⬆ Tải file từ máy (≤25 MB)<input type="file" disabled={busy} onChange={e => { const f = e.target.files?.[0]; if (f) act('Tải ' + f.name, 'attach', idem.a + '-up-' + f.name + f.size, { id: d.documentId }, f); e.target.value = ''; }} /></label>
       <div className="files">{(draft?.files || []).map((f: any) => <a key={f.url} href={f.url} target="_blank">📎 {f.name}</a>)}{!draft?.files?.length && <span className="muted">Chưa có file</span>}</div>
       <button className="pri" disabled={busy || !draft?.files?.length} onClick={() => act('Trình', 'submit', idem.s + '-' + draftRev, { id: d.documentId })}>{d.status === 'DRAFT' ? 'Trình CĐT' : 'Trình lại'}</button>
     </div>}
