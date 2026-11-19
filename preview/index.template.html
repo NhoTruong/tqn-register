@@ -45,6 +45,7 @@ td.num{text-align:right}
 .tab{padding:7px 12px;white-space:nowrap;cursor:pointer;border:0;background:none;font:inherit;color:var(--tx2);border-bottom:3px solid transparent}
 .tab.on{color:var(--navy);background:#fff;border-bottom-color:var(--teal);font-weight:600}
 .tab.tqn{color:var(--teal)}
+.tab[style]{box-shadow:inset 0 -3px 0 var(--tc)}.tab[style].on{border-bottom-color:var(--tc);background:#fff}
 .modal{position:fixed;inset:0;background:rgba(0,0,0,.35);display:none;align-items:center;justify-content:center;z-index:50}
 .modal.show{display:flex}
 .box{background:#fff;border-radius:10px;max-width:640px;width:92%;max-height:80vh;overflow:auto;padding:18px 20px;box-shadow:0 10px 40px rgba(0,0,0,.3)}
@@ -105,7 +106,7 @@ class Sheet{constructor(name,data){this.name=name;this.v=(data?data.values:[]).m
  appendRow(row){this.w('appendRow');const r=this.getLastRow()+1;row.forEach((x,j)=>this.set(r,j+1,x))}
  getMaxRows(){return Math.max(this.v.length,600)} getDataValidations(){return 1} getConditionalFormatRules(){return (this.cfr||[]).slice()} setConditionalFormatRules(r){this.cfr=r}
  setFrozenRows(){}setFrozenColumns(){}setColumnWidth(){}setColumnWidths(){}autoResizeColumns(){}
- hideSheet(){this.hidden=true;drawTabs()} activate(){showSheet(this.name)}setActiveRange(rg){hlRow=rg.r;showSheet(this.name)}}
+ hideSheet(){this.hidden=true;drawTabs()} getTabColor(){return this.tabc||null} setTabColor(c){this.tabc=c;drawTabs();return this} activate(){showSheet(this.name)}setActiveRange(rg){hlRow=rg.r;showSheet(this.name)}}
 const book=[],byName={};let STYLES={};let active=null,hlRow=0;
 const ss={getSheetByName:n=>byName[n]||null,insertSheet:n=>{const s=new Sheet(n);book.push(s);byName[n]=s;return s},setActiveSheet:s=>{s&&showSheet(s.name)},getSheets:()=>book.slice(),getName:()=>'HAUS QUANG NGAI- Register'};
 const menuItems=[];const props={};const triggers=[];const mails=[];let WEATHER_RAW=null;
@@ -176,7 +177,7 @@ function showSheet(name){active=name;const sh=byName[name];if(!sh)return;
   const sel=document.createElement('select');sel.className='ddsel';sel.innerHTML='<option value="">(trống)</option>'+ops.map(o=>'<option'+(String(sh.get(r,c))===o?' selected':'')+'>'+o.replace(/</g,'&lt;')+'</option>').join('');
   td.innerHTML='';td.appendChild(sel);sel.focus();sel.onchange=()=>{sel.onblur=null;sh.v[r-1]=sh.v[r-1]||[];while(sh.v[r-1].length<c)sh.v[r-1].push('');sh.v[r-1][c-1]=sel.value;const st=$('grid').scrollTop,sl=$('grid').scrollLeft;showSheet(name);$('grid').scrollTop=st;$('grid').scrollLeft=sl;toast('Đã chọn: '+(sel.value||'(trống)')+' – ô đổi màu theo lựa chọn')};sel.onblur=()=>{if(sel.parentNode){sel.onblur=null;const st=$('grid').scrollTop,sl=$('grid').scrollLeft;showSheet(name);$('grid').scrollTop=st;$('grid').scrollLeft=sl}}});
  const hl=$('hlr');if(hl)hl.scrollIntoView({block:'center'});hlRow=0;drawTabs()}
-function drawTabs(){$('tabs').innerHTML=book.filter(s=>!s.hidden).map(s=>'<button class="tab'+(s.name===active?' on':'')+(s.name.startsWith('TQN_')?' tqn':'')+'" data-n="'+s.name.replace(/"/g,'&quot;')+'">'+s.name+'</button>').join('');
+function drawTabs(){$('tabs').innerHTML=book.filter(s=>!s.hidden).map(s=>'<button class="tab'+(s.name===active?' on':'')+(s.name.startsWith('TQN_')?' tqn':'')+'" data-n="'+s.name.replace(/"/g,'&quot;')+'"'+(s.tabc?' style="--tc:'+s.tabc+'"':'')+'>'+s.name+'</button>').join('');
  $('tabs').querySelectorAll('.tab').forEach(b=>b.onclick=()=>showSheet(b.dataset.n))}
 function runFn(fn){try{window[fn]();if(fn==='tqnDailyJob'||/Remind|Daily/.test(fn))showMailsIfAny();if(active)showSheet(active)}catch(e){showModal('Lỗi',String(e.message||e))}}
 function showMailsIfAny(){if(!mails.length)return;const m=mails[mails.length-1];showModal('Thư nhắc hạn (xem thử, không gửi)','Đến: '+m.to+'\nTiêu đề: '+m.subject+'\n\n'+String(m.htmlBody||m.body||'').replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').slice(0,1500))}
@@ -186,7 +187,7 @@ function buildMenu(){const box=$('menus');const b=document.createElement('button
  const sch=document.createElement('button');sch.textContent='(Xem thử) Lịch đã bật';sch.onclick=()=>{d.classList.remove('show');showModal('Lịch tự chạy (xem thử)',triggers.length?triggers.map(t=>t.fn+(String(t.h).startsWith('mỗi')?' '+t.h:' lúc ~'+t.h+':00 hằng ngày')).join('\n')+'\n\nBản thật: Google tự chạy cả khi máy tắt.':'Chưa bật lịch nào.')};
  d.appendChild(document.createElement('hr'));d.appendChild(sch);
  const q=$('quick');[
-  ['Hằng ngày','#1B3F7A','#e8f0fe',[['refresh','Nhập & kiểm tra','tqnMenuRun',1],['board','Kiểm soát quy trình + AI','tqnMenuWorkflow'],['plus','Tạo hồ sơ / cấp mã','tqnMenuNewDoc'],['panel','Bảng điều khiển','tqnShowSidebar']]],
+  ['Hằng ngày','#1B3F7A','#e8f0fe',[['board','Quản lý hồ sơ','tqnMenuManager',1],['refresh','Nhập & kiểm tra','tqnMenuRun'],['board','Kiểm soát quy trình + AI','tqnMenuWorkflow'],['plus','Tạo hồ sơ / cấp mã','tqnMenuNewDoc'],['panel','Bảng điều khiển','tqnShowSidebar']]],
   ['Tự động','#0f7a6d','#e6f6f4',[['star','Bật tự động tất cả','tqnMenuSetupAll'],['clock','Trạng thái','tqnMenuAutoStatus']]],
   ['Thời tiết','#8a6100','#fef7e0',[['cloud','Cập nhật ngay','tqnMenuWeatherNow']]],
   ['Giao diện','#4d5a6b','#f1f3f6',[['palette','Dễ nhìn','tqnMenuTheme'],['undo','Trả lại gốc','tqnMenuRestoreTheme']]]
@@ -196,7 +197,7 @@ function buildMenu(){const box=$('menus');const b=document.createElement('button
 let sideSrc='',HTML={};
 const GSHIM='<script>window.google={script:{run:(function(){function mk(ok,fail){return new Proxy({},{get:function(_,k){if(k==="withSuccessHandler")return function(f){return mk(f,fail)};if(k==="withFailureHandler")return function(f){return mk(ok,f)};return function(){var a=arguments;setTimeout(function(){try{Promise.resolve(parent[k].apply(parent,a)).then(function(r){parent.afterCall(k);ok&&ok(r)},function(e){fail&&fail(e)})}catch(e){fail&&fail(e)}},0)}}})}return mk()})()},host:{close:function(){parent.closeDialog()}}};<\/script>';
 function withShim(src){return src.replace('<script>',GSHIM+'<script>')}
-function openDialog(name,title){$('dlgT').textContent=title||name;document.querySelector('#dlg .box').style.maxWidth=name==='NewDoc'?'560px':'1180px';$('dlgF').srcdoc=withShim(HTML[name]||'<p>Thiếu '+name+'</p>');$('dlg').classList.add('show')}
+function openDialog(name,title){$('dlgT').textContent=title||name;document.querySelector('#dlg .box').style.maxWidth=name==='NewDoc'?'560px':'1200px';$('dlgF').srcdoc=withShim(HTML[name]||'<p>Thiếu '+name+'</p>');$('dlg').classList.add('show')}
 function closeDialog(){$('dlg').classList.remove('show');if(active)showSheet(active)}
 window.afterCall=(k)=>{if(k==='tqnGoto'){closeDialog();if(innerWidth<800)closeSide()}};
 function openSide(){$('side').classList.add('show');
@@ -206,7 +207,7 @@ function closeSide(){$('side').classList.remove('show')}
 (async()=>{const data=await (await fetch('data.json')).json();WEATHER_RAW=data.weather_raw;STYLES=data.styles||{};HTML=data.html;sideSrc=HTML.Sidebar;
  data.sheets.forEach(s=>{const sh=new Sheet(s.name,s);book.push(sh);byName[s.name]=sh;ORIGINAL.add(s.name)});
  $('src').textContent='Bản chụp Register · '+data.sheets.length+' tab · ẩn '+data.pii_hidden.length+' tab có SĐT/email';
- onOpen();buildMenu();try{tqnEnsureConfig_();tqnApplyTheme()}catch(e){}showSheet('Sổ trình duyệt');toast('Đang xem ở chế độ Giao diện dễ nhìn · bấm "Trả lại gốc" để xem màu ban đầu');
+ onOpen();buildMenu();try{tqnEnsureConfig_();tqnApplyTheme()}catch(e){}showSheet('Sổ trình duyệt');if(!/nomgr/.test(location.hash))runFn('tqnMenuManager');toast('Đang xem ở chế độ Giao diện dễ nhìn · bấm "Trả lại gốc" để xem màu ban đầu');
  window.__ready=true})();
 </script>
 </body></html>

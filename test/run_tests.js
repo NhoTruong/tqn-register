@@ -227,6 +227,36 @@ console.log(`\nTQN_DATA ${n2} dòng · TQN_QC ${qcRows} dòng · TQN_NHAC_HAN ${
   const cdtC = sheets['RFA'].v[2].findIndex(x => /Chủ Đầu Tư/.test(String(x))) + 1;
   T('U61 RFA: khối Chủ đầu tư màu cam nhạt riêng', cdtC > 0 && (sheets['RFA'].sty['3,' + cdtC] || [])[0] === '#FBDDB8', 'cột ' + cdtC);
 }
+
+// ---- Bảng quản lý (Manager) ----
+{ const W0 = writes.length; const d = run('tqnManagerData()');
+  T('U62 Bảng quản lý: đủ số liệu (3 ô số + nhóm + danh sách + NCR)', d.rows.length > 50 && d.docs.length === 2 && typeof d.kpi.quaHan === 'number' && d.nhom[1] > 0 && d.nhom[2] >= 6, JSON.stringify(d.kpi) + ' nhóm=' + d.nhom.join('/'));
+  const r = d.rows.find(x => /RFA-COS-002-rev02/.test(x.so));
+  T('U63 RFA-COS-002 rev02 (Không duyệt) → bước 4, việc tiếp "Trình lại"', r && r.buoc === 4 && r.next === 'TRINH_LAI', r && (r.buocTen + ' / ' + r.next));
+  const w = d.rows.find(x => /RFI-002/.test(x.so));
+  T('U64 RFI-002 đang chờ CĐT, hạn 20/11 → Sắp hạn, việc tiếp "Soạn nhắc"', w && w.sla === 'SAP_HAN' && w.next === 'NHAC' && w.han === '20/11/2026', w && (w.sla + ' ' + w.han + ' ' + w.bic));
+  const c1 = d.rows.filter(x => x.buoc === 1).slice(0, 2).map(x => x.so);
+  const f = run('tqnMakeForms(' + JSON.stringify(c1) + ')');
+  T('U65 Tạo phiếu 2 hồ sơ → 2 phiếu có logo, số hiệu, ghi TQN_PHIEU', f.n === 2 && (f.html.match(/class="paper"/g) || []).length === 2 && f.html.includes(c1[0]) && sheets['TQN_PHIEU'].getLastRow() === 3);
+  const g1 = run('tqnMakeTransmittal(' + JSON.stringify(c1) + ')'), g2 = run('tqnMakeTransmittal(' + JSON.stringify([c1[0]]) + ')');
+  T('U66 Giao nhận: số TML tăng 001 → 002, ghi TQN_GIAO_NHAN, phiếu đánh dấu đã giao', /-TML-001$/.test(g1.so) && /-TML-002$/.test(g2.so) && sheets['TQN_PHIEU'].get(2, 9) !== '', g1.so + ' / ' + g2.so);
+  const d2 = run('tqnManagerData()');
+  T('U67 Sau tạo phiếu: việc tiếp đổi thành "Giao nhận", Chưa có phiếu giảm 2', d2.rows.find(x => x.so === c1[0]).next === 'GIAO_NHAN' && d2.kpi.chuaPhieu === d.kpi.chuaPhieu - 2, d.kpi.chuaPhieu + ' → ' + d2.kpi.chuaPhieu);
+  const t = run('tqnReminderText(' + JSON.stringify(w.so) + ')');
+  T('U68 Soạn nhắc: có số hiệu, hạn, gửi đúng bên (CĐT)', t.includes(w.so) && t.includes('20/11/2026') && /Kính gửi Chủ đầu tư/.test(t), t.split('\n')[0]);
+  T('U69 Bảng quản lý + phiếu + giao nhận không ghi tab gốc', !writes.slice(W0).some(w => ORIGINAL.has(w[0])), [...new Set(writes.slice(W0).map(w => w[0]))].join(', '));
+  // Đọc phiếu: AI trả JSON (mẫu đúng khuôn) → khớp sổ → chỉ ghi ô trống
+  const o = run('tqnFormParse_(' + JSON.stringify('{"so_hieu":"261116-COA-TBC-RFI-003 rev01","rev":"01","ben_phan_hoi":"CĐT","ket_qua":"Duyệt có ý kiến","ngay_phan_hoi":"19/11/2026","nguoi_ky":"","y_kien":"Dùng gạch mẫu số 2","do_tin_cay":"CAO","ghi_chu":""}') + ')');
+  ctx.__o = o; const m = run('tqnFormMatch_(__o)');
+  T('U70 Đọc phiếu: khớp RFI!8, đề xuất 3 ô (Tình trạng đã có → không đè; ngày + ý kiến CĐT trống → ghi)', m.found && m.at === 'RFI!8' && m.de_xuat.length === 3 && !m.de_xuat[0].ghi && m.de_xuat[1].ghi && m.de_xuat[2].ghi, JSON.stringify(m.de_xuat.map(p => [p.o, p.ghi])));
+  ALLOW.add('RFI'); const before = sheets['RFI'].get(8, m.de_xuat[0].col);
+  const ap = run('tqnAiApplyForm("RFI",8,' + JSON.stringify(m.de_xuat) + ')');
+  T('U71 Ghi vào: 2 ô trống được ghi (ngày là Date), ô Tình trạng đã có giữ nguyên', ap.ghi.length === 2 && ap.bo.length === 1 && sheets['RFI'].get(8, m.de_xuat[0].col) === before && sheets['RFI'].get(8, m.de_xuat[1].col) instanceof Date, JSON.stringify(ap));
+  T('U72 Câu trả lời AI thiếu số hiệu bị chặn', (() => { try { run('tqnFormParse_(\'{"ket_qua":"Đã duyệt"}\')'); return false; } catch (e) { return /số tham chiếu/.test(e.message); } })());
+  T('U73 Ghi vào tab không phải sổ chi tiết bị chặn', (() => { try { run('tqnAiApplyForm("Sổ trình duyệt",5,[])'); return false; } catch (e) { return true; } })());
+  ctx.__o = run('tqnFormParse_(\'{"so_hieu":"261116-COA-TBC-RFI-003","ngay_phan_hoi":"20/11/2026","y_kien":"x","ben_phan_hoi":"CĐT"}\')');
+  T('U74 Ghi lần 2 cùng phiếu: không đè ô vừa ghi', run('tqnFormMatch_(__o)').de_xuat.every(p => !p.ghi));
+}
 console.log(`KẾT QUẢ: ${pass} PASS / ${fail} FAIL`);
 fs.writeFileSync(path.join(__dirname, 'out_' + FIX.replace('.json', '') + '_QC.tsv'), sheets['TQN_QC'].v.map(r => r.map(x => x instanceof Date ? x.toISOString() : x).join('\t')).join('\n'));
 fs.writeFileSync(path.join(__dirname, 'out_' + FIX.replace('.json', '') + '_DATA.tsv'), sheets['TQN_DATA'].v.map(r => r.map(x => x instanceof Date ? x.toISOString().slice(0, 10) : x).join('\t')).join('\n'));

@@ -3,6 +3,8 @@
  */
 function onOpen() {
   SpreadsheetApp.getUi().createMenu('TQN Register')
+    .addItem('▣ Quản lý hồ sơ (bảng chính)', 'tqnMenuManager')
+    .addSeparator()
     .addItem('★ Bật tự động tất cả (bấm 1 lần)', 'tqnMenuSetupAll')
     .addItem('Trạng thái tự động', 'tqnMenuAutoStatus')
     .addItem('Tắt tự động tất cả', 'tqnMenuRemoveAll')

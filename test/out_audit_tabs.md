@@ -1,4 +1,4 @@
-# KIỂM TỪNG TAB – 2026-11-19T05:54:58.993Z
+# KIỂM TỪNG TAB – 2026-11-19T06:05:25.008Z
 
 ## 1. Sổ chi tiết đọc được
 Tab | Dòng | Có ngày trình | Có phản hồi TVGS | CĐT | TVTK | Có tình trạng | Ghép Sổ trình duyệt

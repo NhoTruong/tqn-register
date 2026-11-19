@@ -17,7 +17,7 @@ var TQN_PHIEU_DEFAULTS = [
   ['phieu_thu_muc', 'TQN_PHIEU', 'Tên thư mục Google Drive lưu PDF phiếu'],
   ['code_TML', '{yymmdd}-COA-TBC-TML-{nnn}', 'Mẫu mã phiếu giao nhận']
 ];
-var TQN_GROUPS = { SDS: 1, MSS: 1, MAS: 1, OTS: 1, SCH: 1, RFA: 1, REP: 1, HSE: 1, COS: 1, RFI: 2, RFC: 2, TML: 3 };
+var TQN_GROUPS = { SDS: 1, MSS: 1, MAS: 1, OTS: 1, SCH: 1, RFA: 1, REP: 1, HSE: 1, COS: 1, 'Thanh toán': 1, 'Mua sắm': 1, RFI: 2, RFC: 2, TML: 3, 'Thông báo': 3, 'Lấy ý kiến': 3, 'Công văn': 3, NCR: 4 };
 var TQN_GROUP_NAMES = ['', 'Trình duyệt', 'Hỏi · đổi', 'Giao nhận · văn bản', 'Hiện trường'];
 
 function tqnEnsurePhieuConfig_() {
@@ -151,14 +151,15 @@ function tqnMakeForms(sos) {
   var f = tqnFindRows_(sos), c = f.d.cfg, tz = tqnConfig_().timezone, now = new Date();
   var ngay = Utilities.formatDate(now, tz, 'dd/MM/yyyy');
   var han = Utilities.formatDate(new Date(now.getTime() + (parseInt(c.phieu_so_ngay_ph, 10) || 3) * 86400000), tz, 'dd/MM/yyyy');
-  var sh = tqnOwnSheet_(TQN.PREFIX + 'PHIEU', TQN_PHIEU_HEADERS), out = [];
+  var sh = tqnOwnSheet_(TQN.PREFIX + 'PHIEU', TQN_PHIEU_HEADERS), out = [], pdf = 0;
   f.list.forEach(function (x) {
     var h = tqnPhieuHtml_(x, c, ngay, han), url = tqnSavePdf_(h, String(x.so).replace(/[\\\/:*?"<>|]/g, '_'), c);
+    if (url) pdf++;
     sh.appendRow([now, Session.getActiveUser().getEmail(), x.loai, x.so, x.rev, x.nd, url, '', '']);
     out.push(h);
   });
   tqnAudit_('TAO_PHIEU', f.list.map(function (x) { return x.so; }).join(', '), { phieu: f.list.length });
-  return { n: f.list.length, html: TQN_PAPER_CSS + out.join('') };
+  return { n: f.list.length, pdf: pdf, html: TQN_PAPER_CSS + out.join('') };
 }
 /** Lập phiếu giao nhận: cấp số TML (khóa chống trùng như cấp mã), ghi TQN_GIAO_NHAN, đánh dấu phiếu. */
 function tqnMakeTransmittal(sos) {
@@ -180,7 +181,7 @@ function tqnMakeTransmittal(sos) {
       v.forEach(function (r, i) { if (want[tqnKeyOf_(r[0])]) ph.getRange(i + 2, 9).setValue(so); });
     }
     tqnAudit_('GIAO_NHAN', so, { ho_so: f.list.length });
-    return { so: so, n: f.list.length, html: TQN_PAPER_CSS + h };
+    return { so: so, n: f.list.length, pdf: url ? 1 : 0, html: TQN_PAPER_CSS + h };
   } finally { lock.releaseLock(); }
 }
 /** Nhãn gáy bìa hồ sơ. */
