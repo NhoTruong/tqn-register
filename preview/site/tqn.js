@@ -1042,12 +1042,12 @@ function tqnWorkflowData() {
   return { steps: TQN_WF_STEPS.slice(1), cols: cols, late: wf.late, total: wf.rows.length, at: Utilities.formatDate(new Date(), r.cfg.timezone, 'dd/MM/yyyy HH:mm') };
 }
 function tqnMenuWorkflow() {
-  var html = HtmlService.createHtmlOutputFromFile('Workflow').setWidth(1100).setHeight(640);
+  var html = tqnHtml_('Workflow').setWidth(1100).setHeight(640);
   SpreadsheetApp.getUi().showModalDialog(html, 'Quy trình hồ sơ – ai đang giữ việc');
 }
 function tqnMenuNewDoc() {
   tqnEnsureCodeConfig_();
-  var html = HtmlService.createHtmlOutputFromFile('NewDoc').setWidth(520).setHeight(560);
+  var html = tqnHtml_('NewDoc').setWidth(520).setHeight(560);
   SpreadsheetApp.getUi().showModalDialog(html, 'Tạo hồ sơ mới / Trình lại – cấp mã');
 }
 
@@ -1242,7 +1242,8 @@ function tqnSoftBg_(hex) {
   if (c.l >= 0.97) return hex;                                   // trắng
   if (c.s < 0.12) return c.l < 0.5 ? '#EEF1F5' : '#F7F8FA';      // xám / đen
   if (c.l < 0.35) return '#EEF1F5';                              // xanh than đậm (cột ngăn) → vạch xám rất nhạt
-  if (c.h >= 35 && c.h <= 65) return '#FFF5D6';                  // vàng
+  if (c.h > 50 && c.h <= 70) return '#FFF9DB';                   // vàng chanh (ô nhập liệu) → vàng kem
+  if (c.h >= 15 && c.h <= 50) return '#FDEFD9';                  // vàng cam / cam (dòng tiêu đề, dòng tổng) → cam kem
   return tqnHslToHex_(c.h, 0.62, 0.93);                          // màu khác → pastel cùng tông
 }
 function tqnSoftFont_(hex, bg) {
@@ -1254,7 +1255,11 @@ function tqnSoftFont_(hex, bg) {
   return hex;
 }
 
-function tqnThemeSheets_(cfg) { return [cfg.log_sheet].concat(cfg.detailSheets); }
+/** Tất cả tab của Register (trừ tab TQN_ của công cụ và tab đang ẩn). */
+function tqnThemeSheets_(cfg) {
+  return tqnSs_().getSheets().filter(function (sh) { return sh.getName().indexOf(TQN.PREFIX) !== 0 && !(sh.isSheetHidden && sh.isSheetHidden()); })
+    .map(function (sh) { return sh.getName(); });
+}
 
 function tqnThemeBackup_(sh, R, C) {
   var bk = tqnOwnSheet_(TQN_THEME_TAB, ['Tab', 'Dòng từ', 'Số dòng', 'Số cột', 'Nền', 'Chữ', 'Đậm', 'Thời điểm']);
@@ -1463,8 +1468,7 @@ function tqnMenuSetup() { tqnEnsureConfig_(); tqnEnsureWeatherConfig_(); tqnEnsu
 
 /* ---------------- Thanh bên ---------------- */
 function tqnShowSidebar() {
-  var t = HtmlService.createTemplateFromFile('Sidebar');
-  SpreadsheetApp.getUi().showSidebar(t.evaluate().setTitle('TQN Register'));
+  SpreadsheetApp.getUi().showSidebar(tqnHtml_('Sidebar').setTitle('TQN Register'));
 }
 
 /** Dữ liệu cho thanh bên (gọi từ google.script.run). */
@@ -1509,5 +1513,14 @@ function tqnGroupQC_(rows) {
     g[k].n++; g[k].pos.push(x[2]);
   });
   return order.map(function (k) { var o = g[k]; o.where = o.pos.join(', '); delete o.pos; return o; });
+}
+
+/** Lấy giao diện HTML: ưu tiên file HTML cùng tên trong dự án; nếu không có thì dùng bản gộp sẵn trong code (bản 1 file). */
+function tqnHtml_(name) {
+  try { return HtmlService.createHtmlOutputFromFile(name); }
+  catch (e) {
+    if (typeof TQN_HTML_EMBED !== 'undefined' && TQN_HTML_EMBED[name]) return HtmlService.createHtmlOutput(TQN_HTML_EMBED[name]);
+    throw e;
+  }
 }
 

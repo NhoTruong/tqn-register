@@ -95,7 +95,7 @@ class Sheet{constructor(name,data){this.name=name;this.v=(data?data.values:[]).m
  w(a){if(ORIGINAL.has(this.name)&&!WRITABLE.has(this.name))throw new Error('Chặn ghi vào tab gốc: '+this.name)} /* tab thời tiết là tab được phép ghi theo yêu cầu 6h */
  get(r,c){const x=(this.v[r-1]||[])[c-1];return x===undefined||x===null?'':x}
  set(r,c,x){while(this.v.length<r)this.v.push([]);const row=this.v[r-1];while(row.length<c)row.push('');row[c-1]=x}
- getName(){return this.name}
+ getName(){return this.name} isSheetHidden(){return !!this.hidden}
  getLastRow(){for(let i=this.v.length;i>0;i--)if(this.v[i-1].some(x=>x!==''&&x!==null))return i;return 0}
  getLastColumn(){let m=0;this.v.forEach(r=>{for(let j=r.length;j>m;j--)if(r[j-1]!==''&&r[j-1]!==null){m=j;break}});return m}
  getRange(r,c,nr=1,nc=1){return new Range(this,r,c,nr,nc)}

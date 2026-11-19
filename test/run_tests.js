@@ -41,7 +41,7 @@ class Sheet {
   setConditionalFormatRules(r) { this.cfr = r; }
 }
 const sheets = {}; Object.keys(fx).forEach(n => sheets[n] = new Sheet(n, fx[n]));
-const ss = { getSheetByName: n => sheets[n] || null, insertSheet: n => (sheets[n] = new Sheet(n)), setActiveSheet() { } };
+const ss = { getSheets: () => Object.values(sheets), getSheetByName: n => sheets[n] || null, insertSheet: n => (sheets[n] = new Sheet(n)), setActiveSheet() { } };
 const mails = [], props = {}, TRIG = [], sprops = {}, fetches = []; let AI_RES = () => ({ getResponseCode: () => 500, getContentText: () => '' });
 const ctx = {
   console, Date, JSON, Math, String, Object, Array, RegExp, Error, parseInt, isNaN,
