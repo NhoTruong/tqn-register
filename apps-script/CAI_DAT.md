@@ -40,3 +40,13 @@ Thêm 6 tab `TQN_*`. Tab gốc duy nhất được ghi là "Theo dõi thời ti�
 - Tắt nhắc hạn: **TQN Register → Tắt nhắc hạn hằng ngày**.
 - Xóa 5 tab `TQN_*` và project Apps Script.
 - Register không bị ảnh hưởng.
+
+
+## Cách nhanh nhất (bản 19/11)
+1. Mở Register → **Tệp → Lưu dưới dạng Google Trang tính**. File .xlsx gốc giữ nguyên.
+2. Trong bản vừa tạo: **Tiện ích mở rộng → Apps Script**.
+3. Dán `dist/TQN_Code.gs` vào `Code.gs`, rồi tạo thêm file HTML tên `Sidebar` và dán `dist/Sidebar.html` vào. Bấm Lưu.
+4. Tải lại Sheet → vào **TQN Register → ★ Bật tự động tất cả**. Lần đầu Google sẽ hỏi quyền, anh bấm Cho phép, xong bấm ★ thêm lần nữa.
+5. Mở tab TQN_CONFIG, đổi `weather_enabled` và `weather_license_ok` thành `Có`, rồi bấm ★ lại. Vào **Trạng thái tự động**, thấy đủ 3 dấu ✔ là xong.
+
+Hình minh họa từng bước: `dist/HUONG_DAN_CAI_TQN_REGISTER.png`.

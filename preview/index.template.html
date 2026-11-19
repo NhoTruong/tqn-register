@@ -110,7 +110,7 @@ const G={
  UrlFetchApp:{fetch:(url)=>({getResponseCode:()=>200,getContentText:()=>JSON.stringify(WEATHER_RAW)})},
  HtmlService:{createTemplateFromFile:()=>({evaluate:()=>({setTitle:()=>({})})}),createHtmlOutputFromFile:()=>({setTitle:()=>({})})},
  ScriptApp:{getProjectTriggers:()=>triggers.slice(),deleteTrigger:t=>{triggers.splice(triggers.indexOf(t),1)},
-  newTrigger:(fn)=>{const t={fn,h:null,getHandlerFunction:()=>fn};const b={timeBased:()=>b,atHour:h=>{t.h=h;return b},nearMinute:()=>b,everyDays:()=>b,inTimezone:()=>b,create:()=>{triggers.push(t);return t}};return b}},
+  newTrigger:(fn)=>{const t={fn,h:null,getHandlerFunction:()=>fn};const b={timeBased:()=>b,atHour:h=>{t.h=h;return b},nearMinute:()=>b,everyHours:n=>{t.h='mỗi '+n+' giờ';return b},everyDays:()=>b,inTimezone:()=>b,create:()=>{triggers.push(t);return t}};return b}},
  Logger:{log:()=>{}}
 };
 Object.assign(window,G);
@@ -140,9 +140,9 @@ function showMailsIfAny(){if(!mails.length)return;const m=mails[mails.length-1];
 function buildMenu(){const box=$('menus');const b=document.createElement('button');b.className='mbtn tqn';b.textContent='TQN Register ▾';
  const d=document.createElement('div');d.className='drop';d.style.left=b.offsetLeft+'px';
  menuItems.forEach(it=>{if(!it){d.appendChild(document.createElement('hr'));return}const x=document.createElement('button');x.textContent=it[0];x.onclick=()=>{d.classList.remove('show');runFn(it[1])};d.appendChild(x)});
- const sch=document.createElement('button');sch.textContent='(Xem thử) Lịch đã bật';sch.onclick=()=>{d.classList.remove('show');showModal('Lịch tự chạy (xem thử)',triggers.length?triggers.map(t=>t.fn+' lúc ~'+t.h+':00 hằng ngày').join('\n')+'\n\nBản thật: Google tự chạy cả khi máy tắt.':'Chưa bật lịch nào.')};
+ const sch=document.createElement('button');sch.textContent='(Xem thử) Lịch đã bật';sch.onclick=()=>{d.classList.remove('show');showModal('Lịch tự chạy (xem thử)',triggers.length?triggers.map(t=>t.fn+(String(t.h).startsWith('mỗi')?' '+t.h:' lúc ~'+t.h+':00 hằng ngày')).join('\n')+'\n\nBản thật: Google tự chạy cả khi máy tắt.':'Chưa bật lịch nào.')};
  d.appendChild(document.createElement('hr'));d.appendChild(sch);
- const q=$('quick');[['Bảng điều khiển','tqnShowSidebar',1],['Nhập & kiểm tra','tqnMenuRun',1],['Nhắc hạn hôm nay','tqnMenuRemindPreview'],['Thời tiết ngay','tqnMenuWeatherNow'],['Bật thời tiết 06:00','tqnMenuWeatherOn'],['Bật nhắc hạn 07:00','tqnMenuInstallDaily'],['Cài đặt','tqnMenuSetup']].forEach(([l,f,pr])=>{if(!menuItems.some(m=>m&&m[1]===f))return;const x=document.createElement('button');x.textContent=l;if(pr)x.className='pr';x.onclick=()=>runFn(f);q.appendChild(x)});
+ const q=$('quick');[['★ Bật tự động tất cả','tqnMenuSetupAll',1],['Trạng thái tự động','tqnMenuAutoStatus'],['Bảng điều khiển','tqnShowSidebar',1],['Nhập & kiểm tra','tqnMenuRun',1],['Nhắc hạn hôm nay','tqnMenuRemindPreview'],['Thời tiết ngay','tqnMenuWeatherNow'],['Bật thời tiết 06:00','tqnMenuWeatherOn'],['Bật nhắc hạn 07:00','tqnMenuInstallDaily'],['Cài đặt','tqnMenuSetup']].forEach(([l,f,pr])=>{if(!menuItems.some(m=>m&&m[1]===f))return;const x=document.createElement('button');x.textContent=l;if(pr)x.className='pr';x.onclick=()=>runFn(f);q.appendChild(x)});
  b.onclick=e=>{e.stopPropagation();d.style.left=b.offsetLeft+'px';d.classList.toggle('show')};box.appendChild(b);box.appendChild(d);document.addEventListener('click',()=>d.classList.remove('show'))}
 let sideSrc='';
 function openSide(){$('side').classList.add('show');

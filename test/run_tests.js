@@ -32,7 +32,7 @@ class Sheet {
 }
 const sheets = {}; Object.keys(fx).forEach(n => sheets[n] = new Sheet(n, fx[n]));
 const ss = { getSheetByName: n => sheets[n] || null, insertSheet: n => (sheets[n] = new Sheet(n)), setActiveSheet() { } };
-const mails = [], props = {};
+const mails = [], props = {}, TRIG = [];
 const ctx = {
   console, Date, JSON, Math, String, Object, Array, RegExp, Error, parseInt, isNaN,
   SpreadsheetApp: { getActiveSpreadsheet: () => ss, getUi: () => ({ alert() { }, ButtonSet: {} }) },
@@ -45,7 +45,8 @@ const ctx = {
   LockService: { getDocumentLock: () => ({ tryLock: () => true, releaseLock() { } }) },
   PropertiesService: { getDocumentProperties: () => ({ getProperty: k => props[k] || null, setProperty: (k, v) => { props[k] = v; } }) },
   MailApp: { sendEmail: o => mails.push(o) },
-  ScriptApp: { getProjectTriggers: () => [], newTrigger() { const b = { timeBased: () => b, atHour: () => b, everyDays: () => b, inTimezone: () => b, create: () => b }; return b; }, deleteTrigger() { } }
+  ScriptApp: { getProjectTriggers: () => TRIG.slice(), deleteTrigger(t) { TRIG.splice(TRIG.indexOf(t), 1); },
+    newTrigger(fn) { const t = { getHandlerFunction: () => fn }; const b = { timeBased: () => b, atHour: () => b, nearMinute: () => b, everyHours: () => b, everyDays: () => b, inTimezone: () => b, create: () => { TRIG.push(t); return t; } }; return b; } }
 };
 vm.createContext(ctx);
 const dir = path.join(__dirname, '..', 'apps-script');
@@ -98,6 +99,20 @@ T('U18 Mặc định không gửi mail', mails.length === 0);
 run('tqnDailyJob()'); const a1 = sheets['TQN_AUDIT'].getLastRow(); run('tqnDailyJob()');
 const lastAudit = sheets['TQN_AUDIT'].getRange(sheets['TQN_AUDIT'].getLastRow(), 4, 1, 1).getValues()[0][0];
 T('U19 Job hằng ngày chạy 2 lần cùng ngày thì lần 2 bỏ qua', String(lastAudit).startsWith('Bỏ qua'), lastAudit);
+// ---- Tự động 1 nút ----
+const cnt = () => TRIG.map(t => t.getHandlerFunction()).sort().join(',');
+const rep1 = run('tqnSetupAll()');
+T('U20 Bật tự động: có lịch mỗi giờ + nhắc hạn; thời tiết chưa đủ điều kiện thì KHÔNG bật và báo lý do', cnt() === 'tqnDailyJob,tqnHourlyJob' && rep1.some(x => x.startsWith('✖ Thời tiết')), cnt() + ' | ' + rep1.join(' / '));
+run('tqnSetupAll()');
+T('U21 Bấm lại không sinh lịch trùng', cnt() === 'tqnDailyJob,tqnHourlyJob', cnt());
+const setC = (k, v) => { const c = sheets['TQN_CONFIG']; for (let r = 2; r <= c.getLastRow(); r++) if (c.get(r, 1) === k) c.set(r, 2, v); };
+setC('weather_enabled', 'Có'); setC('weather_license_ok', 'Có');
+const rep2 = run('tqnSetupAll()');
+T('U22 Đủ điều kiện (GPS Coastal đã xác nhận + điều khoản) thì bật đủ 3 lịch', cnt() === 'tqnDailyJob,tqnHourlyJob,tqnWeatherJob', cnt() + ' | ' + rep2.join(' / '));
+T('U23 Trạng thái tự động báo đủ 3 dòng ✔', run('tqnAutoStatus()').every(x => x.startsWith('✔')), run('tqnAutoStatus()').join(' / '));
+run('tqnRemoveAll()');
+T('U24 Tắt tất cả: xóa hết lịch TQN', TRIG.length === 0, cnt());
+T('U25 Tự động mỗi giờ không ghi tab gốc', !writes.some(w => ORIGINAL.has(w[0])));
 const qcRows = sheets['TQN_QC'].getLastRow() - 1;
 console.log(`\nTQN_DATA ${n2} dòng · TQN_QC ${qcRows} dòng · TQN_NHAC_HAN ${sheets['TQN_NHAC_HAN'].getLastRow() - 1} dòng`);
 console.log(`KẾT QUẢ: ${pass} PASS / ${fail} FAIL`);
