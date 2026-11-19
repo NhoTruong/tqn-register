@@ -28,6 +28,7 @@ var TQN_DEFAULT_CONFIG = [
   ['remind_hour', '7', 'Giờ chạy nhắc hạn hằng ngày (giờ dự án). Apps Script có thể lệch ±15 phút'],
   ['remind_email_enabled', 'Không', 'Có = gửi mail; Không = chỉ ghi tab TQN_NHAC_HAN'],
   ['remind_recipients', '', 'Email nhận nhắc hạn, cách nhau dấu phẩy'],
+  ['han_mac_dinh', '4', 'Số ngày chờ phản hồi để tự tính hạn khi Sổ trình duyệt không có hạn (ngày trình + số ngày)'],
   ['detail_first_row', '6', 'Dòng dữ liệu đầu tiên của sổ chi tiết'],
   ['header_rows', '1-5', 'Vùng dòng tiêu đề để dò cột']
 ];

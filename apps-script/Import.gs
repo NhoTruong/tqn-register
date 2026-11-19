@@ -82,6 +82,12 @@ function tqnImport_(cfg) {
     r[12] = d.tvgsDate; r[13] = d.tvgsNote; r[14] = d.tvtkDate; r[15] = d.tvtkNote; r[16] = d.cdtDate; r[17] = d.cdtNote; r[18] = d.ret;
     r[19] = L.wf || ''; r[20] = L.to || ''; r[21] = L.due || ''; r[22] = L.reply || ''; r[23] = L.result || ''; r[24] = L.status || '';
     r[25] = L.link || ''; r[26] = d.matchHow || '';
+    // Không có hạn từ Sổ trình duyệt (sổ thiếu / chưa ghép) → tự tính: ngày trình + han_mac_dinh ngày (TQN_CONFIG)
+    if (!r[21] && tqnIsDate_(d.submitted)) {
+      var nd = parseInt(cfg.han_mac_dinh, 10); if (isNaN(nd)) nd = 4;
+      r[21] = new Date(d.submitted.getFullYear(), d.submitted.getMonth(), d.submitted.getDate() + nd);
+      r[26] = (r[26] ? r[26] + ' · ' : '') + 'Hạn tự tính (+' + nd + ' ngày)';
+    }
     put(cfg.project_id + '|DET|' + d.sheet + '|' + d.code.toUpperCase() + '|' + d.rev + '|' + tqnHash8_(d.subject), r);
   });
   src.logUnmatched.forEach(function (L) {
