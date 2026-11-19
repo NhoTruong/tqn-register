@@ -35,7 +35,7 @@ table.g td.rn{background:var(--bg);color:var(--tx2);text-align:center;position:s
 table.g tr.hl td{background:#fff3c4 !important}
 table.g td.ed{background:#eef8f7;cursor:text;outline:1px dashed var(--teal)}
 td.num{text-align:right}
-.dd{float:right;color:#8792a2;font-size:10px;margin-left:4px}td[data-dv]{cursor:pointer}td[data-dv]:hover{outline:1px solid #1B3F7A;outline-offset:-1px}.ddsel{width:100%;font:12px Inter,Arial;border:1px solid #1B3F7A;border-radius:4px}
+.dd{float:right;color:#8792a2;font-size:10px;margin-left:4px}td[data-dv]{cursor:pointer}.ddm{position:fixed;z-index:60;background:#fff;border:1px solid #d5dbe4;border-radius:10px;box-shadow:0 10px 28px rgba(15,23,42,.18);padding:5px;min-width:190px;max-height:320px;overflow:auto;font:13px Inter,Arial}.ddm button{display:flex;align-items:center;gap:8px;width:100%;border:0;background:none;padding:7px 10px;border-radius:7px;text-align:left;cursor:pointer;font:inherit;color:#1e293b}.ddm button:hover{background:#eef3fb}.ddm i{width:12px;height:12px;border-radius:3px;border:1px solid;flex:none}.ddm b{margin-left:auto;color:#1B3F7A}td[data-dv]:hover{outline:1px solid #1B3F7A;outline-offset:-1px}.ddsel{width:100%;font:12px Inter,Arial;border:1px solid #1B3F7A;border-radius:4px}
 .side{width:380px;border-left:1px solid var(--bd);display:none;flex-direction:column}
 .side.show{display:flex}
 .side .sh{display:flex;align-items:center;padding:8px 10px;border-bottom:1px solid var(--bd);font-weight:600}
@@ -2149,6 +2149,20 @@ function tqnAiApplyForm(sheet, row, items) {
 </script>
 <script>
 /* ===== AI trong bản xem thử: dùng chung câu lệnh/kiểm khuôn/lưu của Ai.gs, chỉ khác đường gọi (Claude của claude.ai thay cho API key) ===== */
+/* ===== Bản xem thử: AI dùng Claude của trang (thay khóa API), thời tiết dùng số liệu dự báo đã lưu ===== */
+let SAMPLE=null;(async()=>{try{SAMPLE=window.claude&&await window.claude.use('sample')}catch(e){SAMPLE=null}})();
+window.tqnAiBlocked_=function(){return SAMPLE?'':'Bản xem thử: mở trang trên claude.ai để dùng AI (bản thật dùng khóa API trong Apps Script).'};
+async function sampleText_(prompt,images){if(!SAMPLE)throw new Error(tqnAiBlocked_());
+ try{const r=await SAMPLE(prompt,images?{modelTier:'default',images:images}:{modelTier:'default'});return r.text}
+ catch(e){throw new Error(e.code==='rate_limited'?'AI đang bận, thử lại sau ít phút.':(e.code==='not_granted'?'Chưa cho phép trang dùng AI (bấm Cho phép khi được hỏi).':'Gọi AI lỗi: '+(e.message||e.code)))}}
+window.tqnAiBatch=async function(){const sh=tqnSs_().getSheetByName('TQN_QUY_TRINH');if(!sh||sh.getLastRow()<2)tqnRunAll_();
+ const s2=tqnSs_().getSheetByName('TQN_QUY_TRINH'),rows=s2.getRange(2,1,s2.getLastRow()-1,TQN_WF_HEADERS.length).getValues().filter(r=>r[11]||/^4/.test(r[0])).slice(0,5);
+ let ok=0;const err=[];for(const r of rows){try{await tqnAiAnalyze(r[13]);ok++}catch(e){err.push(r[3]+': '+e.message);if(/Chưa cho phép|bản xem thử/i.test(e.message))break}}
+ return 'AI đã đọc '+ok+'/'+rows.length+' hồ sơ quá hạn / bị trả về → tab TQN_AI (bản nháp).'+(err.length?' Lỗi: '+err[0]:'')};
+window.tqnAiReadForm=async function(b64,mime){if(/pdf/i.test(mime))throw new Error('Bản xem thử chỉ đọc ảnh (JPG/PNG). Bản thật đọc được cả PDF.');
+ const bin=atob(b64),u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);
+ const o=tqnFormParse_(await sampleText_(TQN_FORM_PROMPT,[new Blob([u],{type:mime||'image/jpeg'})]));const r=tqnFormMatch_(o);r.ai=o;tqnAudit_('AI_DOC_PHIEU',o.so_hieu,{tin_cay:o.do_tin_cay});return r};
+function previewWeatherOn_(){try{const c=byName.TQN_CONFIG;if(!c)return;for(let r=2;r<=c.getLastRow();r++){const k=c.get(r,1);if(k==='weather_enabled'||k==='weather_license_ok')c.set(r,2,'Có')}}catch(e){}}
 window.tqnAiAnalyze=async function(at){
  const rec=tqnAiRecord_(at),prompt=tqnAiPrompt_(rec);
  let sample=null;try{sample=window.claude&&await window.claude.use('sample')}catch(e){}
@@ -2189,9 +2203,7 @@ function showSheet(name){active=name;const sh=byName[name];if(!sh)return;
  $('grid').innerHTML=h+'</table>';
  if(edit)$('grid').querySelectorAll('td.ed').forEach(td=>td.addEventListener('blur',()=>{byName.TQN_CONFIG.set(+td.dataset.r,2,td.textContent.trim());toast('Đã sửa '+byName.TQN_CONFIG.get(+td.dataset.r,1))}));
  $('grid').querySelectorAll('td[data-fx]').forEach(td=>td.onclick=()=>toast('Ô này là công thức, tự tính theo cột Kết quả / Hạn – không chọn tay. Chọn ở cột có dấu ▾.'));
- $('grid').querySelectorAll('td[data-dv]').forEach(td=>td.onclick=()=>{const [r,c]=td.dataset.dv.split(',').map(Number),ops=dvAt(r,c);
-  const sel=document.createElement('select');sel.className='ddsel';sel.innerHTML='<option value="">(trống)</option>'+ops.map(o=>'<option'+(String(sh.get(r,c))===o?' selected':'')+'>'+o.replace(/</g,'&lt;')+'</option>').join('');
-  td.innerHTML='';td.appendChild(sel);sel.focus();sel.onchange=()=>{sel.onblur=null;sh.v[r-1]=sh.v[r-1]||[];while(sh.v[r-1].length<c)sh.v[r-1].push('');sh.v[r-1][c-1]=sel.value;const st=$('grid').scrollTop,sl=$('grid').scrollLeft;showSheet(name);$('grid').scrollTop=st;$('grid').scrollLeft=sl;toast('Đã chọn: '+(sel.value||'(trống)')+' – ô đổi màu theo lựa chọn')};sel.onblur=()=>{if(sel.parentNode){sel.onblur=null;const st=$('grid').scrollTop,sl=$('grid').scrollLeft;showSheet(name);$('grid').scrollTop=st;$('grid').scrollLeft=sl}}});
+ $('grid').querySelectorAll('td[data-dv]').forEach(td=>td.onclick=(ev)=>{ev.stopPropagation();const [r,c]=td.dataset.dv.split(',').map(Number);openDD(td,sh,name,dvAt(r,c))});
  const hl=$('hlr');if(hl)hl.scrollIntoView({block:'center'});hlRow=0;drawTabs()}
 function drawTabs(){$('tabs').innerHTML=book.filter(s=>!s.hidden).map(s=>'<button class="tab'+(s.name===active?' on':'')+(s.name.startsWith('TQN_')?' tqn':'')+'" data-n="'+s.name.replace(/"/g,'&quot;')+'"'+(s.tabc?' style="--tc:'+s.tabc+'"':'')+'>'+s.name+'</button>').join('');
  $('tabs').querySelectorAll('.tab').forEach(b=>b.onclick=()=>showSheet(b.dataset.n))}
@@ -2214,6 +2226,19 @@ let sideSrc='',HTML={};
 const GSHIM='<script>window.google={script:{run:(function(){function mk(ok,fail){return new Proxy({},{get:function(_,k){if(k==="withSuccessHandler")return function(f){return mk(f,fail)};if(k==="withFailureHandler")return function(f){return mk(ok,f)};return function(){var a=arguments;setTimeout(function(){try{Promise.resolve(parent[k].apply(parent,a)).then(function(r){parent.afterCall(k);ok&&ok(r)},function(e){fail&&fail(e)})}catch(e){fail&&fail(e)}},0)}}})}return mk()})()},host:{close:function(){parent.closeDialog()}}};<\/script>';
 function withShim(src){return src.replace('<script>',GSHIM+'<script>')}
 function openDialog(name,title){$('dlgT').textContent=title||name;document.querySelector('#dlg .box').style.maxWidth=name==='NewDoc'?'560px':'1200px';$('dlgF').srcdoc=withShim(HTML[name]||'<p>Thiếu '+name+'</p>');$('dlg').classList.add('show')}
+
+/* Danh sách chọn tự bung ra ngay khi bấm 1 lần (thay cho <select> phải bấm 2 lần) */
+function closeDD(){const m=document.getElementById('ddm');if(m)m.remove()}
+function openDD(td,sh,name,ops){closeDD();const [r,c]=td.dataset.dv.split(',').map(Number),cur=String(sh.get(r,c));
+ const m=document.createElement('div');m.id='ddm';m.className='ddm';
+ const pick=v=>{sh.v[r-1]=sh.v[r-1]||[];while(sh.v[r-1].length<c)sh.v[r-1].push('');sh.v[r-1][c-1]=v;closeDD();const g=$('grid'),st=g.scrollTop,sl=g.scrollLeft;showSheet(name);g.scrollTop=st;g.scrollLeft=sl;toast('Đã chọn: '+(v||'(trống)')+' – ô đổi màu theo lựa chọn')};
+ [''].concat(ops).forEach(o=>{const b=document.createElement('button');const col=(typeof tqnOptColor_==='function'&&o)?tqnOptColor_(o):null;
+  b.innerHTML='<i style="background:'+(col?col[1]:'#fff')+';border-color:'+(col?col[2]:'#cbd5e1')+'"></i>'+(o?o.replace(/</g,'&lt;'):'<span style="color:#94a3b8">(để trống)</span>')+(o===cur?' <b>✓</b>':'');
+  b.onclick=e=>{e.stopPropagation();pick(o)};m.appendChild(b)});
+ document.body.appendChild(m);const R=td.getBoundingClientRect();let top=R.bottom+2,left=R.left;
+ const h=m.offsetHeight,w=m.offsetWidth;if(top+h>innerHeight-8)top=Math.max(8,R.top-h-2);if(left+w>innerWidth-8)left=innerWidth-w-8;m.style.top=top+'px';m.style.left=left+'px'}
+document.addEventListener('click',e=>{if(!e.target.closest||!e.target.closest('#ddm'))closeDD()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeDD()});document.addEventListener('scroll',e=>{if(!(e.target.closest&&e.target.closest('#ddm')))closeDD()},true);
 function closeDialog(){$('dlg').classList.remove('show');if(active)showSheet(active)}
 $('dlg').addEventListener('click',e=>{if(e.target.id==='dlg'){closeDialog();toast('Đã đóng bảng – bấm ô có ▾ để chọn. Mở lại: nút "Quản lý hồ sơ"')}});
 window.afterCall=(k)=>{if(k==='tqnGoto'){closeDialog();if(innerWidth<800)closeSide()}};
@@ -2224,7 +2249,7 @@ function closeSide(){$('side').classList.remove('show')}
 (async()=>{const data=JSON.parse(document.getElementById('tqn-data').textContent);WEATHER_RAW=data.weather_raw;STYLES=data.styles||{};HTML=data.html;sideSrc=HTML.Sidebar;
  data.sheets.forEach(s=>{const sh=new Sheet(s.name,s);book.push(sh);byName[s.name]=sh;ORIGINAL.add(s.name)});
  $('src').textContent='Bản chụp Register · '+data.sheets.length+' tab · ẩn '+data.pii_hidden.length+' tab có SĐT/email';
- onOpen();buildMenu();try{tqnEnsureConfig_();tqnApplyTheme()}catch(e){}showSheet('Sổ trình duyệt');if(!/nomgr/.test(location.hash))runFn('tqnMenuManager');toast('Đang xem ở chế độ Giao diện dễ nhìn · bấm "Trả lại gốc" để xem màu ban đầu');
+ onOpen();buildMenu();try{tqnEnsureConfig_();tqnEnsureWeatherConfig_();previewWeatherOn_();tqnApplyTheme()}catch(e){}showSheet('Sổ trình duyệt');if(!/nomgr/.test(location.hash))runFn('tqnMenuManager');toast('Đang xem ở chế độ Giao diện dễ nhìn · bấm "Trả lại gốc" để xem màu ban đầu');
  window.__ready=true})().catch(e=>{const b=document.getElementById('err');b.style.display='block';b.textContent='Lỗi khởi động: '+(e.message||e)});
 </script>
 </body></html>
