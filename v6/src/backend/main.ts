@@ -7,14 +7,15 @@ import type { Actor, DocType, FileRef, ProjectConfig } from '../core/types';
 
 declare const global: Record<string, unknown>;
 declare const __BUILD__: { commit: string; builtAt: string; env: string; version: string };
+declare const __ENVCFG__: { storeId: string; members: Record<string, string[]> };
 
 function props() { return PropertiesService.getScriptProperties(); }
 function cfg(): ProjectConfig {
   const raw = props().getProperty('TQN6_MEMBERS');                // {"email":["ROLE"]} – không chứa mật khẩu/khóa
-  return coastalConfig(raw ? JSON.parse(raw) : {});
+  return coastalConfig(raw ? JSON.parse(raw) : (__ENVCFG__.members as ProjectConfig['members']));
 }
 function store(): GoogleAppsScript.Spreadsheet.Spreadsheet {
-  const id = props().getProperty('TQN6_STORE_ID');                 // file lưu theo môi trường; thiếu thì dùng file gắn script
+  const id = props().getProperty('TQN6_STORE_ID') || __ENVCFG__.storeId;   // file lưu theo môi trường (DEV/STAGING/PROD)
   return id ? SpreadsheetApp.openById(id) : SpreadsheetApp.getActive();
 }
 function me(): Actor { return { email: (Session.getActiveUser().getEmail() || Session.getEffectiveUser().getEmail()).toLowerCase(), kind: 'HUMAN' }; }

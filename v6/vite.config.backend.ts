@@ -6,6 +6,6 @@ const sh = (c: string) => { try { return execSync(c).toString().trim(); } catch 
 const BUILD = { commit: sh('git rev-parse --short HEAD') + (sh('git status --porcelain').split('\n').filter(l => l && !l.includes('.timestamp-')).length ? '-dirty' : ''), builtAt: new Date().toISOString(), env: process.env.TQN_ENV || 'DEV', version: process.env.npm_package_version || '0' };
 export default defineConfig({
   plugins: [gas()],
-  define: { __BUILD__: JSON.stringify(BUILD) },
+  define: { __BUILD__: JSON.stringify(BUILD), __ENVCFG__: JSON.stringify({ storeId: process.env.TQN_STORE_ID || '', members: JSON.parse(process.env.TQN_MEMBERS || '{}') }) },
   build: { rollupOptions: { input: 'src/backend/main.ts', output: { dir: 'gas/dist', entryFileNames: 'main.js' } }, emptyOutDir: false, minify: false },
 });
