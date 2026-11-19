@@ -142,14 +142,14 @@ function drawCfg(){var L={phieu_ben_gui:'Ban hành bởi – Công ty',phieu_gui
 function legend(){var s=[['t-red','Quá hạn'],['t-org','Bị trả về / Không duyệt'],['t-amb','Sắp hạn'],['t-gry','Còn hạn / chưa trình'],['t-grn','Đã xong']],p=[['nt','Nhà thầu'],['tv','TVGS'],['tk','TVTK'],['cdt','CĐT']];
  $('legend').innerHTML='<span>Hạn:</span>'+s.map(function(x){return '<span class="tag '+x[0]+'">'+x[1]+'</span>'}).join('')+'<span style="margin-left:10px">Bên đang giữ việc:</span>'+p.map(function(x){return '<span class="p p-'+x[0]+'">'+x[1]+'</span>'}).join('')}
 function render(d){D=d;$('at').textContent='Cập nhật '+d.at+' · đọc từ Register, không sửa dữ liệu gốc';nav();drawToday();drawAll();drawGN();drawVB();drawCfg();legend()}
-function load(msg){call('tqnManagerData',[],render,msg)}
+function load(msg,full){call('tqnManagerData',[!full],render,msg)}
 function chosen(){var s=Object.keys(SEL);if(!s.length){toast('Đánh dấu ô vuông ở đầu dòng hồ sơ trước.');return null}return s}
 function paper(t,html,sub){openM(t,'<iframe id="pf" style="width:100%;height:68vh;border:1px solid var(--line);border-radius:8px;background:#f1f5f9"></iframe>'+(sub?'<p class="note">'+sub+'</p>':''),'<button class="sm pri" onclick="var f=document.getElementById(\'pf\');f.contentWindow.focus();f.contentWindow.print()">In / Lưu PDF</button>');
  var f=$('pf');f.srcdoc='<html><head><meta charset="utf-8"></head><body style="margin:12px;background:#f1f5f9">'+html+'</body></html>'}
 function one(kind,so){SEL={};SEL[so]=1;if(kind==='TAO_PHIEU')act('phieu');else if(kind==='GIAO_NHAN')act('gn');else if(kind==='NHAC')act('nhac',so);else if(kind==='TRINH_LAI')act('rev')}
 function act(a,arg){$('menu').classList.remove('show');var s;
- if(a==='nhap'){load('Đang đọc Register và kiểm tra…');setTimeout(function(){toast('Đã nhập và kiểm. Register gốc không bị sửa.')},400);return}
- if(a==='lammoi'){load('Đang làm mới…');return}
+ if(a==='nhap'){load('Đang đọc Register và kiểm tra…',true);setTimeout(function(){toast('Đã nhập và kiểm. Register gốc không bị sửa.')},400);return}
+ if(a==='lammoi'){load('Đang làm mới…',true);return}
  if(a==='bochon'){SEL={};drawToday();drawAll();return}
  if(a==='phieu'){if(!(s=chosen()))return;call('tqnMakeForms',[s],function(r){SEL={};paper('Phiếu vừa tạo ('+r.n+')',r.html,'Đã ghi vào TQN_PHIEU'+(r.pdf?' và lưu '+r.pdf+' PDF vào thư mục Drive "'+esc(D.cfg.phieu_thu_muc)+'"':' (chưa lưu PDF vào Drive – bấm "In / Lưu PDF" để lưu)')+'.');load()},'Đang tạo phiếu…');return}
  if(a==='gn'){if(!(s=chosen()))return;call('tqnMakeTransmittal',[s],function(r){SEL={};paper('Phiếu giao nhận '+r.so,r.html,'Đã cấp số '+esc(r.so)+' cho '+r.n+' hồ sơ, ghi vào TQN_GIAO_NHAN.');load()},'Đang lập phiếu giao nhận…');return}

@@ -39,9 +39,16 @@ function tqnReadOwn_(name, headers) {
 function tqnKeyOf_(so) { return tqnCleanCode_(so).toUpperCase().replace(/\s+/g, ''); }
 
 /** Mọi dữ liệu cho bảng quản lý. */
-function tqnManagerData() {
+/** nhanh = true: dùng bảng TQN_QUY_TRINH đã có (tự cập nhật mỗi giờ / lần "Nhập và kiểm" gần nhất), không đọc lại 32 tab. */
+function tqnWfFromSheet_() {
+  var sh = tqnSs_().getSheetByName(TQN.PREFIX + 'QUY_TRINH');
+  if (!sh || sh.getLastRow() < 2) return null;
+  return { rows: sh.getRange(2, 1, sh.getLastRow() - 1, TQN_WF_HEADERS.length).getValues() };
+}
+function tqnManagerData(nhanh) {
   tqnEnsurePhieuConfig_();
-  var r = tqnRunAll_(), wf = r.wf, tz = r.cfg.timezone;
+  var wf = nhanh ? tqnWfFromSheet_() : null, tz;
+  if (wf) tz = tqnConfig_().timezone; else { var r = tqnRunAll_(); wf = r.wf; tz = r.cfg.timezone; }
   var now = new Date(), t0 = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   var phieu = {}, gn = {};
   tqnReadOwn_(TQN.PREFIX + 'PHIEU', TQN_PHIEU_HEADERS).forEach(function (p) { phieu[tqnKeyOf_(p[3])] = { pdf: p[6], in: p[7], gn: p[8] }; });
@@ -141,7 +148,7 @@ function tqnSavePdf_(html, name, c) {
   } catch (e) { return ''; }
 }
 function tqnFindRows_(sos) {
-  var d = tqnManagerData(), want = {};
+  var d = tqnManagerData(true), want = {};
   sos.forEach(function (s) { want[tqnKeyOf_(s)] = 1; });
   return { d: d, list: d.rows.filter(function (x) { return want[tqnKeyOf_(x.so)]; }) };
 }

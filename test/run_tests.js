@@ -257,6 +257,14 @@ console.log(`\nTQN_DATA ${n2} dòng · TQN_QC ${qcRows} dòng · TQN_NHAC_HAN ${
   ctx.__o = run('tqnFormParse_(\'{"so_hieu":"261116-COA-TBC-RFI-003","ngay_phan_hoi":"20/11/2026","y_kien":"x","ben_phan_hoi":"CĐT"}\')');
   T('U74 Ghi lần 2 cùng phiếu: không đè ô vừa ghi', run('tqnFormMatch_(__o)').de_xuat.every(p => !p.ghi));
 }
+
+// ---- Tạo phiếu / giao nhận / nhắc không đọc lại 32 tab ----
+{ run('tqnManagerData()'); let n = 0; const orig = ctx.tqnRunAll_; ctx.tqnRunAll_ = function () { n++; return orig.apply(this, arguments); };
+  const so = run('tqnManagerData(true)').rows.filter(x => x.buoc === 1).slice(0, 1).map(x => x.so);
+  const t0 = Date.now(); run('tqnMakeForms(' + JSON.stringify(so) + ')'); run('tqnMakeTransmittal(' + JSON.stringify(so) + ')'); run('tqnReminderText(' + JSON.stringify(so[0]) + ')'); const ms = Date.now() - t0;
+  ctx.tqnRunAll_ = orig;
+  T('U77 Tạo phiếu + giao nhận + soạn nhắc: không đọc lại toàn bộ Register (0 lần nhập lại)', n === 0, 'nhập lại ' + n + ' lần, ' + ms + ' ms');
+}
 console.log(`KẾT QUẢ: ${pass} PASS / ${fail} FAIL`);
 fs.writeFileSync(path.join(__dirname, 'out_' + FIX.replace('.json', '') + '_QC.tsv'), sheets['TQN_QC'].v.map(r => r.map(x => x instanceof Date ? x.toISOString() : x).join('\t')).join('\n'));
 fs.writeFileSync(path.join(__dirname, 'out_' + FIX.replace('.json', '') + '_DATA.tsv'), sheets['TQN_DATA'].v.map(r => r.map(x => x instanceof Date ? x.toISOString().slice(0, 10) : x).join('\t')).join('\n'));
