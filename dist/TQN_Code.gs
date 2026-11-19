@@ -1842,9 +1842,17 @@ function tqnKhoiPhucSoTrinhDuyet() {
   var v = TQN_SO_TD_CHUP.v.map(function (r) { return r.map(function (x) { return (x && typeof x === 'object' && x.__d) ? new Date(x.__d) : x; }); });
   sh.getRange(1, 1, v.length, v[0].length).setValues(v);
   TQN_SO_TD_CHUP.f.forEach(function (x) { sh.getRange(x[0], x[1]).setFormula(x[2]); });
-  sh.getRange(1, 1, 3, 4).setNote(null);
+  tqnDinhDangNgaySoTD();
   tqnAudit_('KHOI_PHUC_SO_TD', 'Tạo tab Sổ trình duyệt từ bản chụp 19/11 10:28 (' + v.length + ' dòng, ' + TQN_SO_TD_CHUP.f.length + ' công thức)', {});
   return v.length;
+}
+
+/** Định dạng ngày cho các cột Ngày trình / Hạn phản hồi / Ngày phản hồi của tab Sổ trình duyệt (công thức I+J ra số nếu cột chưa định dạng ngày). */
+function tqnDinhDangNgaySoTD() {
+  var sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Sổ trình duyệt'); if (!sh) return 0;
+  var n = Math.max(sh.getMaxRows() - 22, 1);
+  ['I', 'K', 'L'].forEach(function (c) { sh.getRange(c + '23:' + c + (22 + n)).setNumberFormat('dd/MM/yyyy'); });
+  return n;
 }
 
 // ===== Auto.gs =====
