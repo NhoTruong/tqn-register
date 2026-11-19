@@ -41,6 +41,9 @@ Quy tắc: báo việc còn lại là liệt kê HẾT, tự khai đủ, đối 
 30. Màn xem nhật ký/audit cho ADMIN
 31. Lint, CI GitHub Actions, diễn tập rollback thật
 32. Adapter PostgreSQL / ASP.NET Core
+33. Nhập dữ liệu RFI/RFA hiện có từ sổ PROD vào V6 (khai thêm 23:15)
+
+Giao ChatGPT: xem docs/GIAO_CHATGPT.md
 
 ## Đã bỏ theo ý anh
 - Email nhắc 7h (19/11 23:03)
