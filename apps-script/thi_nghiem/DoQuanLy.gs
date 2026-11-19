@@ -63,3 +63,5 @@ function tqnDoB1B2ADEV() {
   tqnSoSanh_('A_cache_trung', function () { return tqnQlTheoMaA_(tqnQlTheoMaB1_); }, 20, goc);
   var c0 = Date.now(); tqnConfig_(); tqnQlMau_(); Logger.log(JSON.stringify({ cach: 'chi_doc_cau_hinh', ms: Date.now() - c0 }));
 }
+
+/* [DEV] Đếm lý do lọc tqnDocsData – xem issue #1 comment 00:05 (code đầy đủ đã chạy trên bản DEV) */
