@@ -88,6 +88,7 @@ function tqnApplyTheme() {
   });
   try { tqnApplyStatusColors(); } catch (e) { }
   try { tqnApplyOptionColors(); } catch (e) { }
+  try { tqnApplyTabColors(); } catch (e) { }
   tqnAudit_('GIAO_DIEN', 'Áp giao diện dễ nhìn', { o_doi: total, tab: out.length });
   return { total: total, tabs: out };
 }
@@ -103,6 +104,7 @@ function tqnRestoreTheme() {
     rg.setBackgrounds(JSON.parse(r[4])); rg.setFontColors(JSON.parse(r[5])); rg.setFontWeights(JSON.parse(r[6]));
     done[r[0]] = 1;
   });
+  try { tqnRestoreTabColors(); } catch (e) { }
   tqnAudit_('GIAO_DIEN', 'Trả lại giao diện gốc', { tab: Object.keys(done).length });
   return Object.keys(done).length;
 }
@@ -158,4 +160,44 @@ function tqnApplyOptionColors() {
   });
   tqnAudit_('MAU_O_CHON', cols.join(', '), { them: added });
   return { added: added, cols: cols };
+}
+
+
+/* ---------------- Màu thanh tab theo nhóm (cùng màu bảng điều khiển) ---------------- */
+var TQN_TAB_GROUPS = [
+  { ten: 'Sổ tổng', mau: '#1B3F7A', tabs: ['Sổ trình duyệt'] },
+  { ten: 'Trình duyệt', mau: '#0F6E66', tabs: ['SD', 'M0S', 'MAT', 'OTS', 'OTS-MEP', 'SCH', 'RFA', 'CRP- Báo cáo', 'Hồ sơ an toàn'] },
+  { ten: 'Hỏi · đổi', mau: '#2563EB', tabs: ['RFI', 'RFC'] },
+  { ten: 'Giao nhận · văn bản', mau: '#D97706', tabs: ['TRN-GNHS', 'CV-TB đi', 'CV-TB đến', 'Theo dõi phát hành thiết kế'] },
+  { ten: 'Hiện trường', mau: '#7C3AED', tabs: ['NCR', 'Chỉ thị - Phát sinh', 'Chỉ thị NT - Phát sinh', 'Hiện trường', 'Hao hụt bê tông', 'Cấp phối bê tông', 'Theo dõi thời tiết', 'Danh mục thẩm tra BPTC'] },
+  { ten: 'Kế hoạch · nhân sự', mau: '#94A3B8', tabs: ['SCH-Kế hoạch', 'Lịch họp', 'Cập nhật kế hoạch công việc', 'DS BCH', 'DS Trực CN T4', 'DS Trực CN T7', 'Data', 'Check'] },
+  { ten: 'Tool TQN', mau: '#334155', prefix: 'TQN_' }
+];
+function tqnTabColorOf_(name) {
+  var n = String(name).trim();
+  for (var i = 0; i < TQN_TAB_GROUPS.length; i++) {
+    var g = TQN_TAB_GROUPS[i];
+    if (g.prefix && n.indexOf(g.prefix) === 0) return g.mau;
+    if (g.tabs && g.tabs.some(function (t) { return t.trim() === n; })) return g.mau;
+  }
+  return '';
+}
+/** Chỉ đổi MÀU tab (không đổi tên, thứ tự, dữ liệu). Lưu màu gốc để trả lại. */
+function tqnApplyTabColors() {
+  var props = PropertiesService.getDocumentProperties(), goc = {};
+  try { goc = JSON.parse(props.getProperty('tqn_tab_goc') || '{}'); } catch (e) { goc = {}; }
+  var n = 0;
+  tqnSs_().getSheets().forEach(function (sh) {
+    var c = tqnTabColorOf_(sh.getName()); if (!c) return;
+    if (!(sh.getName() in goc)) goc[sh.getName()] = sh.getTabColor() || '';
+    sh.setTabColor(c); n++;
+  });
+  props.setProperty('tqn_tab_goc', JSON.stringify(goc));
+  return n;
+}
+function tqnRestoreTabColors() {
+  var props = PropertiesService.getDocumentProperties(), goc = {};
+  try { goc = JSON.parse(props.getProperty('tqn_tab_goc') || '{}'); } catch (e) { goc = {}; }
+  tqnSs_().getSheets().forEach(function (sh) { if (sh.getName() in goc) sh.setTabColor(goc[sh.getName()] || null); });
+  props.setProperty('tqn_tab_goc', '{}');
 }

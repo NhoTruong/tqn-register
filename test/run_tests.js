@@ -39,6 +39,7 @@ class Sheet {
   getMaxRows() { return Math.max(this.v.length, 1000); }
   getConditionalFormatRules() { return (this.cfr || []).slice(); }
   setConditionalFormatRules(r) { this.cfr = r; }
+  getTabColor() { return this.tab || null; } setTabColor(c) { this.tab = c; return this; }
 }
 const sheets = {}; Object.keys(fx).forEach(n => sheets[n] = new Sheet(n, fx[n]));
 const ss = { getSheets: () => Object.values(sheets), getSheetByName: n => sheets[n] || null, insertSheet: n => (sheets[n] = new Sheet(n)), setActiveSheet() { } };
@@ -192,6 +193,28 @@ const norm = o => JSON.stringify(Object.fromEntries(Object.entries(o).map(([k, v
 T('U50 Trả lại giao diện gốc: màu nền / chữ / đậm y như ban đầu', [...ORIGINAL].every((n, i) => norm(sheets[n].sty) === norm(JSON.parse(snapS)[i])));
 const qcRows = sheets['TQN_QC'].getLastRow() - 1;
 console.log(`\nTQN_DATA ${n2} dòng · TQN_QC ${qcRows} dòng · TQN_NHAC_HAN ${sheets['TQN_NHAC_HAN'].getLastRow() - 1} dòng`);
+
+// ---- Sửa 19/11: ngày trình RFI/RFA/RFC + sổ văn bản ----
+{ const imp = run('(function(){return tqnImport_(tqnConfig_());})()');
+  const rf = imp.src.details.filter(x => /^RF/.test(x.sheet) && !/[Tt]hử/.test(x.subject));   // bỏ dòng do test cấp mã ghi thêm
+  T('U51 RFI/RFA/RFC đọc được ngày trình ở cột "Ngày trình duyệt" (10/10)', rf.length === 10 && rf.every(x => x.submitted instanceof Date), rf.filter(x => x.submitted instanceof Date).length + '/' + rf.length + ' ' + rf.filter(x => !(x.submitted instanceof Date)).map(x => x.sheet + '!' + x.row + ' ' + x.code + ' ' + x.subject).join());
+  const sd = imp.src.details.filter(x => x.sheet === 'SD' && x.submitted).length;
+  T('U52 SD vẫn chỉ lấy cột "Thực tế" (không lấy Kế hoạch làm ngày trình)', sd === 10, 'SD có ngày trình=' + sd);
+  const w0 = writes.length; const docs = run('tqnDocsData(__today)'); const wDocs = writes.slice(w0);
+  const ncr = docs.filter(x => x.loai === 'NCR');
+  T('U53 Đọc NCR: 2 phiếu, ngày phát hành dạng chữ dd/mm/yyyy vẫn hiểu, đang chờ xử lý', ncr.length === 2 && ncr[0].ngay === '08/05/2026' && ncr.every(x => x.tt === 'Chờ phản hồi' && x.cho > 0), JSON.stringify(ncr.map(x => [x.ma, x.ngay, x.cho])));
+  T('U54 Sổ CV đi/đến/Chỉ thị đang trống → không sinh dòng rác (bỏ dòng "NĂM 2026", "I")', docs.filter(x => x.loai !== 'NCR').length === 0, docs.length + ' dòng');
+  T('U55 Đọc văn bản không ghi gì', wDocs.length === 0, wDocs.length + ' lần ghi');
+}
+
+// ---- Màu thanh tab theo nhóm ----
+{ const before = {}; Object.values(sheets).forEach(s => before[s.name] = s.getTabColor());
+  const r = run('tqnApplyTabColors()');
+  T('U56 Tô màu tab theo nhóm: RFI xanh dương, SD xanh ngọc, NCR tím, CV-TB đi cam', sheets['RFI'].tab === '#2563EB' && sheets['SD'].tab === '#0F6E66' && sheets['NCR'].tab === '#7C3AED' && sheets['CV-TB đi'].tab === '#D97706', r + ' tab');
+  T('U57 Không đổi tên, không đổi thứ tự, không đụng dữ liệu tab', Object.keys(sheets).join('|') === Object.keys(before).join('|'));
+  run('tqnRestoreTabColors()');
+  T('U58 Trả lại màu tab gốc', Object.values(sheets).every(s => s.getTabColor() === before[s.name]));
+}
 console.log(`KẾT QUẢ: ${pass} PASS / ${fail} FAIL`);
 fs.writeFileSync(path.join(__dirname, 'out_' + FIX.replace('.json', '') + '_QC.tsv'), sheets['TQN_QC'].v.map(r => r.map(x => x instanceof Date ? x.toISOString() : x).join('\t')).join('\n'));
 fs.writeFileSync(path.join(__dirname, 'out_' + FIX.replace('.json', '') + '_DATA.tsv'), sheets['TQN_DATA'].v.map(r => r.map(x => x instanceof Date ? x.toISOString().slice(0, 10) : x).join('\t')).join('\n'));

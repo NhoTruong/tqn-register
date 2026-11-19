@@ -92,6 +92,8 @@ function tqnReadDetail_(sh, cfg) {
   if (lastR < first) return { map: m, rows: [] };
   var vals = sh.getRange(first, 1, lastR - first + 1, lastC).getValues();
   var out = [];
+  // Cột "Ngày trình duyệt" (RFI/RFA/RFC) là ngày trình THẬT, khác cột "Kế hoạch" (SD/M0S). Dò ở MỌI dòng tiêu đề.
+  var ntp = (m.nt || {}).plan, planIsSubmit = ntp >= 0 && hdr.some(function (h) { return /trinh duyet/.test(tqnNoAccent_(tqnClean_(h[ntp]))); });
   vals.forEach(function (row, i) {
     var raw = row[m.code];
     var code = tqnCleanCode_(raw);
@@ -106,7 +108,7 @@ function tqnReadDetail_(sh, cfg) {
       code: code, key: tqnDocKey_(code), rev: tqnRev_(tqnCell_(row, m.rev), code),
       subject: String(subj), owner: String(tqnClean_(tqnCell_(row, m.owner))),
       status: String(tqnClean_(tqnCell_(row, m.status))),
-      plan: tqnIsDate_(plan) ? plan : '', submitted: tqnIsDate_(act) ? act : (tqnIsDate_(plan) && nt.plan >= 0 && /trinh duyet/.test(tqnNoAccent_(tqnClean_(hdr[hdr.length > 1 ? 1 : 0][nt.plan]))) ? plan : ''),
+      plan: tqnIsDate_(plan) ? plan : '', submitted: tqnIsDate_(act) ? act : (tqnIsDate_(plan) && planIsSubmit ? plan : ''),
       tvgsDate: tv.date, tvgsNote: tv.note, cdtDate: cd.date, cdtNote: cd.note,
       tvtkDate: tk.date, tvtkNote: tk.note,
       ret: tqnIsDate_(tqnCell_(row, m.ret)) ? tqnCell_(row, m.ret) : ''
