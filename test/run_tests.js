@@ -184,7 +184,7 @@ const snapV = JSON.stringify([...ORIGINAL].map(n => sheets[n].v)), snapS = JSON.
 const th = run('tqnApplyTheme()');
 T('U47 Giao diện dễ nhìn: đổi màu nhiều ô, KHÔNG đổi dữ liệu, có bản lưu gốc', th.total > 500 && JSON.stringify([...ORIGINAL].map(n => sheets[n].v)) === snapV && sheets['TQN_GIAO_DIEN_GOC'].getLastRow() > 1, 'đổi ' + th.total + ' ô; ' + th.tabs.slice(0, 3).join(', '));
 const sdt = sheets['Sổ trình duyệt'].sty;
-T('U48 Nền xanh than #002060 → vạch xám rất nhạt; dòng tiêu đề Sổ trình duyệt (22) → nền #EAF0FB chữ đậm', !Object.values(sdt).some(x => String(x[0]).toUpperCase() === '#002060') && sdt['22,3'] && sdt['22,3'][0] === '#EAF0FB' && sdt['22,3'][2] === 1, JSON.stringify(sdt['22,3']));
+T('U48 Nền xanh than #002060 → vạch xám rất nhạt; dòng tiêu đề Sổ trình duyệt (22) → nền xanh than nhạt #E8EEF8 chữ đậm (cùng tông bảng điều khiển)', !Object.values(sdt).some(x => String(x[0]).toUpperCase() === '#002060') && sdt['22,3'] && sdt['22,3'][0] === '#E8EEF8' && sdt['22,3'][2] === 1, JSON.stringify(sdt['22,3']));
 const bkRows = sheets['TQN_GIAO_DIEN_GOC'].getLastRow(); run('tqnApplyTheme()');
 T('U49 Áp lần 2 không ghi đè bản lưu gốc', sheets['TQN_GIAO_DIEN_GOC'].getLastRow() === bkRows);
 run('tqnRestoreTheme()');

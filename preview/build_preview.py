@@ -78,7 +78,17 @@ for s in sheets:
         for r in rng.rules:
             if r.type == 'cellIs' and r.operator == 'equal' and r.formula and r.dxf and r.dxf.fill:
                 cf.append([str(rng.sqref), r.formula[0].strip('"'), _col(r.dxf.fill.fgColor) or _col(r.dxf.fill.bgColor) or '', _col(r.dxf.font.color) if r.dxf.font and r.dxf.font.color else ''])
-    styles[s['name']] = {'s': st, 'cw': cw, 'm': [str(m) for m in ws.merged_cells.ranges], 'cf': cf}
+    dvs = []
+    for dv in ws.data_validations.dataValidation:
+        if dv.type != 'list' or not dv.formula1 or '#REF' in dv.formula1: continue
+        f1 = dv.formula1.strip()
+        if f1.startswith('"'): opts = [x.strip() for x in f1.strip('"').split(',') if x.strip()]
+        else:
+            ref = f1.replace('$', ''); sh_name, rg = ref.split('!') if '!' in ref else (s['name'], ref)
+            sh_name = sh_name.strip("'")
+            opts = [str(c.value) for row in wb[sh_name][rg] for c in row if c.value not in (None, '')] if sh_name in wb.sheetnames else []
+        if opts: dvs.append([str(dv.sqref), opts])
+    styles[s['name']] = {'s': st, 'cw': cw, 'm': [str(m) for m in ws.merged_cells.ranges], 'cf': cf, 'dv': dvs}
 data['styles'] = styles
 json.dump(data, open(os.path.join(OUT, "data.json"), "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
 print('định dạng gốc:', len(styles), 'tab, data.json', os.path.getsize(os.path.join(OUT, "data.json")) // 1024, 'KB')

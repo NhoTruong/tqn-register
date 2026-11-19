@@ -35,6 +35,7 @@ table.g td.rn{background:var(--bg);color:var(--tx2);text-align:center;position:s
 table.g tr.hl td{background:#fff3c4 !important}
 table.g td.ed{background:#eef8f7;cursor:text;outline:1px dashed var(--teal)}
 td.num{text-align:right}
+.dd{float:right;color:#8792a2;font-size:10px;margin-left:4px}td[data-dv]{cursor:pointer}td[data-dv]:hover{outline:1px solid #1B3F7A;outline-offset:-1px}.ddsel{width:100%;font:12px Inter,Arial;border:1px solid #1B3F7A;border-radius:4px}
 .side{width:380px;border-left:1px solid var(--bd);display:none;flex-direction:column}
 .side.show{display:flex}
 .side .sh{display:flex;align-items:center;padding:8px 10px;border-bottom:1px solid var(--bd);font-weight:600}
@@ -87,6 +88,8 @@ class Range{constructor(sh,r,c,nr,nc){Object.assign(this,{sh,r,c,nr,nc})}
  _set(k,v){const S0=(STYLES[this.sh.name]=STYLES[this.sh.name]||{s:{}}).s;v.forEach((row,i)=>row.forEach((x,j)=>{const key=(this.r+i)+','+(this.c+j);const s=S0[key]=S0[key]||['','',0,''];if(k===2)s[2]=x==='bold'?1:0;else s[k]=x}));return this}
  getBackgrounds(){return this._st(s=>s&&s[0],'#ffffff')} getFontColors(){return this._st(s=>s&&s[1],'#000000')} getFontWeights(){return this._st(s=>s&&(s[2]?'bold':'normal'),'normal')}
  setBackgrounds(v){return this._set(0,v)} setFontColors(v){return this._set(1,v)} setFontWeights(v){return this._set(2,v)}
+ getColumn(){return this.c}
+ getDataValidations(){const DV=((STYLES[this.sh.name]||{}).dv||[]).map(d=>[rngOf(d[0]),d[1]]),o=[];for(let i=0;i<this.nr;i++){const row=[];for(let j=0;j<this.nc;j++){const r=this.r+i,c=this.c+j,h=DV.find(d=>d[0].some(g=>r>=g[0]&&r<=g[2]&&c>=g[1]&&c<=g[3]));row.push(h?{getCriteriaType:()=>'VALUE_IN_LIST',getCriteriaValues:()=>[h[1]]}:null)}o.push(row)}return o}
  setValue(x){this.sh.w('setValue');this.sh.set(this.r,this.c,x);return this}
  getValue(){return this.sh.get(this.r,this.c)}
  clearContent(){this.sh.w('clear');for(let i=0;i<this.nr;i++)for(let j=0;j<this.nc;j++)this.sh.set(this.r+i,this.c+j,'');return this}}
@@ -100,7 +103,7 @@ class Sheet{constructor(name,data){this.name=name;this.v=(data?data.values:[]).m
  getLastColumn(){let m=0;this.v.forEach(r=>{for(let j=r.length;j>m;j--)if(r[j-1]!==''&&r[j-1]!==null){m=j;break}});return m}
  getRange(r,c,nr=1,nc=1){return new Range(this,r,c,nr,nc)}
  appendRow(row){this.w('appendRow');const r=this.getLastRow()+1;row.forEach((x,j)=>this.set(r,j+1,x))}
- getMaxRows(){return Math.max(this.v.length,600)} getConditionalFormatRules(){return (this.cfr||[]).slice()} setConditionalFormatRules(r){this.cfr=r}
+ getMaxRows(){return Math.max(this.v.length,600)} getDataValidations(){return 1} getConditionalFormatRules(){return (this.cfr||[]).slice()} setConditionalFormatRules(r){this.cfr=r}
  setFrozenRows(){}setFrozenColumns(){}setColumnWidth(){}setColumnWidths(){}autoResizeColumns(){}
  hideSheet(){this.hidden=true;drawTabs()} activate(){showSheet(this.name)}setActiveRange(rg){hlRow=rg.r;showSheet(this.name)}}
 const book=[],byName={};let STYLES={};let active=null,hlRow=0;
@@ -108,7 +111,7 @@ const ss={getSheetByName:n=>byName[n]||null,insertSheet:n=>{const s=new Sheet(n)
 const menuItems=[];const props={};const triggers=[];const mails=[];let WEATHER_RAW=null;
 const fmt2=n=>String(n).padStart(2,'0');
 const G={
- SpreadsheetApp:{getActiveSpreadsheet:()=>ss,newConditionalFormatRule:()=>{const o={};const b={whenTextEqualTo:v=>(o.v=v,b),setBackground:c=>(o.bg=c,b),setFontColor:c=>(o.fc=c,b),setRanges:r=>(o.r=r,b),build:()=>({o,getBooleanCondition:()=>({getCriteriaValues:()=>[o.v],getBackground:()=>o.bg})})};return b},getUi:()=>({ButtonSet:{OK:'OK'},
+ SpreadsheetApp:{DataValidationCriteria:{VALUE_IN_LIST:'VALUE_IN_LIST',VALUE_IN_RANGE:'VALUE_IN_RANGE'},getActiveSpreadsheet:()=>ss,newConditionalFormatRule:()=>{const o={};const b={whenTextEqualTo:v=>(o.v=v,b),setBackground:c=>(o.bg=c,b),setFontColor:c=>(o.fc=c,b),setRanges:r=>(o.r=r,b),build:()=>({o,getRanges:()=>o.r,getBooleanCondition:()=>({getCriteriaValues:()=>[o.v],getBackground:()=>o.bg})})};return b},getUi:()=>({ButtonSet:{OK:'OK'},
   alert:(a,b)=>showModal(b!==undefined?a:'TQN Register',b!==undefined?b:a),
   showSidebar:(h)=>openSide(),
   showModalDialog:(h,title)=>openDialog(h.name,title),
@@ -156,7 +159,7 @@ function showSheet(name){active=name;const sh=byName[name];if(!sh)return;
  const cond=[];(sh.cfr||[]).forEach(r=>{const g=r.o.r[0];cond.push({g:[g.r,g.c,g.r+g.nr-1,g.c+g.nc-1],v:r.o.v,bg:r.o.bg,fc:r.o.fc})});
  (ST.cf||[]).forEach(r=>rngOf(r[0]).forEach(g=>cond.push({g,v:r[1],bg:r[2],fc:r[3]})));
  const skip={},span={};(ST.m||[]).forEach(m=>{const [r1,c1,r2,c2]=rngOf(m)[0];span[r1+','+c1]=[r2-r1+1,c2-c1+1];for(let r=r1;r<=r2;r++)for(let c=c1;c<=c2;c++)if(r!==r1||c!==c1)skip[r+','+c]=1});
- const isT=name.startsWith('TQN_');
+ const isT=name.startsWith('TQN_');const DVR=(ST.dv||[]).map(d=>[rngOf(d[0]),d[1]]);const dvAt=(r,c)=>{const h=DVR.find(d=>d[0].some(g=>r>=g[0]&&r<=g[2]&&c>=g[1]&&c<=g[3]));return h?h[1]:null};
  let h='<table class="g"><colgroup><col style="width:42px">';for(let c=1;c<=C;c++){const w=cw[colL(c)];h+='<col style="width:'+(w?Math.min(w,420):isT?150:96)+'px">'}h+='</colgroup><tr><th></th>';
  for(let c=1;c<=C;c++)h+='<th>'+colL(c)+'</th>';h+='</tr>';
  for(let r=1;r<=R;r++){h+='<tr'+(r===hlRow?' class="hl" id="hlr"':'')+'><td class="rn">'+r+'</td>';
@@ -165,10 +168,13 @@ function showSheet(name){active=name;const sh=byName[name];if(!sh)return;
    if(s0[0])css+='background:'+s0[0]+';';if(s0[1])css+='color:'+s0[1]+';';if(s0[2])css+='font-weight:700;';if(s0[3])css+='text-align:'+s0[3]+';';
    if(isT&&r===1)css+='background:#1B3F7A;color:#fff;font-weight:700;';
    const hit=cond.find(q=>r>=q.g[0]&&r<=q.g[2]&&c>=q.g[1]&&c<=q.g[3]&&String(x).trim()===q.v);if(hit){if(hit.bg)css+='background:'+hit.bg+';';if(hit.fc)css+='color:'+hit.fc+';';css+='font-weight:500;'}
-   const ed=edit&&c===2&&r>1;
-   h+='<td'+(sp?' rowspan="'+sp[0]+'" colspan="'+sp[1]+'"':'')+(typeof x==='number'&&!s0[3]?' class="num"':'')+(ed?' class="ed" contenteditable data-r="'+r+'"':'')+(css?' style="'+css+'"':'')+' title="'+t.slice(0,300)+'">'+t+'</td>'}h+='</tr>'}
+   const ed=edit&&c===2&&r>1;const op=!sh.f[r+','+c]&&dvAt(r,c);
+   h+='<td'+(sp?' rowspan="'+sp[0]+'" colspan="'+sp[1]+'"':'')+(typeof x==='number'&&!s0[3]?' class="num"':'')+(ed?' class="ed" contenteditable data-r="'+r+'"':'')+(op?' data-dv="'+r+','+c+'"':'')+(css?' style="'+css+'"':'')+' title="'+t.slice(0,300)+'">'+(op?'<span class="dd">▾</span>':'')+t+'</td>'}h+='</tr>'}
  $('grid').innerHTML=h+'</table>';
  if(edit)$('grid').querySelectorAll('td.ed').forEach(td=>td.addEventListener('blur',()=>{byName.TQN_CONFIG.set(+td.dataset.r,2,td.textContent.trim());toast('Đã sửa '+byName.TQN_CONFIG.get(+td.dataset.r,1))}));
+ $('grid').querySelectorAll('td[data-dv]').forEach(td=>td.onclick=()=>{const [r,c]=td.dataset.dv.split(',').map(Number),ops=dvAt(r,c);
+  const sel=document.createElement('select');sel.className='ddsel';sel.innerHTML='<option value="">(trống)</option>'+ops.map(o=>'<option'+(String(sh.get(r,c))===o?' selected':'')+'>'+o.replace(/</g,'&lt;')+'</option>').join('');
+  td.innerHTML='';td.appendChild(sel);sel.focus();sel.onchange=()=>{sel.onblur=null;sh.v[r-1]=sh.v[r-1]||[];while(sh.v[r-1].length<c)sh.v[r-1].push('');sh.v[r-1][c-1]=sel.value;const st=$('grid').scrollTop,sl=$('grid').scrollLeft;showSheet(name);$('grid').scrollTop=st;$('grid').scrollLeft=sl;toast('Đã chọn: '+(sel.value||'(trống)')+' – ô đổi màu theo lựa chọn')};sel.onblur=()=>{if(sel.parentNode){sel.onblur=null;const st=$('grid').scrollTop,sl=$('grid').scrollLeft;showSheet(name);$('grid').scrollTop=st;$('grid').scrollLeft=sl}}});
  const hl=$('hlr');if(hl)hl.scrollIntoView({block:'center'});hlRow=0;drawTabs()}
 function drawTabs(){$('tabs').innerHTML=book.filter(s=>!s.hidden).map(s=>'<button class="tab'+(s.name===active?' on':'')+(s.name.startsWith('TQN_')?' tqn':'')+'" data-n="'+s.name.replace(/"/g,'&quot;')+'">'+s.name+'</button>').join('');
  $('tabs').querySelectorAll('.tab').forEach(b=>b.onclick=()=>showSheet(b.dataset.n))}

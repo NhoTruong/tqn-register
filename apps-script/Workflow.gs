@@ -237,9 +237,9 @@ function tqnMenuNewDoc() {
 }
 
 /* ---------------- Tô màu tình trạng (chỉ định dạng, không đổi dữ liệu) ---------------- */
-var TQN_STATUS_COLORS = [   // bảng màu nhạt dễ nhìn (kiểu nhãn của Google Sheets)
-  ['Quá hạn', '#FCE8E6', '#C5221F'], ['Không duyệt - trình lại', '#FDECE0', '#B4500A'], ['Đang chờ', '#FEF7E0', '#8A6100'],
-  ['Chưa trình', '#F1F3F4', '#5F6368'], ['Đã phản hồi', '#E8F0FE', '#1A56B8'], ['Duyệt có ý kiến', '#EEF6E0', '#4D7C0F'], ['Đã duyệt', '#E6F4EA', '#1E7B3A']
+var TQN_STATUS_COLORS = [   // cùng bảng màu ô chọn (TQN)
+  ['Quá hạn', '#FCE4E4', '#B42318'], ['Không duyệt - trình lại', '#FDE9DD', '#A8430A'], ['Đang chờ', '#FEF3D7', '#8A5A00'],
+  ['Chưa trình', '#F1F3F6', '#5F6B7A'], ['Đã phản hồi', '#E5EEFB', '#1B3F7A'], ['Duyệt có ý kiến', '#EAF5E3', '#3F6E12'], ['Đã duyệt', '#E1F4EF', '#0F6E56']
 ];
 /** Thêm quy tắc tô màu nhạt cho cột Tình trạng của Sổ trình duyệt, đặt LÊN TRƯỚC quy tắc cũ (quy tắc cũ vẫn giữ, không xóa).
  *  Chỉ đổi màu hiển thị, không đổi dữ liệu. Bấm lại không thêm trùng. */
