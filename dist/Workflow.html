@@ -130,17 +130,9 @@ function draw(){
  var nl=A.filter(function(x){return x.sla==='QUA_HAN'}).length;
  h+='<div class="kp alert'+(S.sla==='QUA_HAN'?' on':'')+'" data-q="1" style="--c:#d93a3a"><div class="l">⚠ Quá hạn – cần xử lý</div><div class="n">'+nl+'</div></div></div>';
  var tg=[];if(S.step!=='')tg.push(['step','Bước '+(+S.step+1)+': '+STEP[+S.step].n]);if(S.bic)tg.push(['bic','Bên giữ: '+S.bic]);if(S.sla)tg.push(['sla',SLA[S.sla].n]);if(S.q)tg.push(['q','Tìm: '+S.q]);
- h+=tg.length?'<div class="flt">Đang lọc '+tg.map(function(t){return '<span class="tag">'+esc(t[1])+'<button data-x="'+t[0]+'" aria-label="Bỏ lọc">×</button></span>'}).join('')+'<span>→ <b>'+F.length+'</b> hồ sơ</span></div>':'<div class="hint">Bấm vào thẻ số, thanh màu hoặc dòng để lọc · bấm hồ sơ để mở đúng dòng trong sổ</div>';
+ h+=tg.length?'<div class="flt">Đang lọc '+tg.map(function(t){return '<span class="tag">'+esc(t[1])+'<button data-x="'+t[0]+'" aria-label="Bỏ lọc">×</button></span>'}).join('')+'<span>→ <b>'+F.length+'</b> hồ sơ</span></div>':'<div class="hint">Bấm vào thẻ số hoặc dòng để lọc · bấm hồ sơ để mở đúng dòng trong sổ</div>';
  if(S.view==='ctl'){
-  var parties={};open.forEach(function(x){var p=party(x.bic);parties[p]=(parties[p]||0)+1});
-  var plist=Object.keys(parties).sort(function(a,b){return parties[b]-parties[a]});
-  h+='<div class="grid2"><div class="box" style="align-self:start"><div class="bh"><b>Hồ sơ đang mở theo bên giữ việc</b><span>chia theo tình trạng hạn</span></div><div class="bb">';
-  plist.forEach(function(p){var r=open.filter(function(x){return party(x.bic)===p}),tot=r.length;
-   h+='<div class="prow"><div class="pn"><span class="av" style="--ac:'+pc(p)+'">'+esc(ini(p))+'</span>'+esc(p)+'</div><div class="stk">';
-   SLAO.slice(0,4).forEach(function(k){var n=r.filter(function(x){return x.sla===k}).length;if(!n)return;
-    h+='<div class="'+(S.bic===p&&S.sla===k?'on':'')+'" data-p="'+esc(p)+'" data-k="'+k+'" title="'+esc(p)+' · '+SLA[k].n+': '+n+'" style="flex:'+n+';background:'+SLA[k].c+'">'+n+'</div>'});
-   h+='</div><div class="ptot">'+tot+'</div></div>'});
-  h+='</div><div class="lgd">'+SLAO.slice(0,4).map(function(k){return '<span><i style="--c:'+SLA[k].c+'"></i>'+SLA[k].n+'</span>'}).join('')+'</div></div>';
+  h+='<div class="grid2" style="grid-template-columns:1fr">';
   var od=F.filter(function(x){return x.sla==='QUA_HAN'||x.sla==='SAP_HAN'||x.si===3}).sort(function(a,b){return SLAO.indexOf(a.sla)-SLAO.indexOf(b.sla)||(a.d===''?0:a.d)-(b.d===''?0:b.d)});
   h+='<div class="box"><div class="bh"><b>Cần xử lý trước</b><span>quá hạn, sắp đến hạn, bị trả về · '+od.length+' hồ sơ</span></div>';
   h+=od.length?'<table class="t"><thead><tr><th>Hạn</th><th>Loại</th><th>Hồ sơ</th><th>Đang giữ</th><th></th></tr></thead><tbody>'+od.slice(0,15).map(function(x){return row(x,{due:1})}).join('')+'</tbody></table>':'<div class="empty">✓ Không có hồ sơ quá hạn hay sắp đến hạn</div>';
