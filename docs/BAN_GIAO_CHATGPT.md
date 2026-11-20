@@ -1,4 +1,18 @@
-# BÀN GIAO CHO CHATGPT – TQN Register (20/11 00:10)
+# BÀN GIAO CHO CHATGPT – TQN Register (cập nhật 20/11 09:13)
+
+## CẬP NHẬT MỚI NHẤT (09:13)
+- **Đã đo bản nhanh cả nút trên DEV** (`tqnA_DoQuanLyNhanhDEV`, xem issue #1 comment 7028170988):
+  - Cũ: **18,5 s**.
+  - Nhanh, chưa cache (n=20): median **6,2 s**, p95 7,3 s.
+  - Cache trúng (n=20): median **0,49 s**, p95 0,86 s.
+  - So khớp JSON cũ/mới: `khop = true`, 0 chỗ lệch.
+- **Kế hoạch nhanh hơn, anh Nho đồng ý xem xét, làm theo thứ tự:**
+  1. Gộp `TQN_QUY_TRINH / PHIEU / GIAO_NHAN / AUDIT` + cấu hình vào cùng batchGet, cache `tqnConfig_`, khóa cache không gọi `tqnConfig_` → mục tiêu lần lạnh ~2 s (ước tính).
+  2. Nạp dữ liệu từ cache ngay khi mở hộp thoại, bỏ 1 vòng khứ hồi; nút Làm mới vẫn đọc thật.
+  3. Trigger 5 phút hâm sẵn cache, onEdit đổi `tqnDv`.
+  Mục tiêu: bấm nút → thấy bảng < 1 s gần như mọi lần. Đo 20 lần trên DEV, anh Nho duyệt mới lên PROD.
+- **V6 journal (issue #2):** Claude đã đồng ý 5 lỗ hổng ChatGPT nêu. Acceptance test có 5 ca `it.fails` (commit 681efc4). Việc tiếp: ADR-0004 rồi code journal; ChatGPT review và viết test đọc xen giữa.
+
 
 Claude sắp hết phiên. ChatGPT làm tiếp trên repo này theo `PHOI_HOP.md`. Mọi trao đổi ghi ở issue #1, #2.
 
