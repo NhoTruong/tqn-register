@@ -76,7 +76,7 @@ function tqnTaoBaoCaoShopBptc() {
   sh.getImages().forEach(function (im) { im.remove(); });
   try { sh.getRange(1, 1, sh.getMaxRows(), sh.getMaxColumns()).breakApart(); } catch (e) { }
   sh.clear(); if (sh.getMaxColumns() < 11) sh.insertColumnsAfter(sh.getMaxColumns(), 11 - sh.getMaxColumns());
-  var N = 9, R = function (r, c, nr, nc) { return sh.getRange(r, c, nr || 1, nc || 1); }, F = 'Arial', GRID = '#D5DBE3', NAVY = '#2B4C7E';
+  var N = 9, R = function (r, c, nr, nc) { return sh.getRange(r, c, nr || 1, nc || 1); }, F = 'Arial', GRID = '#8A96A6', NAVY = '#2B4C7E';
   [42, 205, 360, 46, 150, 86, 72, 120, 190].forEach(function (w, i) { sh.setColumnWidth(i + 1, w); }); sh.setColumnWidth(10, 24); sh.setColumnWidth(11, 230);
   R(1, 1, sh.getMaxRows(), N).setFontFamily(F).setFontSize(10).setVerticalAlignment('middle').setFontColor('#18212D');
   // --- Đầu trang theo mẫu phiếu RFI ---
@@ -109,7 +109,7 @@ function tqnTaoBaoCaoShopBptc() {
     R(row, 8, 1, 2).setFontColor('#5F6B7A'); sh.setRowHeight(row, 30); row++;
   });
   R(h1, 1, row - h1, N).setBorder(true, true, true, true, true, true, GRID, SpreadsheetApp.BorderStyle.SOLID);
-  R(h1, 8, row - h1, 1).setBorder(null, true, null, null, null, null, '#AEB7C2', SpreadsheetApp.BorderStyle.SOLID);
+  R(h1, 8, row - h1, 1).setBorder(null, true, null, null, null, null, '#5F6B7A', SpreadsheetApp.BorderStyle.SOLID);
   R(row, 1, 1, N).merge().setValue('Ghi chú: Đã trình = có ngày thực tế nhà thầu đệ trình.  Đang chuẩn bị = Hoàn thành (nhà thầu làm xong, CHƯA trình, CHƯA duyệt) + Đang thực hiện.  Shop dầm + sàn cùng tầng, cùng công trình tính là 1 bộ.' + (tongPh ? '  Có ' + tongPh + ' hồ sơ TVGS/CĐT đã phản hồi nhưng sổ chưa ghi kết quả (tính vào Chờ duyệt).' : '')).setFontSize(9).setFontStyle('italic').setFontColor('#8792A2').setWrap(true); sh.setRowHeight(row, 30);
   row += 2;
   // --- Chi tiết hồ sơ đã trình ---
