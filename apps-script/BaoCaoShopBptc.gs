@@ -93,21 +93,24 @@ function tqnTaoBaoCaoShopBptc() {
   var data = TQN_BC.NGUON.map(function (n) { return { tab: n[0], ten: n[1], d: tqnBcDoc_(ss, n[0]) }; }), row = 9;
   R(row, 1, 1, N).merge().setValue('1. TỔNG HỢP').setFontWeight('bold').setFontSize(11).setFontColor(NAVY); sh.setRowHeight(row, 24); row++;
   var h1 = row; R(h1, 1, 2, 1).merge().setValue('STT'); R(h1, 2, 2, 1).merge().setValue('Hạng mục');
-  R(h1, 3, 1, 4).merge().setValue('HỒ SƠ ĐÃ TRÌNH'); R(h1, 7, 1, 3).merge().setValue('CHƯA TRÌNH (để theo dõi)');
-  R(h1 + 1, 3, 1, 7).setValues([['Đã trình  ·  Đã duyệt  ·  Chờ duyệt  ·  Trả về', 'Đã phản hồi*', 'Chờ > ' + TQN_BC.NGAY_CHO + ' ngày', '', 'Hoàn thành – chờ trình', 'Đang thực hiện', 'Kế hoạch']]);
-  R(h1 + 1, 5, 1, 2).merge();
-  R(h1, 1, 2, 6).setBackground(NAVY).setFontColor('#FFFFFF'); R(h1, 7, 2, 3).setBackground('#5F6B7A').setFontColor('#FFFFFF');
-  R(h1, 1, 2, N).setFontWeight('bold').setHorizontalAlignment('center').setWrap(true); sh.setRowHeight(h1, 24); sh.setRowHeight(h1 + 1, 30);
-  row = h1 + 2;
+  R(h1, 3, 1, 5).merge().setValue('HỒ SƠ ĐÃ TRÌNH'); R(h1, 8, 1, 2).merge().setValue('CHƯA TRÌNH');
+  R(h1 + 1, 3, 1, 7).setValues([['Tổng đã trình', 'Đã duyệt', 'Chờ duyệt', 'Trả về', 'Chờ > ' + TQN_BC.NGAY_CHO + ' ngày', 'Đang chuẩn bị', 'Kế hoạch']]);
+  R(h1, 1, 2, 7).setBackground(NAVY).setFontColor('#FFFFFF'); R(h1, 8, 2, 2).setBackground('#5F6B7A').setFontColor('#FFFFFF');
+  R(h1, 1, 2, N).setFontWeight('bold').setHorizontalAlignment('center').setWrap(true); sh.setRowHeight(h1, 24); sh.setRowHeight(h1 + 1, 28);
+  row = h1 + 2; var tongPh = 0;
   data.forEach(function (x, k) {
     var ds = (x.d && x.d.ds) || [], d = function (l) { return ds.filter(function (o) { return o.loai === l; }).length; };
     var trinh = ds.filter(function (o) { return /DUYET|CHO|PHANHOI|TRAVE/.test(o.loai); }).length, tre = ds.filter(function (o) { return o.cho !== '' && o.cho > TQN_BC.NGAY_CHO; }).length;
-    R(row, 1, 1, N).setValues([[k + 1, x.ten + (x.d ? '' : ' (không có tab ' + x.tab + ')'), trinh + '   ·   ' + d('DUYET') + '   ·   ' + d('CHO') + '   ·   ' + d('TRAVE'), d('PHANHOI'), tre, '', d('XONG'), d('LAM'), d('KH')]]);
-    R(row, 5, 1, 2).merge(); R(row, 1, 1, N).setHorizontalAlignment('center').setFontSize(11); R(row, 2).setHorizontalAlignment('left').setFontWeight('bold'); R(row, 3).setFontWeight('bold');
-    if (tre) R(row, 5).setFontColor('#C5221F').setFontWeight('bold'); sh.setRowHeight(row, 28); row++;
+    tongPh += d('PHANHOI');
+    R(row, 1, 1, N).setValues([[k + 1, x.ten + (x.d ? '' : ' (không có tab ' + x.tab + ')'), trinh, d('DUYET'), d('CHO') + d('PHANHOI'), d('TRAVE'), tre, d('XONG') + d('LAM'), d('KH')]]);
+    R(row, 1, 1, N).setHorizontalAlignment('center').setFontSize(12); R(row, 2).setHorizontalAlignment('left').setFontWeight('bold').setFontSize(11);
+    R(row, 3).setFontWeight('bold'); R(row, 4).setFontColor('#1E7B3A').setFontWeight('bold'); R(row, 5).setFontColor('#8A6100').setFontWeight('bold');
+    R(row, 6).setFontColor(d('TRAVE') ? '#C5221F' : '#18212D'); R(row, 7).setFontColor(tre ? '#C5221F' : '#18212D').setFontWeight(tre ? 'bold' : 'normal');
+    R(row, 8, 1, 2).setFontColor('#5F6B7A'); sh.setRowHeight(row, 30); row++;
   });
   R(h1, 1, row - h1, N).setBorder(true, true, true, true, true, true, GRID, SpreadsheetApp.BorderStyle.SOLID);
-  R(row, 1, 1, N).merge().setValue('* Đã phản hồi: TVGS/CĐT đã có ngày phản hồi thực tế nhưng cột Tình trạng chưa ghi kết quả duyệt.   "Hoàn thành" = nhà thầu làm xong hồ sơ, CHƯA phải đã duyệt.   Shop dầm + sàn cùng tầng, cùng công trình tính là 1 bộ.').setFontSize(9).setFontStyle('italic').setFontColor('#8792A2').setWrap(true); sh.setRowHeight(row, 30);
+  R(h1, 8, row - h1, 1).setBorder(null, true, null, null, null, null, '#5F6B7A', SpreadsheetApp.BorderStyle.SOLID_MEDIUM);
+  R(row, 1, 1, N).merge().setValue('Ghi chú: Đã trình = có ngày thực tế nhà thầu đệ trình.  Đang chuẩn bị = Hoàn thành (nhà thầu làm xong, CHƯA trình, CHƯA duyệt) + Đang thực hiện.  Shop dầm + sàn cùng tầng, cùng công trình tính là 1 bộ.' + (tongPh ? '  Có ' + tongPh + ' hồ sơ TVGS/CĐT đã phản hồi nhưng sổ chưa ghi kết quả (tính vào Chờ duyệt).' : '')).setFontSize(9).setFontStyle('italic').setFontColor('#8792A2').setWrap(true); sh.setRowHeight(row, 30);
   row += 2;
   // --- Chi tiết hồ sơ đã trình ---
   var thuTu = { TRAVE: 1, CHO: 2, PHANHOI: 3, DUYET: 4 }, so = 2;
