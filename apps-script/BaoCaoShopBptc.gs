@@ -156,17 +156,28 @@ function tqnTaoBaoCaoShopBptc() {
   sh.setHiddenGridlines(true); ss.setActiveSheet(sh); sh.setActiveSelection('A1'); SpreadsheetApp.flush();
   return { tab: TQN_BC.TAB, dongCuoi: row };
 }
-/** Nút Xuất: hộp có link tải PDF (A4 ngang, vừa trang, chỉ cột A:I) và Excel – trình duyệt tải bằng quyền người bấm */
+/** Nút Xuất: máy chủ tạo PDF (A4 ngang, vừa trang, cột A:I) + Excel, LƯU VÀO DRIVE thư mục "TQN – Báo cáo Shop BPTC",
+ *  rồi hiện hộp có nút Mở PDF / Tải PDF / Tải Excel. Không phụ thuộc trình duyệt chặn link. */
 function tqnXuatBaoCaoShopBptc() {
   var ss = SpreadsheetApp.getActiveSpreadsheet(), sh = ss.getSheetByName(TQN_BC.TAB); if (!sh) { tqnTaoBaoCaoShopBptc(); sh = ss.getSheetByName(TQN_BC.TAB); }
   SpreadsheetApp.flush();
+  var tz = ss.getSpreadsheetTimeZone(), ten = 'BC_Shop_BPTC_' + Utilities.formatDate(new Date(), tz, 'yyyyMMdd_HHmm');
   var base = 'https://docs.google.com/spreadsheets/d/' + ss.getId() + '/export?gid=' + sh.getSheetId(), last = sh.getLastRow();
-  var pdf = base + '&format=pdf&size=A4&portrait=false&fitw=true&gridlines=false&sheetnames=false&printtitle=false&pagenum=CENTER&horizontal_alignment=CENTER&top_margin=0.35&bottom_margin=0.35&left_margin=0.3&right_margin=0.3&range=A1:I' + last;
-  var ten = 'BC_Shop_BPTC_' + Utilities.formatDate(new Date(), ss.getSpreadsheetTimeZone(), 'yyyyMMdd');
-  var b = 'display:inline-block;color:#fff;padding:10px 18px;border-radius:7px;text-decoration:none;font-weight:bold;margin-right:8px';
-  var h = '<div style="font:14px Arial;padding:4px 6px"><p style="margin:4px 0 14px"><b>' + ten + '</b></p>'
-    + '<a href="' + pdf + '" target="_blank" style="' + b + ';background:#1B3F7A">⤓ Tải PDF (A4 ngang)</a>'
-    + '<a href="' + base + '&format=xlsx" target="_blank" style="' + b + ';background:#1F8A8A">⤓ Tải Excel</a>'
-    + '<p style="color:#6b7280;font-size:12px;margin-top:16px">Cần số liệu mới nhất: bấm LÀM MỚI trên tờ báo cáo trước khi xuất.</p></div>';
-  SpreadsheetApp.getUi().showModalDialog(HtmlService.createHtmlOutput(h).setWidth(440).setHeight(170), 'Xuất báo cáo Shop drawing / BPTC');
+  var hd = { headers: { Authorization: 'Bearer ' + ScriptApp.getOAuthToken() }, muteHttpExceptions: true };
+  var pdfUrl = base + '&format=pdf&size=A4&portrait=false&fitw=true&gridlines=false&sheetnames=false&printtitle=false&pagenum=CENTER&horizontal_alignment=CENTER&top_margin=0.35&bottom_margin=0.35&left_margin=0.3&right_margin=0.3&range=A1:I' + last;
+  var r = UrlFetchApp.fetch(pdfUrl, hd);
+  if (r.getResponseCode() !== 200) throw new Error('Google không xuất được PDF (mã ' + r.getResponseCode() + '). Thử lại sau ít phút.');
+  var dp = PropertiesService.getDocumentProperties(), fid = dp.getProperty('TQN_BC_FOLDER'), folder;
+  try { folder = DriveApp.getFolderById(fid); } catch (e) { folder = DriveApp.createFolder('TQN – Báo cáo Shop BPTC'); dp.setProperty('TQN_BC_FOLDER', folder.getId()); }
+  var pdf = folder.createFile(r.getBlob().setName(ten + '.pdf'));
+  var x = UrlFetchApp.fetch(base + '&format=xlsx', hd), xlsx = x.getResponseCode() === 200 ? folder.createFile(x.getBlob().setName(ten + '.xlsx')) : null;
+  var dl = function (f) { return 'https://drive.google.com/uc?export=download&id=' + f.getId(); };
+  var b = 'display:inline-block;color:#fff;padding:10px 16px;border-radius:7px;text-decoration:none;font-weight:bold;margin:0 8px 8px 0;cursor:pointer;border:0;font:bold 13px Arial';
+  var h = '<div style="font:14px Arial;padding:4px 6px"><p style="margin:2px 0 12px">✓ Đã lưu vào Drive, thư mục <b>' + folder.getName() + '</b>:<br><b>' + ten + '.pdf</b>' + (xlsx ? ' và .xlsx' : '') + '</p>'
+    + '<button style="' + b + ';background:#1B3F7A" onclick="window.open(\'' + pdf.getUrl() + '\',\'_blank\')">Mở PDF</button>'
+    + '<button style="' + b + ';background:#2F6FDB" onclick="window.open(\'' + dl(pdf) + '\',\'_blank\')">⤓ Tải PDF</button>'
+    + (xlsx ? '<button style="' + b + ';background:#1F8A8A" onclick="window.open(\'' + dl(xlsx) + '\',\'_blank\')">⤓ Tải Excel</button>' : '')
+    + '<p style="margin:6px 0 0"><a href="' + folder.getUrl() + '" target="_blank">Mở thư mục báo cáo trên Drive</a></p>'
+    + '<p style="color:#6b7280;font-size:12px;margin-top:10px">Cần số liệu mới nhất: bấm LÀM MỚI trước khi xuất.</p></div>';
+  SpreadsheetApp.getUi().showModalDialog(HtmlService.createHtmlOutput(h).setWidth(470).setHeight(230), 'Xuất báo cáo Shop drawing / BPTC');
 }
